@@ -1,120 +1,35 @@
-# OrbCharts
+# OrbCharts（開發分支）
 
 ![logo - light mode](https://orbcharts.blueplanet.com.tw/images/logo_light_temp2.png)
 
-OrbCharts is a **data-driven JavaScript chart library**. One data format for every chart — data is decoupled from rendering, so you can switch how the same data is visualized at any time. Built for dashboards.
+> ⚠️ 本專案為 [OrbCharts 原始專案](https://github.com/bpbase/orbcharts/) 的開發 fork，由原始主要開發者 [@upstairs0102](https://github.com/upstairs0102) 在個人帳號下持續維護與開發。
 
-[Official Website](https://orbcharts.blueplanet.com.tw) | [Documentation](https://orbcharts.blueplanet.com.tw/docs)
+本專案建立的目的，是為了在個人 GitHub 帳號下持續推進 OrbCharts 的開發與維護工作，並方便進行測試、功能實驗與貢獻。所有改進會透過 Pull Request 的方式提交回原始專案，與 main branch 保持同步。
 
-> **Note:** `4.0.0-beta.0` is a major redesign of OrbCharts. The API differs significantly from v3.x — see the [migration guide](https://orbcharts.blueplanet.com.tw/docs/advanced/migration-from-v3) if you are upgrading.
+**原始專案**：[github.com/bpbase/orbcharts](https://github.com/bpbase/orbcharts)  
+**維護者**：[upstairs0102](https://github.com/upstairs0102)
 
-## Features
+---
 
-### (1) One data format for every chart
+## 本 fork 的用途
 
-In OrbCharts, every chart reads the same data format — a plain array of objects. You don't reshape your data one way for a bar chart and another way for a pie chart. Define your data once and declare field mappings with Encoding. The data layer stays clean and simple: what you maintain is the data itself, not a chart-specific format.
+此分支主要用途為：
 
-### (2) Data and rendering, decoupled
+- 作為個人開發與測試的工作空間
+- 嘗試實驗性功能或架構調整
+- 提交改進至原始專案，維持與主線同步
 
-In OrbCharts, the visual presentation is a swappable layer. Show the same data as a bar chart today and switch to a line or pie chart tomorrow — only the chart declaration changes, while your data and fetching logic stay untouched. Visual decisions can be made later and changed at any time. Once the data is ready, the only question left is how you want to look at it.
+⚠️ **本 repo 並非替代版本，也不會與原始 API 分歧，請以原始專案為主要使用來源。**
 
-### (3) Flexibility built for dashboards
+---
 
-Dashboard requirements never stop changing: try a different chart for this metric, add a trend line to that panel. OrbCharts' composable design lets layers be plugged in and toggled at runtime, and combined with a unified data format, the cost of adding or adjusting a chart is minimal. The data pipeline stays stable while the presentation evolves freely — exactly the developer experience dashboard products need.
+## 貢獻與交流
 
-## Get Started!
+若您希望參與開發、測試功能，或有建議與回饋，歡迎開 issue 或提出 Pull Request。  
+穩定的功能與修正將會定期貢獻至主專案。
 
-### Installation
+---
 
-OrbCharts supports CDN downloads and npm installation, is not limited to specific front-end frameworks, and supports both JavaScript and TypeScript development environments.
+## 授權條款
 
-Here are several installation methods:
-
-1. npm installation
-
-```sh
-npm i orbcharts@beta
-```
-
-> The `orbcharts` package re-exports everything from `@orbcharts/core` (the chart engine) and `@orbcharts/plugin-basic` (the built-in plugins). If you prefer to manage them separately, you can also install the individual packages:
->
-> ```sh
-> npm i @orbcharts/core@beta @orbcharts/plugin-basic@beta
-> ```
-
-2. ESM format CDN download
-
-```html
-<script type="module">
-import * as orbcharts from 'https://cdn.jsdelivr.net/npm/orbcharts@4.0.0-beta.0/+esm'
-</script>
-```
-
-3. UMD format CDN download
-
-```html
-<script src="https://cdn.jsdelivr.net/npm/orbcharts@4.0.0-beta.0/dist/orbcharts.umd.js"></script>
-```
-
-### Execution
-
-Prepare a container element with an explicit width and height (by default the chart automatically fills its container):
-
-```html
-<div id="chart" style="width: 600px; height: 400px;"></div>
-```
-
-This is an executable program to start creating your first pie chart:
-
-```js
-import { OrbCharts, PartitionPlot, Tooltip, Legend } from 'orbcharts'
-
-const element = document.querySelector('#chart')
-
-const data = [
-  { series: 'A', value: 30 },
-  { series: 'B', value: 70 },
-  { series: 'C', value: 45 },
-  { series: 'D', value: 85 },
-]
-
-const chart = new OrbCharts(element, {
-  data,
-  plugins: [new PartitionPlot({ Pie: {} }), new Tooltip(), new Legend()],
-})
-```
-
-### Same data, different views
-
-The data never changes — switching the visualization is a single declaration:
-
-```js
-const plot = new PartitionPlot({ Pie: {}, PieLabel: {} })
-
-const chart = new OrbCharts(element, { data, plugins: [plot, new Tooltip(), new Legend()] })
-
-// Later, switch the same chart to a rose chart — the data stays untouched
-plot.showOnly(['Rose', 'RoseLabel'])
-```
-
-Parameters can be updated at runtime as well — for example, splitting one chart into a separate chart per series:
-
-```js
-plot.updateParams({
-  separateSeries: true
-})
-```
-
-You can also subscribe to the chart's reactive data streams — when the data updates, everything downstream updates with it:
-
-```js
-chart.context.seriesData$.subscribe(data => {
-  console.log(data)
-})
-
-chart.setData(newData) // the chart re-renders, and the subscription above receives the update
-```
-
-## License
-
-OrbCharts is released under the [Apache License 2.0](https://github.com/BPbase/orbcharts/blob/main/LICENSE).
+本專案繼承原始 OrbCharts 專案的授權條款 [Apache License 2.0](https://github.com/BPbase/orbcharts/blob/main/LICENSE)。
