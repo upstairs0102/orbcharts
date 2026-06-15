@@ -142,7 +142,10 @@ export const RankedPlot = defineSVGPlugin<
 
     // const gridAxesReverseTransform$ = gridAxesReverseTransformObservable({ gridAxesTransform$ }).pipe(shareReplay(1))
 
-    const rankedSeriesData$ = rankedSeriesDataObservable({ visibleComputedData$ }).pipe(shareReplay(1))
+    const rankedSeriesData$ = rankedSeriesDataObservable({
+      visibleComputedData$,
+      categoryScaleDomainValue$
+    }).pipe(shareReplay(1))
 
     const computedRankedAmount$ = computedRankedAmountObservable({
       containerSize$,

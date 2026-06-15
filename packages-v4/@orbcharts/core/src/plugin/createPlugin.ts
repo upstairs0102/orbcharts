@@ -144,6 +144,14 @@ export const createPlugin = <
   //   })
   // )
 
+  // 目前生效的 plugin 本身 params（預設值 + 歷次 patch 累積合併）。
+  // deepOverwrite 會忽略 defaults 中不存在的 key，因此建構子參數內的
+  // layer keys（如 { Bar: {} }）會被自然濾除，不會混入 plugin-level params。
+  let currentPluginParams: PluginParams = deepOverwrite(
+    (config.defaultParams ?? {}) as PluginParams,
+    (initPluginParams ?? {}) as DeepPartial<PluginParams>
+  )
+
   // update plugin params
   const patchPluginParams$ = new BehaviorSubject<DeepPartial<AllLayerParams | PluginParams> | undefined>(
     initPluginParams ?? {}
@@ -177,9 +185,8 @@ export const createPlugin = <
         console.error(createOrbChartsErrorMessage(e))
       }
 
-      const newParams = deepOverwrite(config.defaultParams, patch as DeepPartial<PluginParams> ?? {})
-      // console.log('newParams', newParams)
-      subscriber.next(newParams)
+      // currentPluginParams 已於 updateParams 中累積合併（歷次 patch 不互相覆蓋）
+      subscriber.next(currentPluginParams)
     })
 
     // -- force replace --
@@ -403,7 +410,8 @@ export const createPlugin = <
     //   params = { ...params, ...partial }
     // },
     updateParams: (patch: DeepPartial<PluginParams | AllLayerParams>) => {
-      // plugin params
+      // plugin params（累積合併至目前值，使連續多次 updateParams 不互相覆蓋）
+      currentPluginParams = deepOverwrite(currentPluginParams, patch as DeepPartial<PluginParams>)
       patchPluginParams$.next(patch)
       // layer params
       Object.keys(patch).forEach((key) => {
@@ -417,6 +425,7 @@ export const createPlugin = <
     },
     forceReplaceParams: (full: PluginParams | AllLayerParams) => {
       // plugin params
+      currentPluginParams = full as PluginParams
       forceReplacePluginParams$.next(full)
       // layer params
       Object.keys(full).forEach((key) => {
@@ -428,10 +437,12 @@ export const createPlugin = <
       // InitLayerNameSet$.next(getParamsKeySet(full))
     },
     getParams: () => {
-      return layers.reduce((acc, layer) => {
-        acc[layer._name] = layer._getParams()
-        return acc
-      }, {} as Record<string, any>) as PluginParams | AllLayerParams
+      // plugin 本身的 params 在前、各 layer params 在後
+      const result: Record<string, any> = Object.assign({}, currentPluginParams)
+      layers.forEach((layer) => {
+        result[layer._name] = layer._getParams()
+      })
+      return result as PluginParams | AllLayerParams
     },
     // layer: <LayerName extends keyof PluginParams>(name: LayerName) => ({
     //   // set: (partial: DeepPartial<PluginParams[LayerName]>) => {
