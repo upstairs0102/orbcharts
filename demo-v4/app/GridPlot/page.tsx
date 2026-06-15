@@ -33,7 +33,7 @@ export default function GridPlotPage() {
   const chartRef = useRef<OrbCharts | null>(null)
 
   useEffect(() => {
-    
+
     // console.log(domRef.current)
 
     const gridPlot = new GridPlot({
@@ -87,7 +87,7 @@ export default function GridPlotPage() {
     const chart = new OrbCharts(domRef.current!, {
       data: data,
       encoding: {
-        
+
       },
       // plugins: [],
       theme: {
@@ -150,7 +150,7 @@ export default function GridPlotPage() {
     // })
 
     // seriesPlugin.showOnly(['Pie'])
-    
+
     // chart.updateEncoding({})
     // chart.updateTheme({})
     // chart.setPlugins([seriesPlugin])
@@ -158,7 +158,7 @@ export default function GridPlotPage() {
     chart.context.gridData$.subscribe(data => {
       console.log('Grid Data Updated:', data)
     })
-    
+
     console.log(chart)
 
   }, [])

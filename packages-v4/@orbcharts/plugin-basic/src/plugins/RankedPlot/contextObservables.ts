@@ -221,17 +221,29 @@ export const gridAxesReverseTransformObservable = ({
 
 // ---- ranking ----
 
-// Sort series by sum of all category values, descending
+// Sort series by sum of category values "within the current (zoomed) category range", descending
+// （排名僅計算目前顯示範圍內的值——縮放類別範圍時排名會隨之重組）
 export const rankedSeriesDataObservable = ({
-  visibleComputedData$
+  visibleComputedData$,
+  categoryScaleDomainValue$
 }: {
   visibleComputedData$: Observable<ComputedDatumGrid[][]>
+  categoryScaleDomainValue$: Observable<[number, number]>
 }): Observable<ComputedDatumGrid[][]> => {
-  return visibleComputedData$.pipe(
-    map(computedData => {
-      const seriesWithSum = computedData.map(seriesData => ({
+  return combineLatest({
+    visibleComputedData: visibleComputedData$,
+    categoryScaleDomainValue: categoryScaleDomainValue$
+  }).pipe(
+    debounceTime(0),
+    map(({ visibleComputedData, categoryScaleDomainValue }) => {
+      const [domainMin, domainMax] = categoryScaleDomainValue
+      const seriesWithSum = visibleComputedData.map(seriesData => ({
         seriesData,
-        sum: seriesData.reduce((acc, d) => acc + (d.value ?? 0), 0)
+        sum: seriesData.reduce((acc, d) => {
+          return d.categoryIndex >= domainMin && d.categoryIndex <= domainMax
+            ? acc + (d.value ?? 0)
+            : acc
+        }, 0)
       }))
       seriesWithSum.sort((a, b) => b.sum - a.sum)
       return seriesWithSum.map(s => s.seriesData)
