@@ -741,6 +741,22 @@ export const createChart: CreateChart = (element, options) => {
     return _context
   })()
 
+  // OrbCharts 自有的 container（root 的直接子元素，由 OrbCharts 建立及擁有）：
+  // svg/canvas 為 position:absolute，需要一個 positioned ancestor 作為錨點，
+  // 但 root 是使用者傳入的元素、不應修改它的樣式——
+  // 因此在 root 底下建立 position:relative 的 container 來掛載 svg/canvas。
+  // （container 本身高度為 0、不影響 root 的尺寸量測；destroy 時隨 root 清空一併移除）
+  let orbContainer: HTMLDivElement | null = null
+  const getOrbContainer = (): HTMLDivElement => {
+    if (!orbContainer) {
+      orbContainer = document.createElement('div')
+      orbContainer.classList.add('orbcharts-container')
+      orbContainer.style.position = 'relative'
+      element.appendChild(orbContainer)
+    }
+    return orbContainer
+  }
+
   // inject context into plugins
   pluginsInstance$.subscribe(plugins => {
     // -- 建立頂層 svg 和 canvas --
@@ -755,7 +771,7 @@ export const createChart: CreateChart = (element, options) => {
     })
     if (hasSVGPlugin && !context.svg) {
       context.svg = createSVG('orbcharts-root-svg')
-      context.root.appendChild(context.svg)
+      getOrbContainer().appendChild(context.svg)
       svgElement$.next(context.svg)
     } else if (!hasSVGPlugin && context.svg) {
       context.svg.remove()
@@ -764,7 +780,7 @@ export const createChart: CreateChart = (element, options) => {
     }
     if (hasCanvasPlugin && !context.canvas) {
       context.canvas = createCanvas('orbcharts-root-canvas')
-      context.root.appendChild(context.canvas)
+      getOrbContainer().appendChild(context.canvas)
       canvasElement$.next(context.canvas)
     } else if (!hasCanvasPlugin && context.canvas) {
       context.canvas.remove()
@@ -972,8 +988,9 @@ export const createChart: CreateChart = (element, options) => {
       // context.svgSelection.remove()
       // context.canvasSelection.remove()
       destroy$.next(undefined)
-      // 清空 element 底下所有元素
+      // 清空 element 底下所有元素（含 OrbCharts 自有的 container）
       removeElementChildren(element)
+      orbContainer = null
     }
 
     return {
