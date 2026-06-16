@@ -39,7 +39,7 @@ npm i orbcharts@beta
 > The `orbcharts` package re-exports everything from `@orbcharts/core` (the chart engine) and `@orbcharts/plugin-basic` (the built-in plugins). If you prefer to manage them separately, you can also install the individual packages:
 >
 > ```sh
-> npm i @orbcharts/core @orbcharts/plugin-basic
+> npm i @orbcharts/core@beta @orbcharts/plugin-basic@beta
 > ```
 
 2. ESM format CDN download
