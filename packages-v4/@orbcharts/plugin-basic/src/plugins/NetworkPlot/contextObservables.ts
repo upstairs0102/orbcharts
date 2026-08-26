@@ -22,14 +22,19 @@ export const multivariateComputedDataObservable = ({ selectedGraphData$, pluginP
   selectedGraphData$: Observable<ModelData<'graph'>>
   pluginParams$: Observable<NetworkPlotPluginParams>
 }): Observable<ComputedData<'graph'>> => {
+  // 只依賴會影響資料計算的欄位（visibleFilter），避免 styles（例如 highlightDefault）
+  // 之類的樣式更新也觸發整份資料重新計算，造成不必要的重繪與動畫
+  const visibleFilter$ = pluginParams$.pipe(
+    map(pluginParams => pluginParams.visibleFilter),
+    distinctUntilChanged()
+  )
   return combineLatest({
     selectedGraphData: selectedGraphData$,
-    pluginParams: pluginParams$
+    visibleFilter: visibleFilter$
   }).pipe(
     debounceTime(0),
-    map(({ selectedGraphData, pluginParams }) => {
+    map(({ selectedGraphData, visibleFilter }) => {
       const filteredNodes = selectedGraphData.nodes.map((datum, index) => {
-        const visibleFilter = pluginParams.visibleFilter
         return {
           ...datum,
           visible: visibleFilter ? visibleFilter(datum) : true,

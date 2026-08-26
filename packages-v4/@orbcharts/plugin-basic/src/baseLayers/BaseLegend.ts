@@ -31,7 +31,7 @@ export interface BaseLegendParams {
 }
 
 interface BaseLegendContext {
-  rootSelection: d3.Selection<any, unknown, any, unknown>
+  selection: d3.Selection<any, unknown, any, unknown>
   pluginName: string
   layerName: string
   legendLabels$: Observable<string[]>
@@ -107,7 +107,7 @@ function getSeriesColor (seriesIndex: number, theme: Theme) {
 export const createBaseLegend: BaseLayerFn<BaseLegendContext> = ({
   pluginName,
   layerName,
-  rootSelection,
+  selection,
   legendLabels$,
   baseLegendParams$,
   layout$,
@@ -285,7 +285,7 @@ export const createBaseLegend: BaseLayerFn<BaseLegendContext> = ({
     takeUntil(destroy$),
     map(data => {
 
-      return rootSelection
+      return selection
         .selectAll<SVGGElement, RootPosition>(`g.${rootPositionClassName}`)
         .data([data])
         .join(
@@ -678,7 +678,6 @@ export const createBaseLegend: BaseLayerFn<BaseLegendContext> = ({
   itemSelection$.subscribe()
 
   return () => {
-    rootSelection.select(`g.${rootPositionClassName}`).remove()
     destroy$.next(undefined)
   }
 }

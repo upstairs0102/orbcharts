@@ -758,7 +758,24 @@ export const createChart: CreateChart = (element, options) => {
   }
 
   // inject context into plugins
+  let previousPlugins: PluginEntity<any, unknown, unknown>[] = []
   pluginsInstance$.subscribe(plugins => {
+    // -- 清理被移除的 plugin --
+    // setPlugins()/removePlugin() 換掉的舊 plugin，若沒有新 plugin 用相同
+    // pluginId 重新呼叫 _updateLayerElements（例如從 GridPlot 換成
+    // PartitionPlot 這種不同種類的切換），它的 layer 登記會一直留在
+    // svgLayerInfo/canvasLayerInfo 裡、DOM 元素永遠不會被移除（同種類切換
+    // 之所以看起來正常，只是因為新 plugin 用同一個 pluginId 重新登記，
+    // 把舊登記蓋掉的副作用，並不是真的有清理機制）。這裡明確對每個「上一輪
+    // 有、這一輪沒有」的 plugin 呼叫一次空的 _updateLayerElements 把它的
+    // 登記清掉，並呼叫 destroy() 釋放其內部資源。
+    const removedPlugins = previousPlugins.filter(prevPlugin => !plugins.includes(prevPlugin))
+    removedPlugins.forEach(removedPlugin => {
+      context._updateLayerElements(removedPlugin._elementType, removedPlugin._getId(), [])
+      removedPlugin.destroy()
+    })
+    previousPlugins = plugins
+
     // -- 建立頂層 svg 和 canvas --
     let hasSVGPlugin = false
     let hasCanvasPlugin = false
