@@ -75,10 +75,11 @@ export const RankedPlot = defineSVGPlugin<
     // ---- select grid dataset ----
     const selectedGridData$ = combineLatest({
       gridData: props.context.gridData$,
-      datasetIndex: props.pluginParams$.pipe(map(p => p.datasetIndex))
+      datasetIndex: props.pluginParams$.pipe(map(p => p.datasetIndex), distinctUntilChanged())
     }).pipe(
       debounceTime(0),
       map(({ gridData, datasetIndex }) => gridData[datasetIndex]),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 

@@ -21,16 +21,22 @@ export const treeComputedDataObservable = ({ selectedTreeData$, pluginParams$ }:
   selectedTreeData$: Observable<ModelData<'tree'>>
   pluginParams$: Observable<HierarchyPlotPluginParams>
 }): Observable<ComputedData<'tree'>> => {
+  // 只依賴會影響資料計算的欄位（visibleFilter），避免 styles 之類的樣式更新
+  // 也觸發整份資料重新計算，造成不必要的重繪與動畫
+  const visibleFilter$ = pluginParams$.pipe(
+    map(pluginParams => pluginParams.visibleFilter),
+    distinctUntilChanged()
+  )
   return combineLatest({
     selectedTreeData: selectedTreeData$,
-    pluginParams: pluginParams$
+    visibleFilter: visibleFilter$
   }).pipe(
     debounceTime(0),
-    map(({ selectedTreeData, pluginParams }) => {
+    map(({ selectedTreeData, visibleFilter }) => {
       function buildComputedTree (node: ModelDatumTree, parentVisible: boolean = true): ComputedDatumTree {
         // 父節點必須可見，子節點才有機會可見
         const selfVisible = parentVisible && (
-          !pluginParams.visibleFilter || pluginParams.visibleFilter(node)
+          !visibleFilter || visibleFilter(node)
         )
 
         return {

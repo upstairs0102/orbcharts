@@ -1,9 +1,10 @@
 import * as d3 from 'd3'
 import {
   shareReplay,
-  map, 
+  map,
   combineLatest,
-  debounceTime} from 'rxjs'
+  debounceTime,
+  distinctUntilChanged} from 'rxjs'
 
 import type { PartitionPlotExtendContext, PartitionPlotPluginParams, PartitionPlotAllLayerParams } from './types'
 import { defineSVGPlugin } from '@orbcharts/core'
@@ -50,11 +51,13 @@ export const PartitionPlot = defineSVGPlugin<
     const selectedSeriesData$ = combineLatest({
       seriesData: props.context.seriesData$,
       datasetIndex: props.pluginParams$.pipe(
-        map(pluginParams => pluginParams.datasetIndex)
+        map(pluginParams => pluginParams.datasetIndex),
+        distinctUntilChanged()
       )
     }).pipe(
       debounceTime(0),
       map(({ seriesData, datasetIndex }) => seriesData[datasetIndex]),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 

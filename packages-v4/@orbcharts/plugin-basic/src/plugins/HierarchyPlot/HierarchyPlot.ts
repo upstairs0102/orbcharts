@@ -44,11 +44,13 @@ export const HierarchyPlot = defineSVGPlugin<
     const selectedTreeData$ = combineLatest({
       treeData: props.context.treeData$,
       datasetIndex: props.pluginParams$.pipe(
-        map(pluginParams => pluginParams.datasetIndex)
+        map(pluginParams => pluginParams.datasetIndex),
+        distinctUntilChanged()
       )
     }).pipe(
       debounceTime(0),
       map(({ treeData, datasetIndex }) => treeData[datasetIndex]),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 

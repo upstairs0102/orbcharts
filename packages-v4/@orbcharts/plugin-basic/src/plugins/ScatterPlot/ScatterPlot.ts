@@ -114,11 +114,13 @@ export const ScatterPlot = defineSVGPlugin<
     const selectedMultivariateData$ = combineLatest({
       multivariateData: props.context.multivariateData$,
       datasetIndex: props.pluginParams$.pipe(
-        map(pluginParams => pluginParams.datasetIndex)
+        map(pluginParams => pluginParams.datasetIndex),
+        distinctUntilChanged()
       )
     }).pipe(
       debounceTime(0),
       map(({ multivariateData, datasetIndex }) => multivariateData[datasetIndex]),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 
