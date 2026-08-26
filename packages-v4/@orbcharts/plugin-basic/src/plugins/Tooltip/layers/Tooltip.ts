@@ -71,7 +71,7 @@ export const Tooltip = defineSVGLayer<TooltipExtendContext, TooltipPluginParams,
     const destroy$ = new Subject()
 
     const unsubscribeTooltip = createBaseTooltip({
-      rootSelection: d3.select(svgG),
+      selection: d3.select(svgG),
       pluginName,
       layerName,
       baseTooltipParams$: layerParams$,

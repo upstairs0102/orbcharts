@@ -46,11 +46,13 @@ export const NetworkPlot = defineSVGPlugin<
     const selectedGraphData$ = combineLatest({
       graphData: props.context.graphData$,
       datasetIndex: props.pluginParams$.pipe(
-        map(pluginParams => pluginParams.datasetIndex)
+        map(pluginParams => pluginParams.datasetIndex),
+        distinctUntilChanged()
       )
     }).pipe(
       debounceTime(0),
       map(({ graphData, datasetIndex }) => graphData[datasetIndex]),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 
