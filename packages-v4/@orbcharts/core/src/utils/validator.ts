@@ -57,6 +57,16 @@ function getInvalidProperty<T> (data: T, rules: Partial<ValidatorRule<T>>) {
     if (rules[columnName as keyof T]) {
       const rule: ValidatorRuleToBeTypes | ValidatorRuleToBe | ValidatorRuleToBeOption = rules[columnName as keyof T]
       const value = data[columnName as keyof T]
+      // 明確傳入 undefined 視同「未提供該欄位」，不做驗證。
+      // 常見於呼叫端用 spread/條件式建構 options（例如
+      // `{ ...base, encoding: hasEncoding ? {...} : undefined }`），
+      // Object.keys() 仍會列出該屬性名稱，若不特別排除，這裡會誤判成
+      // "型別錯誤" 而不是 "沒有提供"（目前程式碼裡沒有任何規則真的需要
+      // 用 toBeTypes: ['undefined'] 去要求欄位必須是 undefined，所以一律
+      // 跳過是安全的）。
+      if (value === undefined) {
+        return false
+      }
       // 測試 "toBeTypes"
       if ((rule as ValidatorRuleToBeTypes).toBeTypes) {
         const toBeTypes = (rule as ValidatorRuleToBeTypes).toBeTypes

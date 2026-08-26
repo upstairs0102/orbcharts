@@ -37,16 +37,21 @@ export const multivariateComputedDataObservable = ({ selectedMultivariateData$, 
   selectedMultivariateData$: Observable<ModelDataMultivariate>
   pluginParams$: Observable<ScatterPlotPluginParams>
 }): Observable<ComputedDatumMultivariate[][]> => {
+  // 只依賴會影響資料計算的欄位（visibleFilter），避免 styles 之類的樣式更新
+  // 也觸發整份資料重新計算，造成不必要的重繪與動畫
+  const visibleFilter$ = pluginParams$.pipe(
+    map(pluginParams => pluginParams.visibleFilter),
+    distinctUntilChanged()
+  )
   return combineLatest({
     selectedMultivariateData: selectedMultivariateData$,
-    pluginParams: pluginParams$
+    visibleFilter: visibleFilter$
   }).pipe(
     debounceTime(0),
-    map(({ selectedMultivariateData, pluginParams }) => {
+    map(({ selectedMultivariateData, visibleFilter }) => {
       return selectedMultivariateData
         .map((data) => {
           return data.map((datum, index) => {
-            const visibleFilter = pluginParams.visibleFilter
             return {
               ...datum,
               visible: visibleFilter ? visibleFilter(datum) : true,

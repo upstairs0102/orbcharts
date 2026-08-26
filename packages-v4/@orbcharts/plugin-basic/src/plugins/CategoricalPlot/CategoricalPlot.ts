@@ -4,6 +4,7 @@ import {
   of,
   combineLatest,
   debounceTime,
+  distinctUntilChanged,
   Subject,
   switchMap,
   BehaviorSubject
@@ -81,10 +82,11 @@ export const CategoricalPlot = defineSVGPlugin<
     // ---- select series dataset ----
     const selectedSeriesData$ = combineLatest({
       seriesData: props.context.seriesData$,
-      datasetIndex: props.pluginParams$.pipe(map(p => p.datasetIndex))
+      datasetIndex: props.pluginParams$.pipe(map(p => p.datasetIndex), distinctUntilChanged())
     }).pipe(
       debounceTime(0),
       map(({ seriesData, datasetIndex }) => seriesData[datasetIndex] ?? []),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 

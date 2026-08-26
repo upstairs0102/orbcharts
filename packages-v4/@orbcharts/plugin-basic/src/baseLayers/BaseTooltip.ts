@@ -52,7 +52,7 @@ export type BaseTooltipParams = {
 interface BaseTooltipContext {
   pluginName: string
   layerName: string
-  rootSelection: d3.Selection<any, unknown, any, unknown>
+  selection: d3.Selection<any, unknown, any, unknown>
   baseTooltipParams$: Observable<BaseTooltipParams>
   theme$: Observable<Theme>
   layout$: Observable<Layout>
@@ -89,8 +89,8 @@ function textToSvg (_textArr: string[] | string | null | undefined, textStyle: B
   }
 }
 
-function renderTooltip ({ rootSelection, pluginName, layerName, gClassName, boxClassName, rootWidth, rootHeight, svgString, tooltipStyle, event  }: {
-  rootSelection: d3.Selection<any, unknown, any, unknown>
+function renderTooltip ({ selection, pluginName, layerName, gClassName, boxClassName, rootWidth, rootHeight, svgString, tooltipStyle, event  }: {
+  selection: d3.Selection<any, unknown, any, unknown>
   pluginName: string
   layerName: string
   gClassName: string
@@ -104,16 +104,14 @@ function renderTooltip ({ rootSelection, pluginName, layerName, gClassName, boxC
   // if (!svgString) {
   //   return
   // }
-  // const rootSelection = d3.select('svg.bpcharts__root')
-  // console.log('tooltip', { rootSelection, pluginName, gClassName, boxClassName, rootWidth, rootHeight, svgString, tooltipStyle, event  })
-  rootSelection.interrupt('fadeout')
+  selection.interrupt('fadeout')
   const radius = 5
 
   // data（svg string無值則為空陣列）
   const contentData = svgString ? [svgString] : []
   const styleData = svgString ? [tooltipStyle] : []
   // tooltipG <g>
-  const tooltipG = rootSelection
+  const tooltipG = selection
     .selectAll<SVGGElement, string>(`g.${gClassName}`)
     .data(contentData)
     .join(
@@ -239,7 +237,7 @@ function removeTooltip (gClassName: string) {
 export const createBaseTooltip: BaseLayerFn<BaseTooltipContext> = ({
   pluginName,
   layerName,
-  rootSelection,
+  selection,
   baseTooltipParams$,
   theme$,
   layout$,
@@ -402,7 +400,7 @@ export const createBaseTooltip: BaseLayerFn<BaseTooltipContext> = ({
       return
     }
     renderTooltip({
-      rootSelection,
+      selection,
       pluginName,
       layerName,
       gClassName,

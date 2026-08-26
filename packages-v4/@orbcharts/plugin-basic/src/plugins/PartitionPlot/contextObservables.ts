@@ -27,19 +27,25 @@ export const seriesComputedDataObservable = ({ selectedSeriesData$, pluginParams
   selectedSeriesData$: Observable<ModelDataSeries>
   pluginParams$: Observable<PartitionPlotPluginParams>
 }): Observable<ComputedDatumSeries[][]> => {
+  // 只依賴會影響資料計算的欄位（sort、visibleFilter），避免 styles 之類的樣式更新
+  // 也觸發整份資料重新計算，造成不必要的重繪與動畫（例如force simulation重新啟動）
+  const sortAndVisibleFilter$ = pluginParams$.pipe(
+    map(pluginParams => ({ sort: pluginParams.sort, visibleFilter: pluginParams.visibleFilter })),
+    distinctUntilChanged((a, b) => a.sort === b.sort && a.visibleFilter === b.visibleFilter)
+  )
   return combineLatest({
     selectedSeriesData: selectedSeriesData$,
-    pluginParams: pluginParams$
+    sortAndVisibleFilter: sortAndVisibleFilter$
   }).pipe(
     debounceTime(0),
-    map(({ selectedSeriesData, pluginParams }) => {
+    map(({ selectedSeriesData, sortAndVisibleFilter }) => {
       return selectedSeriesData
           // 攤為一維陣列
           .flat()
           // 排序後給 seq
-          .sort(pluginParams.sort ?? undefined)
+          .sort(sortAndVisibleFilter.sort ?? undefined)
           .map((datum, index) => {
-            const visibleFilter = pluginParams.visibleFilter
+            const visibleFilter = sortAndVisibleFilter.visibleFilter
             return {
               ...datum,
               visible: visibleFilter ? visibleFilter(datum) : true,

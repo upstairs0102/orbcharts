@@ -119,11 +119,13 @@ export const GridPlot = defineSVGPlugin<
     const selectedGridData$ = combineLatest({
       gridData: props.context.gridData$,
       datasetIndex: props.pluginParams$.pipe(
-        map(pluginParams => pluginParams.datasetIndex)
+        map(pluginParams => pluginParams.datasetIndex),
+        distinctUntilChanged()
       )
     }).pipe(
       debounceTime(0),
       map(({ gridData, datasetIndex }) => gridData[datasetIndex]),
+      distinctUntilChanged(),
       shareReplay(1)
     )
 

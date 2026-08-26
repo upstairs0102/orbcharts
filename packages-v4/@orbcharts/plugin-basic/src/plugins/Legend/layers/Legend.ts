@@ -98,7 +98,7 @@ export const Legend = defineSVGLayer<LegendExtendContext, LegendPluginParams, Le
     const unsubscribeBaseLegend = createBaseLegend({
       pluginName,
       layerName,
-      rootSelection: d3.select(context.svg),
+      selection: d3.select(svgG),
       legendLabels$,
       baseLegendParams$,
       layout$: context.layout$,

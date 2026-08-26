@@ -305,6 +305,17 @@ export default function NetworkPlotPage() {
       console.log('Graph Data Updated:', data)
     })
 
+    chart.context.event$.subscribe(event => {
+      if (event.eventName !== 'click') {
+        return
+      }
+      networkPlot.updateParams({
+        styles: {
+          highlightDefault: event.target?.id
+        }
+      })
+    })
+
     return () => {
       subscription.unsubscribe()
       chart.destroy()
