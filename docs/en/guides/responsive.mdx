@@ -1,0 +1,81 @@
+---
+title: Responsive Sizing
+description: OrbCharts fills its container and redraws on window resize by default—how to set up an RWD container, and how to size manually.
+nav:
+  group: Guides
+  order: 2
+related:
+  - /docs/getting-started/core-concepts
+  - /docs/api/orbcharts-class
+---
+
+# Responsive Sizing
+
+OrbCharts is responsive by default. A chart **automatically fills the container it lives in** and redraws on window resize, so you don't have to compute sizes by hand.
+
+## The size defaults
+
+Each chart's size is controlled by the `size` option, which defaults to:
+
+```ts
+{
+  width: 'auto',          // fill the container width
+  height: 'auto',         // fill the container height
+  resizeDebounce: 50,     // ms to debounce redraws after a window resize
+}
+```
+
+When `width` and `height` are `'auto'`, the chart takes the **container DOM's actual width and height**. On window resize it detects the change and redraws, debounced by `resizeDebounce` (50ms by default) to avoid over-redrawing while dragging.
+
+> **Note**: Because `'auto'` reads the container's size, **the container DOM must have an explicit width and height**, otherwise the chart collapses to 0 height and is invisible. Set the size with CSS.
+
+## RWD container example
+
+The most common setup is a full-width container with a fixed height:
+
+```html
+<div id="chart" class="chart-box"></div>
+```
+
+```css
+.chart-box {
+  width: 100%;
+  height: 400px;
+}
+```
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+The `100%` width follows the parent and the chart redraws along with it; the height is fixed at `400px`. You can also use `aspect-ratio`, `vh`, or a Grid/Flex layout—anything works as long as the container ends up with a measurable width and height.
+
+## Sizing manually
+
+If you don't want to follow the container, pass a fixed size at creation, or call `chart.resize()` later:
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  size: { width: 800, height: 400 },
+  plugins: [/* ... */],
+})
+
+// Adjust later
+chart.resize({ width: 1000, height: 500, resizeDebounce: 100 })
+```
+
+All three fields of `resize()` are optional—pass only what you want to change.
+
+> **Tip**: Even with `'auto'`, when the container size changes via JS (rather than a window resize)—for example expanding a sidebar—you can call `chart.resize()` to trigger a redraw.
+
+## Related
+
+- [Core Concepts](/docs/getting-started/core-concepts) — the relationship between container and chart
+- [OrbCharts Class](/docs/api/orbcharts-class) — `resize` and the `size` option

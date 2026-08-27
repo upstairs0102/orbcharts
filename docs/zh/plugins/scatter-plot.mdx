@@ -1,0 +1,213 @@
+---
+title: ScatterPlot
+description: ScatterPlot 是 multivariate 資料格式的核心 Plugin，可繪製散佈圖與 XY 氣泡圖。
+nav:
+  group: Plugins
+  order: 3
+charts:
+  - scatter-plot
+  - bubble-chart-xy
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# ScatterPlot
+
+`ScatterPlot` 是處理 `multivariate` 資料格式的核心 Plugin。它具備 X 軸與 Y 軸兩個數值軸，可透過切換內部的 Layer 繪製散佈圖與 XY 氣泡圖。
+
+**資料格式：** `multivariate`
+
+## 支援的圖表
+
+ScatterPlot 透過不同的 Layer 組合呈現不同圖表：
+
+- [散佈圖（Scatter Plot）](#散佈圖) — `Point` Layer
+- [XY 氣泡圖（Bubble Chart）](#xy-氣泡圖) — `Bubble` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張散佈圖。ScatterPlot 預設會顯示 `Point`、`XYAxes` 兩個 Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { ScatterPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', x: 30, y: 10, z: 10, name: 'a' },
+  { series: 'A', x: 50, y: 20, z: 20, name: 'b' },
+  { series: 'B', x: 70, y: 30, z: 30, name: 'c' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new ScatterPlot({ Point: {}, XYAxes: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+這份 `multivariate` 資料每筆包含 `series`、`x`、`y`、`z`、`name`：`x` 對應 X 軸、`y` 對應 Y 軸、`z` 用於氣泡圖的大小、`series` 用於分組與上色。
+
+## Layer 顯示機制
+
+ScatterPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new ScatterPlot()`），預設顯示 `Point`、`XYAxes`（即一張散佈圖）。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+```ts
+new ScatterPlot({ Point: {}, XYAxes: {} })   // 散佈圖
+new ScatterPlot({ Bubble: {}, XYAxes: {} })  // XY 氣泡圖
+```
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 圖表範例
+
+以下範例皆使用相同的 `multivariate` 資料，只需更換 Layer 即可切換圖表類型。
+
+### 散佈圖
+
+```ts
+new ScatterPlot({ Point: {}, XYAxes: {} })
+```
+
+`Point` 以固定大小的圓點繪製每筆資料的 `(x, y)` 位置，搭配 `XYAxes` 顯示 X／Y 兩軸。
+
+### XY 氣泡圖
+
+```ts
+new ScatterPlot({ Bubble: {}, XYAxes: {}, XYGuide: {}, XZoom: {} })
+```
+
+`Bubble` 以圓形泡泡繪製，泡泡大小依 `z` 值變化；可再加上 `XYGuide` 顯示輔助線、`XZoom` 啟用 X 軸縮放。
+
+> **提示**：可搭配 [Legend](/docs/plugins/legend) 與 [Tooltip](/docs/plugins/tooltip) 增加互動，加入方式與 [GridPlot](/docs/plugins/grid-plot) 相同。
+
+## Plugin 參數
+
+這些參數影響整個 ScatterPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `xAxis` | `XYAxis` | 見下表 | X 軸設定 |
+| `yAxis` | `XYAxis` | 見下表 | Y 軸設定 |
+| `separateSeries` | `boolean` | `false` | 是否將各系列分開繪製 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 20, 60, 80, 60 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `container` | `Container` | 單一圖表 | 多圖表佈局（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`container`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 ScatterPlot 的預設值差異（`styles.padding` 預設為 `{ top: 20, right: 60, bottom: 80, left: 60 }`，`transitionDuration` 預設較短，為 `100`）。
+
+### `xAxis` / `yAxis`（XYAxis）
+
+X 軸與 Y 軸各使用一組 `XYAxis` 設定，結構相同：
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `scaleDomain` | `[number \| 'min' \| 'auto', number \| 'max' \| 'auto']` | `['auto', 'auto']` | 數值範圍 |
+| `scaleRange` | `[number, number]` | `[0, 0.9]` | 對應到繪圖區的比例範圍 |
+| `label` | `string` | `''` | 軸標籤 |
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### Point（資料點）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `radius` | `number` | `5` | 圓點半徑 |
+| `fillColorType` | `ColorType` | `'data'` | 填色 |
+| `strokeColorType` | `ColorType` | `'data'` | 邊框色 |
+| `strokeWidth` | `number` | `0` | 邊框寬度 |
+
+### Bubble（氣泡）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `fillColorType` | `ColorType` | `'data'` | 填色 |
+| `strokeColorType` | `ColorType` | `'data'` | 邊框色 |
+| `strokeWidth` | `number` | `0` | 邊框寬度 |
+| `valueLinearOpacity` | `[number, number]` | `[0.8, 0.8]` | 依數值的透明度範圍 |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | 數值映射方式（半徑或面積） |
+| `sizeAdjust` | `number` | `0.5` | 泡泡大小調整係數 |
+
+### XYAxes（XY 座標軸）
+
+包含 `xAxis` 與 `yAxis` 兩組設定，兩者結構相同：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `false` | 是否顯示軸線 |
+| `ticks` | `number \| null` | `null` | 刻度數量（`null` 為自動） |
+| `tickFormat` | `string \| ((num) => string)` | 千分位格式化函式 | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `true` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+
+### XYGuide（XY 輔助線）
+
+包含 `xAxis` 與 `yAxis` 兩組設定，兩者結構相同；滑鼠移至資料點時顯示對應的輔助線與標籤：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | 是否顯示輔助線 |
+| `showLabel` | `boolean` | `true` | 是否顯示標籤 |
+| `lineDashArray` | `string` | `'3, 3'` | 虛線樣式 |
+| `lineColorType` | `ColorType` | `'primary'` | 輔助線顏色 |
+| `labelColorType` | `ColorType` | `'primary'` | 標籤背景顏色 |
+| `labelTextColorType` | `ColorType` | `'background'` | 標籤文字顏色 |
+| `labelPadding` | `number` | `20` | 標籤內距 |
+
+### XZoom（X 軸縮放）
+
+啟用後可在 X 軸方向進行縮放與平移。此 Layer 無額外參數：
+
+```ts
+new ScatterPlot({ Point: {}, XYAxes: {}, XZoom: {} })
+```
+
+## 完整 TypeScript 介面
+
+```ts
+interface ScatterPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumMultiValue) => boolean | null
+  container: Container
+  xAxis: XYAxis
+  yAxis: XYAxis
+  separateSeries: boolean
+  datasetIndex: number
+}
+
+interface ScatterPlotAllLayerParams {
+  Point: ScatterPlotPointParams
+  Bubble: ScatterPlotBubbleParams
+  XYGuide: ScatterPlotXYGuideParams
+  XYAxes: ScatterPlotXYAxesParams
+  XZoom: ScatterPlotXZoomParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new ScatterPlot(params?: DeepPartial<ScatterPlotPluginParams & ScatterPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

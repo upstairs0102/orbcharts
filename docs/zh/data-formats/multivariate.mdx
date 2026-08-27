@@ -1,0 +1,147 @@
+---
+title: Multivariate 格式
+description: Multivariate 是描述多維度數值（X / Y / Z…）的資料格式，適合散佈圖、泡泡圖等需要同時呈現多個維度的圖表。
+nav:
+  group: 資料格式
+  order: 4
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/scatter-plot
+---
+
+# Multivariate 格式
+
+`multivariate` 用於描述**多維度數值**。每一筆資料除了 `series` 之外，還包含多個維度（例如 `x`、`y`、`z`），這些維度透過 `Encoding.multivariate` 對應到模型資料。
+
+它適合需要同時呈現多個數值維度的圖表，例如散佈圖與泡泡圖（以 `x`、`y` 定位，`z` 控制大小）。
+
+## 適用場景
+
+- 想呈現「兩個變數之間的關係」（散佈圖）
+- 想以第三個維度（`z`）表達額外資訊，例如泡泡大小
+- 資料是多維度的數值點，而非單一數值
+
+## 資料結構
+
+Multivariate 資料的每一筆包含 `series` 與多個維度欄位：
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', x: 30, y: 10, z: 10, name: 'a' },
+  { series: 'A', x: 50, y: 20, z: 20, name: 'b' },
+  { series: 'B', x: 70, y: 30, z: 30, name: 'c' },
+]
+```
+
+### 可用欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `x` | `number \| null` | 否 | 第一個維度（預設對應 X 軸） |
+| `y` | `number \| null` | 否 | 第二個維度（預設對應 Y 軸） |
+| `z` | `number \| null` | 否 | 第三個維度（預設對應泡泡大小） |
+| `series` | `string` | 否 | 系列名稱，預設用於分組與上色 |
+| `name` | `string` | 否 | 顯示名稱（例如 Tooltip 中顯示的文字） |
+| `data` | `any` | 否 | 自訂附加資料，會原樣保留 |
+
+> **提示**：預設的色彩來源是 `series`（`color: { from: 'series' }`），相同 `series` 的資料點會用同一個顏色。
+
+## Encoding.multivariate
+
+多維度欄位是透過 `Encoding.multivariate` 對應的。預設值如下，會把 `x`、`y`、`z` 三個欄位依序對應為三個維度：
+
+```ts
+const defaultMultivariate = [
+  { from: 'x', name: 'x' },
+  { from: 'y', name: 'y' },
+  { from: 'z', name: 'z' },
+]
+```
+
+如果你的資料欄位名稱不同（例如用 `width`、`height`），可以自訂對應：
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    multivariate: [
+      { from: 'width', name: 'x' },
+      { from: 'height', name: 'y' },
+    ],
+  },
+})
+```
+
+## 模型資料（ModelDatumMultivariate）
+
+當 OrbCharts 處理完 RawData 後，每筆資料會轉換為 `ModelDatumMultivariate`。它繼承自 `ModelDatumBase`，並把多個維度收納在 `multivariate` 陣列中：
+
+```ts
+interface ModelDatumMultivariate {
+  // 來自 ModelDatumBase
+  id: string            // 唯一識別
+  index: number         // 在同類別中的索引
+  modelType: 'multivariate'
+  name: string          // 來自原始資料的 name
+  data: any             // 來自原始資料的 data
+  value: number | null  // 經過 aggregate 後的數值
+  color: string         // 對應後的顏色（hex）
+  // Multivariate 專屬欄位
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+  multivariate: Array<{
+    index: number
+    name: string
+    value: number | null
+  }>
+}
+```
+
+## 對應的 Plugin
+
+`multivariate` 格式可搭配以下 Plugin：
+
+| Plugin | 可繪製的圖表 |
+|---|---|
+| [ScatterPlot](/docs/plugins/scatter-plot) | 散佈圖、泡泡圖（Bubble） |
+
+## 完整範例
+
+以下是一個泡泡圖，使用 `ScatterPlot` 的 `Bubble` Layer 並搭配 `XYAxes`：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { ScatterPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', x: 30, y: 10, z: 10, name: 'a' },
+  { series: 'A', x: 50, y: 20, z: 20, name: 'b' },
+  { series: 'B', x: 70, y: 30, z: 30, name: 'c' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new ScatterPlot({ Bubble: {}, XYAxes: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// 元件卸載時記得銷毀，釋放資源與事件監聽
+// chart.destroy()
+```
+
+> **注意**：OrbCharts 預設會自動填滿容器尺寸（`size` 預設為 `'auto'`），請確保 `#chart` 容器有明確的寬度與高度，否則圖表可能無法顯示。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+## 相關連結
+
+- 回到 [資料格式概述](/docs/data-formats/overview)
+- 查看 [ScatterPlot](/docs/plugins/scatter-plot) 的完整參數與更多圖表範例
+- 了解尺寸與色彩設定請見 [核心概念](/docs/getting-started/core-concepts)
+- 色彩與 ColorType 設定請見 [Theme API](/docs/api/theme)

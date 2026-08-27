@@ -1,0 +1,121 @@
+---
+title: Tree Format
+description: Tree links records into a parent-child hierarchy via the parent field, ideal for tree diagrams and treemaps that show hierarchical structures.
+nav:
+  group: Data Formats
+  order: 6
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/hierarchy-plot
+---
+
+# Tree Format
+
+`tree` describes **parent-child hierarchical relationships**. Each record uses `id` as its unique identifier and points to its parent's `id` through the `parent` field, linking records into a tree. The root node has no `parent` and its `value` may be `null`; leaf nodes carry an actual `value`.
+
+It suits charts that show hierarchical structures, such as tree diagrams and treemaps.
+
+## When to use
+
+- Showing "a hierarchical classification structure" (organization, category catalog)
+- Expressing "the value proportion of each level" by area (treemap)
+- Data that has explicit parent-child relationships
+
+## Data structure
+
+Tree data forms a hierarchy with `id` and `parent`. The root has no `parent`, intermediate nodes may have a `null` value, and leaf nodes carry values:
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { id: 'Movies', name: 'Movies', value: null, series: '' },
+  { id: 'Movies.Action', name: 'Action', value: null, parent: 'Movies', series: '' },
+  { id: 'Movies.Action.Avatar', name: 'Avatar', value: 760505847, parent: 'Movies.Action', series: 'Action' },
+]
+```
+
+### Available fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | Unique identifier; referenced by child nodes via `parent` |
+| `parent` | `string` | No | The parent node's `id`; omitted for the root node |
+| `value` | `number \| null` | No | The value of this node; may be `null` for root/intermediate nodes |
+| `series` | `string` | No | Series name; used for grouping and coloring by default |
+| `name` | `string` | No | Display name (e.g. the text shown in a Tooltip) |
+| `data` | `any` | No | Custom attached data, preserved as-is |
+
+> **Tip**: The root node (without `parent`) usually has its `value` set to `null`, since its value is accumulated from its children. Make sure every `parent` matches the `id` of an existing node, otherwise that node cannot be correctly attached to the tree.
+
+## Model data (ModelDatumTree)
+
+After OrbCharts processes RawData, each record is converted into a `ModelDatumTree`. It extends `ModelDatumBase` and adds hierarchy-related fields (`parent`, `depth`, `children`, etc.):
+
+```ts
+interface ModelDatumTree {
+  // From ModelDatumBase
+  id: string
+  index: number
+  modelType: 'tree'
+  name: string
+  data: any
+  value: number | null
+  color: string
+  // Tree-specific fields
+  parent: string | null
+  parentIndex: number | null
+  depth: number                  // depth in the tree (root is 0)
+  seq: number                    // order within the same level
+  children: ModelDatumTree[]     // child nodes
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+## Corresponding Plugins
+
+The `tree` format works with the following Plugins:
+
+| Plugin | Charts |
+|---|---|
+| [HierarchyPlot](/docs/plugins/hierarchy-plot) | Treemap, tree diagram |
+
+## Full example
+
+Below is a treemap using `HierarchyPlot` (which shows a TreeMap by default):
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { HierarchyPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { id: 'Movies', name: 'Movies', value: null, series: '' },
+  { id: 'Movies.Action', name: 'Action', value: null, parent: 'Movies', series: '' },
+  { id: 'Movies.Action.Avatar', name: 'Avatar', value: 760505847, parent: 'Movies.Action', series: 'Action' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new HierarchyPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// Remember to destroy the chart on unmount to release resources and listeners
+// chart.destroy()
+```
+
+> **Note**: OrbCharts fills its container by default (`size` defaults to `'auto'`). Make sure the `#chart` container has an explicit width and height, otherwise the chart may not be visible. See [Core Concepts](/docs/getting-started/core-concepts).
+
+## Related links
+
+- Back to [Data Formats Overview](/docs/data-formats/overview)
+- See the full parameters and more chart examples in [HierarchyPlot](/docs/plugins/hierarchy-plot)
+- For size and color settings, see [Core Concepts](/docs/getting-started/core-concepts)
+- For color and ColorType settings, see [Theme API](/docs/api/theme)

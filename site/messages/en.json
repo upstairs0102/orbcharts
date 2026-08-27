@@ -1,0 +1,148 @@
+{
+  "Nav": {
+    "home": "Home",
+    "demo": "Demo",
+    "playground": "Playground",
+    "docs": "Docs"
+  },
+  "Home": {
+    "title": "OrbCharts",
+    "subtitle": "Data-driven JavaScript chart library",
+    "description": "One data format for every chart. Data is decoupled from rendering — switch how the same data is visualized at any time.",
+    "Hero": {
+      "badge": "v4 Beta now available",
+      "subtitle": "Data-driven JavaScript chart library",
+      "description": "One data format for every chart. Data is decoupled from rendering — switch how the same data is visualized at any time. Built for dashboards.",
+      "ctaStart": "Get Started",
+      "ctaDemo": "View Demos"
+    },
+    "Features": {
+      "heading": "Why OrbCharts",
+      "f1Title": "One data format for every chart",
+      "f1Body": "In OrbCharts, every chart reads the same data format — a plain array of objects. You don't reshape your data one way for a bar chart and another way for a pie chart. Define your data once and declare field mappings with Encoding. The data layer stays clean and simple: what you maintain is the data itself, not a chart-specific format.",
+      "f2Title": "Data and rendering, decoupled",
+      "f2Body": "In OrbCharts, the visual presentation is a swappable layer. Show the same data as a bar chart today and switch to a line or pie chart tomorrow — only the chart declaration changes, while your data and fetching logic stay untouched. Visual decisions can be made later and changed at any time. Once the data is ready, the only question left is how you want to look at it.",
+      "f3Title": "Flexibility built for dashboards",
+      "f3Body": "Dashboard requirements never stop changing: try a different chart for this metric, add a trend line to that panel. OrbCharts' composable design lets layers be plugged in and toggled at runtime, and combined with a unified data format, the cost of adding or adjusting a chart is minimal. The data pipeline stays stable while the presentation evolves freely — exactly the developer experience dashboard products need."
+    },
+    "QuickDemo": {
+      "heading": "Same data, different views",
+      "description": "The chart below is rendered live by OrbCharts: the data never changes — only one line of declaration does.",
+      "dataTitle": "Data (unchanged)",
+      "codeTitle": "Code (one line changes)",
+      "viewPie": "Pie chart",
+      "viewRose": "Rose chart",
+      "viewBubble": "Bubble chart",
+      "chartAriaLabel": "OrbCharts interactive demo chart, currently showing {view}",
+      "tablistAriaLabel": "Switch chart presentation"
+    },
+    "Cta": {
+      "heading": "Ready to get started?",
+      "description": "Install the packages and draw your first chart in minutes.",
+      "copy": "Copy install command",
+      "copied": "Copied",
+      "ctaDocs": "View Docs"
+    }
+  },
+  "Demo": {
+    "title": "Demo",
+    "description": "Live previews of every chart example — click any card to open and edit it in the playground.",
+    "openInPlayground": "Open {title} in playground",
+    "Plugins": {
+      "GridPlot": "Axis-based charts of category × value: bar, line, area, stacked and more — switch freely on the same data.",
+      "PartitionPlot": "Proportional views of categorical data: pie, rose, bubble.",
+      "ScatterPlot": "Multivariate scatter rendering with X / Y / Z axes.",
+      "NetworkPlot": "Force-directed layout of nodes and relations, with drag interaction.",
+      "HierarchyPlot": "TreeMap for hierarchical data.",
+      "RacingPlot": "Animated ranking race over time.",
+      "RankedPlot": "Bubble matrix ranked by value.",
+      "CategoricalPlot": "Bubble distribution across category × series."
+    },
+    "Examples": {
+      "gridBar": "Bar Chart",
+      "gridLine": "Line Chart",
+      "gridArea": "Area Chart",
+      "gridStackedBar": "Stacked Bar",
+      "gridTriangleBar": "Triangle Bar",
+      "gridBarLine": "Bar + Line Combo",
+      "partitionPie": "Pie Chart",
+      "partitionRose": "Rose Chart",
+      "partitionBubble": "Bubble Chart",
+      "scatterPoint": "Scatter Plot",
+      "scatterBubble": "XY Bubble Chart",
+      "networkForce": "Force-Directed Graph",
+      "networkBubble": "Network Bubble",
+      "hierarchyTreeMap": "TreeMap",
+      "racingBar": "Racing Bar Chart",
+      "rankedBubble": "Ranked Bubble",
+      "categoricalBubble": "Categorical Bubble"
+    }
+  },
+  "Playground": {
+    "title": "Playground",
+    "description": "Try OrbCharts interactively: edit data and code, and see the chart update live.",
+    "selectExample": "Switch example",
+    "selectExampleTitle": "Select an example",
+    "reset": "Reset example",
+    "rerun": "Re-render",
+    "openPanel": "Open panel",
+    "panelTitle": "Panel",
+    "chartAreaLabel": "Live chart area",
+    "splitterLabel": "Resize panels",
+    "Tabs": {
+      "data": "Data",
+      "encoding": "Encoding",
+      "theme": "Theme",
+      "params": "Plugin Params",
+      "code": "Source Code",
+      "console": "Console",
+      "info": "Info"
+    },
+    "Data": {
+      "dataset": "Dataset {index}",
+      "addRow": "Add row",
+      "deleteRow": "Delete row {index}",
+      "rowCount": "{count} rows"
+    },
+    "Code": {
+      "run": "Run",
+      "hint": "After editing, press “Run” or “Re-render” above to rebuild the chart."
+    },
+    "Console": {
+      "empty": "No output yet. console.log calls will appear here.",
+      "latestOnly": "Shows the latest output in full — expand history for the rest",
+      "history": "History ({count})",
+      "clear": "Clear"
+    },
+    "Editor": {
+      "hint": "Edits apply to the chart immediately and sync to the code.",
+      "paramsHint": "Edits apply immediately and sync to the code (function-type params must be edited in Source Code)."
+    },
+    "Info": {
+      "example": "Example",
+      "plugin": "Plugin",
+      "dataFormat": "Data format",
+      "docs": "Related docs",
+      "pluginDocs": "{plugin} docs",
+      "dataFormatDocs": "{format} data format",
+      "minimalCode": "Minimal runnable code",
+      "minimalCodeHint": "Copy into your project and run (install the packages first)."
+    },
+    "runError": "Run error"
+  },
+  "Docs": {
+    "title": "Documentation",
+    "description": "Learn how to use OrbCharts."
+  },
+  "Footer": {
+    "copyright": "© 2025-present Blue Planet Inc. All rights reserved.",
+    "licensePrefix": "OrbCharts is released under the ",
+    "licenseSuffix": ".",
+    "tagline": "Data-driven JavaScript chart library"
+  },
+  "LocaleSwitcher": {
+    "label": "Language",
+    "en": "English",
+    "zh": "繁體中文"
+  }
+}

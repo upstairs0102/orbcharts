@@ -1,0 +1,72 @@
+---
+title: Layer 顯示控制
+description: 以「params 列出的 Layer = 顯示的 Layer」為核心,搭配 show/hide/showOnly/toggle 等方法在不同圖表型態間切換。
+nav:
+  group: 指南
+  order: 5
+related:
+  - /docs/api/plugin-api
+  - /docs/plugins/grid-plot
+---
+
+# Layer 顯示控制
+
+每個 Plugin 由多個 **Layer** 組成,每個 Layer 負責一種視覺元素(長條、折線、座標軸等)。核心規則只有一句:**你在參數中列出哪些 Layer 名稱,就會顯示那些 Layer。**
+
+```ts
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })   // 長條圖
+new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} })  // 折線圖
+```
+
+換掉列出的 Layer 名稱,就換了圖表型態。這是所有 Plugin 共通的行為,完整 API 見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 建立後動態切換
+
+建立 Plugin 後,可用以下方法在執行期控制顯示:
+
+```ts
+const plugin = new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+plugin.show('Line')                     // 額外顯示一個或多個 Layer
+plugin.hide('Bar')                      // 隱藏指定 Layer
+plugin.showOnly(['Line', 'CategoryAxis', 'ValueAxis'])  // 只顯示這些
+plugin.showAll()                        // 顯示全部
+plugin.hideAll()                        // 隱藏全部
+plugin.toggle('Point')                  // 切換顯示與否
+plugin.getShownLayerNames()             // 取得目前顯示的 Layer 名稱陣列
+```
+
+## 實例:在長條圖與折線圖之間切換
+
+把上述方法接到按鈕,就能讓使用者切換圖表型態。重點是用 `showOnly` 同時換掉資料 Layer、保留共用的座標軸:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const grid = new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [grid],
+})
+
+document.querySelector('#to-bar')!.addEventListener('click', () => {
+  grid.showOnly(['Bar', 'CategoryAxis', 'ValueAxis'])
+})
+
+document.querySelector('#to-line')!.addEventListener('click', () => {
+  grid.showOnly(['Line', 'CategoryAxis', 'ValueAxis'])
+})
+```
+
+> **提示**:`showOnly` 適合「切換主視覺、保留座標軸」的情境;若只是想額外疊加或移除某個 Layer(例如折線上的資料點 `Point`),用 `show` / `hide` / `toggle` 更直覺。
+
+> **注意**:Layer 名稱一律大寫開頭(`Bar`、`ValueAxis`);Plugin 層級參數(如 `styles`、`container`)為小寫開頭,**不算** Layer 名稱,不影響顯示哪些 Layer。
+
+## 相關連結
+
+- [Plugin 通用 API](/docs/api/plugin-api) — `show` / `hide` / `showOnly` / `toggle` 等方法的完整定義
+- [GridPlot](/docs/plugins/grid-plot) — 各 Layer 對應的圖表型態

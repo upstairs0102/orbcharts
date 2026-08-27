@@ -1,0 +1,258 @@
+---
+title: OrbCharts 類別
+description: OrbCharts 類別的建構式、選項，以及資料、Encoding、Plugin、Theme、尺寸與生命週期等所有方法。
+nav:
+  group: API 參考
+  order: 1
+related:
+  - /docs/api/encoding
+  - /docs/api/theme
+  - /docs/api/plugin-api
+---
+
+# OrbCharts 類別
+
+`OrbCharts` 是整個函式庫的進入點。你以一個 DOM 容器與選項物件建立實例,之後透過它的方法動態更新資料、Encoding、Plugin、Theme 與尺寸,並在不需要時釋放資源。
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+
+const chart = new OrbCharts(element, options)
+```
+
+## 建構式
+
+```ts
+new OrbCharts(element: HTMLElement | Element, options?: PartialChartOptions)
+```
+
+| 參數 | 型別 | 說明 |
+|---|---|---|
+| `element` | `HTMLElement \| Element` | 圖表的容器 DOM。必須有明確寬高,否則圖表不顯示。 |
+| `options` | `PartialChartOptions` | 選擇性的初始設定;未提供的欄位皆使用預設值。 |
+
+`PartialChartOptions` 的所有欄位皆為選用:
+
+```ts
+interface PartialChartOptions {
+  size?:     SizeConfig
+  theme?:    DeepPartial<Theme>
+  data?:     RawData
+  encoding?: DeepPartial<Encoding>
+  plugins?:  PluginEntity[]
+}
+```
+
+| 欄位 | 說明 | 對應方法 |
+|---|---|---|
+| `size` | 寬高與 resize 設定 | [`resize`](#resize) |
+| `theme` | 色彩、明暗模式、字級 | [Theme](/docs/api/theme) |
+| `data` | 原始資料 `RawData` | [`setData`](#setdata) |
+| `encoding` | 欄位對應、排序、聚合 | [Encoding](/docs/api/encoding) |
+| `plugins` | 要套用的 Plugin 陣列 | [`setPlugins`](#setplugins) |
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'Q1', value: 30 },
+  { series: 'A', category: 'Q2', value: 55 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  theme: { colorScheme: 'dark' },
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+> **提示**:`theme` 與 `encoding` 接受 `DeepPartial`,只需覆寫想改的欄位,其餘沿用預設(深層合併)。
+
+## 資料
+
+### `setData`
+
+```ts
+setData(data: RawData): void
+```
+
+完整取代圖表的原始資料並重新渲染。`RawData` 的結構與各維度格式請見 [資料格式總覽](/docs/data-formats/overview)。
+
+```ts
+chart.setData([
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+])
+```
+
+## Encoding
+
+Encoding 決定原始資料的欄位如何對應到圖表的維度(dataset、series、category、value 等),並可指定排序與聚合。完整欄位說明見 [Encoding](/docs/api/encoding)。
+
+### `updateEncoding`
+
+```ts
+updateEncoding(patch: DeepPartial<Encoding>): void
+```
+
+局部更新 Encoding,與目前值**深層合併**。適合只調整某一項設定。
+
+```ts
+// 只把 value 欄位改對應到 amount,其餘設定不變
+chart.updateEncoding({ value: { from: 'amount' } })
+```
+
+### `forceReplaceEncoding`
+
+```ts
+forceReplaceEncoding(full: Encoding): void
+```
+
+以完整的 `Encoding` 物件**整個取代**目前設定。未列出的欄位不會沿用舊值。
+
+### `getEncoding`
+
+```ts
+getEncoding(): Readonly<Encoding>
+```
+
+回傳目前生效的 Encoding(唯讀)。
+
+## Plugin
+
+Plugin 負責實際繪製圖表。各 Plugin 的共通操作見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+### `setPlugins`
+
+```ts
+setPlugins(plugins: PluginEntity[]): void
+```
+
+以新的陣列**取代**目前所有 Plugin。
+
+```ts
+import { GridPlot, Tooltip } from '@orbcharts/plugin-basic'
+
+chart.setPlugins([new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} }), new Tooltip()])
+```
+
+### `addPlugin`
+
+```ts
+addPlugin(plugin: PluginEntity): void
+```
+
+新增單一 Plugin,不影響其他已存在的 Plugin。
+
+```ts
+import { Legend } from '@orbcharts/plugin-basic'
+
+chart.addPlugin(new Legend())
+```
+
+### `removePlugin`
+
+```ts
+removePlugin(id: string): void
+```
+
+依 Plugin 的 `id` 移除指定 Plugin。
+
+```ts
+chart.removePlugin('Legend')
+```
+
+## Theme
+
+### `updateTheme`
+
+```ts
+updateTheme(patch: DeepPartial<Theme>): void
+```
+
+局部更新主題,與目前值深層合併。完整結構見 [Theme](/docs/api/theme)。
+
+```ts
+chart.updateTheme({ colorScheme: 'dark' })
+```
+
+### `forceReplaceTheme`
+
+```ts
+forceReplaceTheme(full: Theme): void
+```
+
+以完整的 `Theme` 物件整個取代目前主題。
+
+### `getTheme`
+
+```ts
+getTheme(): Readonly<Theme>
+```
+
+回傳目前生效的主題(唯讀)。
+
+## 尺寸
+
+### `resize`
+
+```ts
+resize(sizeConfig: SizeConfig): void
+```
+
+設定圖表尺寸與自動縮放行為。
+
+```ts
+interface SizeConfig {
+  width:  number | 'auto'
+  height: number | 'auto'
+  resizeDebounce: number
+}
+```
+
+| 欄位 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `width` | `number \| 'auto'` | `'auto'` | 寬度(像素);`'auto'` 表示填滿容器 |
+| `height` | `number \| 'auto'` | `'auto'` | 高度(像素);`'auto'` 表示填滿容器 |
+| `resizeDebounce` | `number` | `50` | 容器尺寸變動時,重新計算的 debounce 延遲(毫秒) |
+
+```ts
+// 固定寬度、高度自動,並縮短 debounce
+chart.resize({ width: 800, height: 'auto', resizeDebounce: 30 })
+```
+
+> **提示**:`'auto'` 會跟著容器大小變化,因此容器本身必須有明確的寬高;尺寸與容器機制是初學者最常踩到的坑。
+
+## 生命週期
+
+### `destroy`
+
+```ts
+destroy(): void
+```
+
+釋放所有資源、移除事件監聽,並一併清理底下的 Plugin。
+
+```ts
+chart.destroy()
+```
+
+> **提示**:在元件卸載時(React 的 `useEffect` cleanup、Vue 的 `onUnmounted`)務必呼叫 `chart.destroy()`,以避免記憶體洩漏與殘留的事件訂閱。
+
+## `context` 屬性
+
+```ts
+chart.context: ChartContext
+```
+
+`context` 提供圖表內部的 RxJS 串流(如 `event$`、`encoding$`、`theme$`)與根節點(`root`、`svg`、`canvas`),用於進階監聽與整合。事件相關用法見 [事件系統](/docs/api/events);完整串流清單見 [TypeScript 型別](/docs/api/typescript-types)。
+
+## 相關連結
+
+- [Encoding](/docs/api/encoding) — 欄位對應、排序與聚合
+- [Theme](/docs/api/theme) — 色彩與明暗模式
+- [Plugin 通用 API](/docs/api/plugin-api) — Plugin 的共通操作
+- [事件系統](/docs/api/events) — 監聽與觸發圖表事件
+- [TypeScript 型別](/docs/api/typescript-types) — 完整型別清單

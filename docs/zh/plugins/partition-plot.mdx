@@ -1,0 +1,248 @@
+---
+title: PartitionPlot
+description: PartitionPlot 是 series 資料格式的核心 Plugin，可繪製圓餅圖、玫瑰圖與泡泡圖。
+nav:
+  group: Plugins
+  order: 2
+charts:
+  - pie-chart
+  - rose-chart
+  - bubble-chart
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# PartitionPlot
+
+`PartitionPlot` 是處理 `series` 資料格式的核心 Plugin。它把每筆系列資料視為一份「占比」，可透過切換內部的 Layer 繪製圓餅圖、玫瑰圖與泡泡圖。
+
+**資料格式：** `series`
+
+## 支援的圖表
+
+PartitionPlot 透過不同的 Layer 組合呈現不同圖表：
+
+- [圓餅圖（Pie Chart）](#圓餅圖) — `Pie` Layer
+- [玫瑰圖（Rose Chart）](#玫瑰圖) — `Rose` Layer
+- [泡泡圖（Bubble Chart）](#泡泡圖) — `Bubble` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張泡泡圖。PartitionPlot 預設只顯示 `Bubble` 一個 Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { PartitionPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new PartitionPlot({ Bubble: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+這份 `series` 資料每筆包含 `series` 與 `value`：`value` 決定占比與大小，`series` 用於分組與上色。
+
+## Layer 顯示機制
+
+PartitionPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new PartitionPlot()`），預設只顯示 `Bubble`（即一張泡泡圖）。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+```ts
+new PartitionPlot({ Pie: {} })     // 圓餅圖
+new PartitionPlot({ Bubble: {} })  // 泡泡圖
+```
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 圖表範例
+
+以下範例皆使用相同的 `series` 資料，只需更換 Layer 即可切換圖表類型。
+
+### 圓餅圖
+
+```ts
+new PartitionPlot({ Pie: {} })
+```
+
+`Pie` 負責繪製扇形。可再加上 `PieLabel` 顯示標籤、`PieEventText` 在圓餅中央顯示文字。將 `Pie` 的 `innerRadius` 設為大於 `0` 即成為環圈（甜甜圈）圖。
+
+```ts
+new PartitionPlot({ Pie: { innerRadius: 0.5 }, PieLabel: {} })  // 環圈圖
+```
+
+### 玫瑰圖
+
+```ts
+new PartitionPlot({ Rose: {} })
+```
+
+`Rose` 以等角度、半徑隨數值變化的扇形呈現。可再加上 `RoseLabel` 顯示標籤。
+
+### 泡泡圖
+
+```ts
+new PartitionPlot({ Bubble: {} })
+```
+
+`Bubble` 以力導向（force）排列的圓形泡泡呈現，泡泡大小對應數值。此為 PartitionPlot 的預設圖表。
+
+> **提示**：可搭配 [Legend](/docs/plugins/legend) 與 [Tooltip](/docs/plugins/tooltip) 增加互動，加入方式與 [GridPlot](/docs/plugins/grid-plot) 相同。
+
+## Plugin 參數
+
+這些參數影響整個 PartitionPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `sort` | `((a, b) => number) \| null` | `null` | 資料排序函式；`null` 為不排序 |
+| `separateSeries` | `boolean` | `false` | 是否將各系列分開繪製 |
+| `separateName` | `boolean` | `false` | 是否依名稱分開繪製 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 20, 20, 60, 20 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `container` | `Container` | 單一圖表 | 多圖表佈局（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum: ModelDatumSeries) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`container`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 PartitionPlot 的預設值差異（`styles.padding` 預設為 `{ top: 20, right: 20, bottom: 60, left: 20 }`，`transitionDuration` 預設 `800`）。
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### Pie（圓餅）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.85` | 外半徑（相對於可用半徑的比例） |
+| `innerRadius` | `number` | `0` | 內半徑；大於 `0` 即為環圈圖 |
+| `outerRadiusWhileHighlight` | `number` | `0.9` | highlight 時的外半徑 |
+| `startAngle` | `number` | `0` | 起始角度（弧度） |
+| `endAngle` | `number` | `6.283185307179586` | 結束角度（弧度，預設 2π） |
+| `padAngle` | `number` | `0` | 扇形之間的間隙角度 |
+| `strokeColorType` | `ColorType` | `'background'` | 邊框色 |
+| `strokeWidth` | `number` | `1` | 邊框寬度 |
+| `cornerRadius` | `number` | `0` | 扇形圓角 |
+
+### Rose（玫瑰）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.95` | 外半徑（相對比例） |
+| `padAngle` | `number` | `0` | 扇形之間的間隙角度 |
+| `strokeColorType` | `ColorType` | `'background'` | 邊框色 |
+| `strokeWidth` | `number` | `0.5` | 邊框寬度 |
+| `cornerRadius` | `number` | `0` | 扇形圓角 |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | 數值映射方式（半徑或面積） |
+| `angleIncreaseWhileHighlight` | `number` | `0.05` | highlight 時的角度增量 |
+
+### Bubble（泡泡）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `force.strength` | `number` | `0.08` | 力導向的吸引強度 |
+| `force.velocityDecay` | `number` | `0.3` | 速度衰減 |
+| `force.collisionSpacing` | `number` | `2` | 泡泡碰撞間距 |
+| `bubbleLabel.labelFn` | `(datum) => string` | 顯示系列名稱 | 標籤文字函式 |
+| `bubbleLabel.colorType` | `ColorType` | `'dataContrast'` | 標籤文字顏色 |
+| `bubbleLabel.fillRate` | `number` | `0.6` | 標籤填充比例 |
+| `bubbleLabel.lineHeight` | `number` | `1` | 行高 |
+| `bubbleLabel.maxLineLength` | `number` | `6` | 單行最大字數 |
+| `bubbleLabel.wordBreakAll` | `boolean` | `true` | 是否允許任意斷行 |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | 數值映射方式（半徑或面積） |
+
+### PieLabel（圓餅標籤）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.85` | 標籤定位的外半徑 |
+| `outerRadiusWhileHighlight` | `number` | `0.9` | highlight 時的外半徑 |
+| `startAngle` | `number` | `0` | 起始角度（弧度） |
+| `endAngle` | `number` | `6.283185307179586` | 結束角度（弧度，預設 2π） |
+| `labelCentroid` | `number` | `2.1` | 標籤相對於扇形質心的位置 |
+| `labelFn` | `(datum) => string` | 顯示數值 | 標籤文字函式 |
+| `labelColorType` | `ColorType` | `'primary'` | 標籤文字顏色 |
+
+### RoseLabel（玫瑰標籤）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.95` | 標籤定位的外半徑 |
+| `labelCentroid` | `number` | `2.1` | 標籤相對於扇形質心的位置 |
+| `labelFn` | `(datum) => string` | 顯示數值 | 標籤文字函式 |
+| `labelColorType` | `ColorType` | `'primary'` | 標籤文字顏色 |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | 數值映射方式（半徑或面積） |
+
+### PieEventText（圓餅中央文字）
+
+在圓餅中央顯示文字，常用於環圈圖中央的合計或標題。
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `renderFn` | `(eventData) => string \| string[]` | — | 依事件資料回傳要顯示的文字 |
+| `textAttrs` | `Array<{ [key: string]: string \| number }>` | — | 各行文字的 SVG 屬性 |
+| `textStyles` | `Array<{ [key: string]: string \| number }>` | — | 各行文字的 CSS 樣式 |
+
+### Indicator（指針）
+
+以儀表般的指針呈現單一數值，常搭配環圈圖使用。
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `startAngle` | `number` | `-1.5707963267948966` | 起始角度（弧度，預設 -π/2） |
+| `endAngle` | `number` | `1.5707963267948966` | 結束角度（弧度，預設 π/2） |
+| `radius` | `number` | `0.6` | 指針半徑（相對比例） |
+| `indicatorType` | `string` | `'needle'` | 指針類型 |
+| `size` | `number` | `10` | 指針大小 |
+| `colorType` | `ColorType` | `'data'` | 指針顏色 |
+| `value` | `number` | `0` | 指針指向的數值 |
+
+## 完整 TypeScript 介面
+
+```ts
+interface PartitionPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumSeries) => boolean | null
+  container: Container
+  sort: ((a: ComputedDatumSeries, b: ComputedDatumSeries) => number) | null
+  separateSeries: boolean
+  separateName: boolean
+  datasetIndex: number
+}
+
+interface PartitionPlotAllLayerParams {
+  Bubble: PartitionPlotBubbleParams
+  Pie: PartitionPlotPieParams
+  PieEventText: PartitionPlotPieEventTextParams
+  PieLabel: PartitionPlotPieLabelParams
+  Rose: PartitionPlotRoseParams
+  RoseLabel: PartitionPlotRoseLabelParams
+  Indicator: PartitionPlotIndicatorParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new PartitionPlot(params?: DeepPartial<PartitionPlotPluginParams & PartitionPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

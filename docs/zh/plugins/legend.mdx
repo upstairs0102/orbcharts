@@ -1,0 +1,116 @@
+---
+title: Legend
+description: Legend 是工具型 Plugin，為任何圖表加入可互動的圖例，可點擊切換 series 的顯示。
+nav:
+  group: Plugins
+  order: 9
+related:
+  - /docs/plugins/grid-plot
+  - /docs/plugins/tooltip
+  - /docs/api/plugin-api
+---
+
+# Legend
+
+`Legend` 是一個工具型 Plugin，適用於**所有圖表**。它會自動讀取當前資料的 `series`，產生對應的圖例。圖例可點擊以切換各 series 的顯示，並透過事件通知其他 Plugin 一同更新。
+
+Legend 只有單一 Layer（同名的 `Legend`），預設即會顯示，因此通常 `new Legend()` 就能使用。
+
+## 用法
+
+Legend 與圖表 Plugin 一起放入 `plugins` 陣列即可。以下是 GridPlot 搭配 Legend 的完整範例：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Legend({ Legend: { placement: 'top' } }),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+不帶任何參數的 `new Legend()` 會以預設值（`placement: 'bottom'`）顯示圖例。
+
+```ts
+new Legend()                                   // 預設置於下方
+new Legend({ Legend: { placement: 'top' } })   // 置於上方
+```
+
+> **提示**：圖例會自動依當前資料的 `series` 產生項目；點擊某個項目可切換該 series 的顯示，並通知同一張圖中的其他 Plugin。
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## Plugin 參數
+
+這些參數影響整個 Legend 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `sort` | `((a, b) => number) \| null` | `null` | 圖例項目的排序函式；`null` 為不排序 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 60, 60, 60, 60 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum: ModelDatumSeries) => boolean \| null` | `() => true` | 過濾要顯示的 series（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`visibleFilter` 為所有 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 Legend 的預設值差異（`styles.padding` 預設為 `{ top: 60, right: 60, bottom: 60, left: 60 }`）。
+
+## Layer 參數
+
+Legend 只有一個 Layer，名稱同樣為 `Legend`：
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### Legend（圖例）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `placement` | 見下方 | `'bottom'` | 圖例位置 |
+| `padding` | `number` | `5` | 圖例容器內距 |
+| `backgroundFill` | `ColorType` | `'none'` | 背景填色 |
+| `backgroundStroke` | `ColorType` | `'none'` | 背景邊框色 |
+| `gap` | `number` | `10` | 各項目之間的間距 |
+| `listRectWidth` | `number` | `14` | 色塊寬度 |
+| `listRectHeight` | `number` | `14` | 色塊高度 |
+| `listRectRadius` | `number` | `0` | 色塊圓角 |
+| `textColorType` | `ColorType` | `'primary'` | 文字顏色 |
+
+`placement` 可選值：`'top'`、`'top-start'`、`'top-end'`、`'bottom'`、`'bottom-start'`、`'bottom-end'`、`'left'`、`'left-start'`、`'left-end'`、`'right'`、`'right-start'`、`'right-end'`。
+
+## 完整 TypeScript 介面
+
+```ts
+interface LegendPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumSeries) => boolean | null
+  sort: ((a, b) => number) | null
+  datasetIndex: number
+}
+
+interface LegendAllLayerParams {
+  Legend: LegendLayerParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new Legend(params?: DeepPartial<LegendPluginParams & LegendAllLayerParams>)
+```
+
+## 相關連結
+
+- [GridPlot](/docs/plugins/grid-plot) — 搭配 Legend 的圖表 Plugin
+- [Tooltip](/docs/plugins/tooltip) — 另一個工具型 Plugin
+- [Plugin 通用 API](/docs/api/plugin-api) — 共用參數與操作方式

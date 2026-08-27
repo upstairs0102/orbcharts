@@ -1,0 +1,123 @@
+---
+title: HierarchyPlot
+description: HierarchyPlot 是 tree 資料格式的核心 Plugin，以矩形樹狀圖（TreeMap）呈現具階層關係的數值。
+nav:
+  group: Plugins
+  order: 5
+charts:
+  - treemap
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# HierarchyPlot
+
+`HierarchyPlot` 是處理 `tree` 資料格式的核心 Plugin。它以矩形樹狀圖（TreeMap）將具階層關係的資料以巢狀矩形呈現，矩形面積對應數值大小。
+
+**資料格式：** `tree`
+
+## 支援的圖表
+
+- [矩形樹狀圖（TreeMap）](#矩形樹狀圖) — `TreeMap` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張矩形樹狀圖。HierarchyPlot 預設會顯示 `TreeMap` Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { HierarchyPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { id: 'Movies', name: 'Movies', value: null, series: '' },
+  { id: 'Movies.Action', name: 'Action', value: null, parent: 'Movies', series: '' },
+  { id: 'Movies.Action.Avatar', name: 'Avatar', value: 760505847, parent: 'Movies.Action', series: 'Action' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new HierarchyPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+`tree` 資料以 `parent` 欄位建立階層：每筆資料的 `parent` 指向其上層節點的 `id`，未指定 `parent` 者為根節點。葉節點的 `value` 決定矩形面積，中間節點的 `value` 可為 `null`（由子節點加總）。
+
+## 圖表範例
+
+### 矩形樹狀圖
+
+```ts
+new HierarchyPlot({ TreeMap: {} })
+```
+
+`TreeMap` 依階層將空間遞迴切分為巢狀矩形，矩形面積對應 `value`，適合在有限空間中比較大量具階層關係的數值。
+
+> **提示**：可搭配 [Legend](/docs/plugins/legend) 與 [Tooltip](/docs/plugins/tooltip) 增加互動，加入方式與 [GridPlot](/docs/plugins/grid-plot) 相同。
+
+## Layer 顯示機制
+
+HierarchyPlot 由 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。`TreeMap` 為其唯一且預設顯示的 Layer，因此 `new HierarchyPlot()` 即會顯示矩形樹狀圖。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## Plugin 參數
+
+這些參數影響整個 HierarchyPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 20, 20, 60, 20 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 HierarchyPlot 的預設值差異（`styles.padding` 預設為 `{ top: 20, right: 20, bottom: 60, left: 20 }`，`transitionDuration` 預設為 `800`）。
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### TreeMap（矩形樹狀圖）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `paddingInner` | `number` | `2` | 同層矩形之間的內距 |
+| `paddingOuter` | `number` | `2` | 父矩形與其子矩形之間的外距 |
+| `labelColorType` | `ColorType` | `'dataContrast'` | 矩形內標籤文字顏色 |
+| `squarifyRatio` | `number` | `1.618034` | 矩形長寬比偏好值（預設為黃金比例） |
+| `sort` | `(a, b) => number` | `(a, b) => b.value - a.value` | 同層節點的排序函式（預設依數值由大到小） |
+
+## 完整 TypeScript 介面
+
+```ts
+interface HierarchyPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumTree) => boolean | null
+  datasetIndex: number
+}
+
+interface HierarchyPlotAllLayerParams {
+  TreeMap: HierarchyPlotTreeMapParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new HierarchyPlot(params?: DeepPartial<HierarchyPlotPluginParams & HierarchyPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

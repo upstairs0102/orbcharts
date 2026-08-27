@@ -1,0 +1,139 @@
+---
+title: Series Format
+description: Series is the simplest data format in OrbCharts, ideal for pie, rose, and bubble charts that focus on "categorical values".
+nav:
+  group: Data Formats
+  order: 2
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/partition-plot
+---
+
+# Series Format
+
+`series` is the **simplest** data format in OrbCharts. It describes a set of "categorical values"—each record has a value and is grouped and colored by its `series` field.
+
+It suits charts that don't need X / Y axes, such as pie, rose, and bubble charts.
+
+## When to use
+
+- Showing "the proportion each part contributes to the whole" (pie chart)
+- Comparing "the magnitude of each group" (bubble chart)
+- Data that has no concept of a time or coordinate axis
+
+## Data structure
+
+The minimal series data only needs `series` and `value`:
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+```
+
+### Available fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `value` | `number \| null` | Yes | The value of this record |
+| `series` | `string` | No | Series name; used for grouping and coloring by default |
+| `category` | `string` | No | Category name (can act as a secondary grouping) |
+| `name` | `string` | No | Display name (e.g. the text shown in a Tooltip) |
+| `data` | `any` | No | Custom attached data, preserved as-is |
+
+> **Tip**: The default color source is `series` (`color: { from: 'series' }`). That is, records with the same `series` share the same color. You can switch to coloring by `category` or `index`.
+
+## Aggregation behavior
+
+`aggregate` defaults to `'none'`, so **each record is its own data point**, even when they share the same `series`.
+
+```ts
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'A', value: 50 },  // not automatically summed with the previous record
+  { series: 'B', value: 70 },
+]
+```
+
+The example above produces **3** data points. If you want to sum values within the same `series` into a single record, configure Encoding:
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { aggregate: 'sum' },  // sum within the same group
+  },
+})
+```
+
+Available `aggregate` values: `'sum'`, `'mean'`, `'median'`, `'min'`, `'max'`, `'count'`, `'none'`.
+
+## Model data (ModelDatumSeries)
+
+After OrbCharts processes RawData, each record is converted into a `ModelDatumSeries`. This is the structure you receive in events (such as click or Tooltip):
+
+```ts
+interface ModelDatumSeries {
+  id: string            // unique identifier
+  index: number         // index within the same category
+  modelType: 'series'
+  name: string          // from the original data's name
+  data: any             // from the original data's data
+  value: number | null  // the value after aggregation
+  color: string         // the mapped color (hex)
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+## Corresponding Plugins
+
+The `series` format works with the following Plugins:
+
+| Plugin | Charts |
+|---|---|
+| [PartitionPlot](/docs/plugins/partition-plot) | Pie, Rose, Bubble |
+| [CategoricalPlot](/docs/plugins/categorical-plot) | Categorical bubble |
+
+## Full example
+
+Below is a minimal pie chart using the `Pie` layer of `PartitionPlot`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { PartitionPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new PartitionPlot({ Pie: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// Remember to destroy the chart on unmount to release resources and listeners
+// chart.destroy()
+```
+
+> **Note**: OrbCharts fills its container by default (`size` defaults to `'auto'`). Make sure the `#chart` container has an explicit width and height, otherwise the chart may not be visible.
+
+## Next steps
+
+- Back to [Data Formats Overview](/docs/data-formats/overview)
+- See the full parameters and more chart examples in [PartitionPlot](/docs/plugins/partition-plot)

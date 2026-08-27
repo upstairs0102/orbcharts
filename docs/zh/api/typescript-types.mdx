@@ -1,0 +1,121 @@
+---
+title: TypeScript 型別
+description: OrbCharts 從 @orbcharts/core 匯出的主要型別,依用途分類並連結到相關說明頁。
+nav:
+  group: API 參考
+  order: 6
+related:
+  - /docs/api/orbcharts-class
+  - /docs/api/encoding
+  - /docs/api/events
+---
+
+# TypeScript 型別
+
+OrbCharts 以 TypeScript 撰寫,主要型別皆從 `@orbcharts/core` 匯出。本頁依用途分類列出,並連結到對應的詳細頁面。
+
+```ts
+import type { RawData, Encoding, EventData } from '@orbcharts/core'
+```
+
+## 資料輸入
+
+你提供給圖表的原始資料。完整格式說明見 [資料格式總覽](/docs/data-formats/overview)。
+
+```ts
+type RawData = RawDataColumn[] | RawDataColumn[][]
+```
+
+- `RawDataColumn[]` 為單一資料集;`RawDataColumn[][]` 為多資料集(二維)。
+
+`RawDataColumn` 的欄位:
+
+| 欄位 | 型別 | 說明 |
+|---|---|---|
+| `id` | `string` | 唯一識別碼 |
+| `name` | `string` | 顯示名稱 |
+| `source` | `string` | 來源節點(關係圖用) |
+| `target` | `string` | 目標節點(關係圖用) |
+| `parent` | `string` | 父節點(樹狀圖用) |
+| `data` | `any` | 附帶的自訂資料 |
+| `value` | `number \| null` | 數值 |
+| `x` / `y` / `z` | `number \| null` | 多變量座標值 |
+| `dataset` | — | 資料集分組(可經 [Encoding](/docs/api/encoding) 改名) |
+| `series` | — | 系列分組(可經 Encoding 改名) |
+| `category` | — | 類別分組(可經 Encoding 改名) |
+
+> **提示**:前六個欄位(`id`、`name`、`source`、`target`、`parent`、`data`)為固定欄位;`dataset`、`series`、`category` 等則可透過 [Encoding](/docs/api/encoding) 對應到其他欄位名。
+
+## 設定型別
+
+| 型別 | 說明 | 詳見 |
+|---|---|---|
+| `PartialChartOptions` | 建立圖表的選項(`size`、`theme`、`data`、`encoding`、`plugins`) | [OrbCharts 類別](/docs/api/orbcharts-class) |
+| `SizeConfig` | 尺寸與 resize 設定 | [OrbCharts 類別](/docs/api/orbcharts-class#尺寸) |
+| `Encoding` | 欄位對應、排序、聚合 | [Encoding](/docs/api/encoding) |
+| `Theme` | 色彩、明暗模式、字級 | [Theme](/docs/api/theme) |
+| `Colors` | 單一明暗模式下的色盤 | [Theme](/docs/api/theme) |
+| `ColorType` | Layer 參數中指向 Theme 色彩的型別 | [Theme](/docs/api/theme) |
+| `PluginEntity` | Plugin 實例的型別 | [Plugin 通用 API](/docs/api/plugin-api) |
+| `DeepPartial<T>` | 深層選用版型別,用於 `updateXxx` 的 patch | — |
+
+## 資料模型(Model)
+
+圖表內部把 `RawData` 轉換後的資料節點。`modelType` 標示資料屬於哪種模型:
+
+```ts
+type ModelType = 'series' | 'grid' | 'multivariate' | 'graph' | 'tree'
+```
+
+所有模型節點都以 `ModelDatumBase` 為基底:
+
+```ts
+interface ModelDatumBase {
+  id:        string
+  index:     number
+  modelType: ModelType
+  name:      string
+  data:      any
+  value:     number | null
+  color:     string
+}
+```
+
+各模型在 `ModelDatumBase` 之上增加欄位:
+
+| 型別 | 額外欄位 |
+|---|---|
+| `ModelDatumSeries` | `series`、`seriesIndex`、`category`、`categoryIndex` |
+| `ModelDatumGrid` | `series`、`seriesIndex`、`category`、`categoryIndex` |
+| `ModelDatumMultivariate` | 上述欄位 + `multivariate: Array<{ index, name, value }>` |
+| `ModelDatumGraphNode` | `series`、`seriesIndex`、`category`、`categoryIndex` |
+| `ModelDatumGraphEdge` | 上述欄位 + `source`、`sourceIndex`、`target`、`targetIndex` |
+| `ModelDatumTree` | `parent: string \| null`、`parentIndex: number \| null`、`depth`、`seq`、`children: ModelDatumTree[]`、`series`… |
+
+## 事件型別
+
+| 型別 | 說明 | 詳見 |
+|---|---|---|
+| `EventType` | 事件種類的字串聯集 | [事件系統](/docs/api/events) |
+| `EventData<T>` | 事件傳遞的資料物件 | [事件系統](/docs/api/events) |
+
+## ChartContext
+
+`chart.context` 的型別,集中了圖表的 RxJS 串流與根節點:
+
+| 類別 | 成員 |
+|---|---|
+| 資料串流 | `encoding$`、`seriesData$`、`gridData$`、`multivariateData$`、`graphData$`、`treeData$` |
+| 設定串流 | `plugins$`、`theme$`、`size$` |
+| 事件串流 | `event$`、`eventTrigger$` |
+| 根節點 | `root`、`svg`、`canvas` |
+
+串流皆為 RxJS `Observable` 或 `Subject`。事件相關用法見 [事件系統](/docs/api/events)。
+
+## 相關連結
+
+- [OrbCharts 類別](/docs/api/orbcharts-class) — `PartialChartOptions`、`SizeConfig`、`ChartContext`
+- [Encoding](/docs/api/encoding) — `Encoding` 與 `RawData` 欄位對應
+- [事件系統](/docs/api/events) — `EventType`、`EventData`
+- [Theme](/docs/api/theme) — `Theme`、`Colors`、`ColorType`
+- [資料格式總覽](/docs/data-formats/overview) — `RawData` 的完整格式

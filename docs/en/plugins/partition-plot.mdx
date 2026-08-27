@@ -1,0 +1,248 @@
+---
+title: PartitionPlot
+description: PartitionPlot is the core Plugin for the series data format, drawing pie, rose, and bubble charts.
+nav:
+  group: Plugins
+  order: 2
+charts:
+  - pie-chart
+  - rose-chart
+  - bubble-chart
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# PartitionPlot
+
+`PartitionPlot` is the core Plugin for the `series` data format. It treats each series record as a "proportion" and can draw pie, rose, and bubble charts by switching its internal Layers.
+
+**Data format:** `series`
+
+## Supported charts
+
+PartitionPlot renders different charts through different Layer combinations:
+
+- [Pie Chart](#pie-chart) — `Pie` Layer
+- [Rose Chart](#rose-chart) — `Rose` Layer
+- [Bubble Chart](#bubble-chart) — `Bubble` Layer
+
+## Quick start
+
+A minimal configuration draws a bubble chart. PartitionPlot shows only one Layer by default: `Bubble`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { PartitionPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new PartitionPlot({ Bubble: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+Each record in this `series` data has `series` and `value`: `value` determines the proportion and size, and `series` is used for grouping and coloring.
+
+## How layer visibility works
+
+PartitionPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new PartitionPlot()`), it shows only `Bubble` by default (a bubble chart). You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+```ts
+new PartitionPlot({ Pie: {} })     // pie chart
+new PartitionPlot({ Bubble: {} })  // bubble chart
+```
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Chart examples
+
+All examples below use the same `series` data—just swap the Layer to change the chart type.
+
+### Pie Chart
+
+```ts
+new PartitionPlot({ Pie: {} })
+```
+
+`Pie` draws the slices. Add `PieLabel` to show labels and `PieEventText` to display text in the center. Set `Pie`'s `innerRadius` greater than `0` to turn it into a donut chart.
+
+```ts
+new PartitionPlot({ Pie: { innerRadius: 0.5 }, PieLabel: {} })  // donut chart
+```
+
+### Rose Chart
+
+```ts
+new PartitionPlot({ Rose: {} })
+```
+
+`Rose` renders slices of equal angle whose radius varies with the value. Add `RoseLabel` to show labels.
+
+### Bubble Chart
+
+```ts
+new PartitionPlot({ Bubble: {} })
+```
+
+`Bubble` renders force-directed circular bubbles whose size corresponds to the value. This is PartitionPlot's default chart.
+
+> **Tip**: Pair with [Legend](/docs/plugins/legend) and [Tooltip](/docs/plugins/tooltip) for interactivity, added the same way as in [GridPlot](/docs/plugins/grid-plot).
+
+## Plugin parameters
+
+These parameters affect the whole PartitionPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `sort` | `((a, b) => number) \| null` | `null` | Data sort function; `null` means no sorting |
+| `separateSeries` | `boolean` | `false` | Whether to draw each series separately |
+| `separateName` | `boolean` | `false` | Whether to draw separately by name |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 20, 20, 60, 20 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `container` | `Container` | single chart | Multi-chart layout (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum: ModelDatumSeries) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles`, `container`, and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only PartitionPlot's default differences are noted here (`styles.padding` defaults to `{ top: 20, right: 20, bottom: 60, left: 20 }`, and `transitionDuration` defaults to `800`).
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### Pie
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.85` | Outer radius (ratio of the available radius) |
+| `innerRadius` | `number` | `0` | Inner radius; greater than `0` makes a donut chart |
+| `outerRadiusWhileHighlight` | `number` | `0.9` | Outer radius while highlighted |
+| `startAngle` | `number` | `0` | Start angle (radians) |
+| `endAngle` | `number` | `6.283185307179586` | End angle (radians, default 2π) |
+| `padAngle` | `number` | `0` | Gap angle between slices |
+| `strokeColorType` | `ColorType` | `'background'` | Stroke color |
+| `strokeWidth` | `number` | `1` | Stroke width |
+| `cornerRadius` | `number` | `0` | Slice corner radius |
+
+### Rose
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.95` | Outer radius (ratio) |
+| `padAngle` | `number` | `0` | Gap angle between slices |
+| `strokeColorType` | `ColorType` | `'background'` | Stroke color |
+| `strokeWidth` | `number` | `0.5` | Stroke width |
+| `cornerRadius` | `number` | `0` | Slice corner radius |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | How values map (radius or area) |
+| `angleIncreaseWhileHighlight` | `number` | `0.05` | Angle increment while highlighted |
+
+### Bubble
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `force.strength` | `number` | `0.08` | Force attraction strength |
+| `force.velocityDecay` | `number` | `0.3` | Velocity decay |
+| `force.collisionSpacing` | `number` | `2` | Bubble collision spacing |
+| `bubbleLabel.labelFn` | `(datum) => string` | shows the series name | Label text function |
+| `bubbleLabel.colorType` | `ColorType` | `'dataContrast'` | Label text color |
+| `bubbleLabel.fillRate` | `number` | `0.6` | Label fill rate |
+| `bubbleLabel.lineHeight` | `number` | `1` | Line height |
+| `bubbleLabel.maxLineLength` | `number` | `6` | Max characters per line |
+| `bubbleLabel.wordBreakAll` | `boolean` | `true` | Whether to allow breaking anywhere |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | How values map (radius or area) |
+
+### PieLabel
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.85` | Outer radius for label positioning |
+| `outerRadiusWhileHighlight` | `number` | `0.9` | Outer radius while highlighted |
+| `startAngle` | `number` | `0` | Start angle (radians) |
+| `endAngle` | `number` | `6.283185307179586` | End angle (radians, default 2π) |
+| `labelCentroid` | `number` | `2.1` | Label position relative to the slice centroid |
+| `labelFn` | `(datum) => string` | shows the value | Label text function |
+| `labelColorType` | `ColorType` | `'primary'` | Label text color |
+
+### RoseLabel
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `outerRadius` | `number` | `0.95` | Outer radius for label positioning |
+| `labelCentroid` | `number` | `2.1` | Label position relative to the slice centroid |
+| `labelFn` | `(datum) => string` | shows the value | Label text function |
+| `labelColorType` | `ColorType` | `'primary'` | Label text color |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | How values map (radius or area) |
+
+### PieEventText
+
+Displays text in the center of the pie, often used for a total or title in the center of a donut chart.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `renderFn` | `(eventData) => string \| string[]` | — | Returns the text to display based on event data |
+| `textAttrs` | `Array<{ [key: string]: string \| number }>` | — | SVG attributes for each line of text |
+| `textStyles` | `Array<{ [key: string]: string \| number }>` | — | CSS styles for each line of text |
+
+### Indicator
+
+Renders a single value as a gauge-like needle, often paired with a donut chart.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `startAngle` | `number` | `-1.5707963267948966` | Start angle (radians, default -π/2) |
+| `endAngle` | `number` | `1.5707963267948966` | End angle (radians, default π/2) |
+| `radius` | `number` | `0.6` | Needle radius (ratio) |
+| `indicatorType` | `string` | `'needle'` | Indicator type |
+| `size` | `number` | `10` | Indicator size |
+| `colorType` | `ColorType` | `'data'` | Indicator color |
+| `value` | `number` | `0` | The value the indicator points to |
+
+## Full TypeScript interface
+
+```ts
+interface PartitionPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumSeries) => boolean | null
+  container: Container
+  sort: ((a: ComputedDatumSeries, b: ComputedDatumSeries) => number) | null
+  separateSeries: boolean
+  separateName: boolean
+  datasetIndex: number
+}
+
+interface PartitionPlotAllLayerParams {
+  Bubble: PartitionPlotBubbleParams
+  Pie: PartitionPlotPieParams
+  PieEventText: PartitionPlotPieEventTextParams
+  PieLabel: PartitionPlotPieLabelParams
+  Rose: PartitionPlotRoseParams
+  RoseLabel: PartitionPlotRoseLabelParams
+  Indicator: PartitionPlotIndicatorParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new PartitionPlot(params?: DeepPartial<PartitionPlotPluginParams & PartitionPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

@@ -1,0 +1,308 @@
+---
+title: GridPlot
+description: GridPlot 是 grid 資料格式的核心 Plugin，可繪製長條圖、折線圖、區域圖、堆疊長條圖與三角長條圖。
+nav:
+  group: Plugins
+  order: 1
+charts:
+  - bar-chart
+  - line-chart
+  - area-chart
+  - stacked-bar
+  - triangle-bar
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# GridPlot
+
+`GridPlot` 是處理 `grid` 資料格式的核心 Plugin。它具備「類別軸」與「數值軸」，可透過切換內部的 Layer 繪製多種常見圖表。
+
+**資料格式：** `grid`
+
+## 支援的圖表
+
+GridPlot 透過不同的 Layer 組合呈現不同圖表：
+
+- [長條圖（Bar Chart）](#長條圖) — `Bar` Layer
+- [折線圖（Line Chart）](#折線圖) — `Line` Layer
+- [區域圖（Area Chart）](#區域圖) — `LineArea` Layer
+- [堆疊長條圖（Stacked Bar）](#堆疊長條圖) — `StackedBar` Layer
+- [三角長條圖（Triangle Bar）](#三角長條圖) — `TriangleBar` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張長條圖。GridPlot 預設會顯示 `Bar`、`CategoryAxis`、`ValueAxis` 三個 Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'A', category: 'category3', value: 45 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+  { series: 'B', category: 'category3', value: 90 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+這份 `grid` 資料每筆包含 `series`、`category`、`value`：`category` 對應到類別軸，`value` 對應到數值軸，`series` 用於分組與上色。
+
+## Layer 顯示機制
+
+GridPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new GridPlot()`），預設顯示 `Bar`、`CategoryAxis`、`ValueAxis`（即一張長條圖）。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+```ts
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })   // 長條圖
+new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} })  // 折線圖
+```
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 圖表範例
+
+以下範例皆使用相同的 `grid` 資料，只需更換 Layer 即可切換圖表類型。
+
+### 長條圖
+
+```ts
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+最基本的圖表。`Bar` 負責繪製長條，搭配類別軸與數值軸。
+
+### 折線圖
+
+```ts
+new GridPlot({ Line: {}, Point: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`Line` 繪製折線；可再加上 `Point` 顯示資料點的圓點。
+
+### 區域圖
+
+```ts
+new GridPlot({ LineArea: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`LineArea` 在折線下方填滿漸層區域，適合呈現量體或趨勢。
+
+### 堆疊長條圖
+
+```ts
+new GridPlot({ StackedBar: {}, CategoryAxis: {}, StackedValueAxis: {} })
+```
+
+`StackedBar` 會把同一類別中各系列的數值堆疊起來，並搭配 `StackedValueAxis` 顯示堆疊後的數值軸。
+
+### 三角長條圖
+
+```ts
+new GridPlot({ TriangleBar: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`TriangleBar` 以三角形漸層長條呈現，常用於漏斗或強調遞減的視覺效果。
+
+## Plugin 參數
+
+這些參數影響整個 GridPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `direction` | `'bottom-up' \| 'top-down' \| 'left-right' \| 'right-left'` | `'bottom-up'` | 圖表方向（軸的起點與延伸方向） |
+| `separateSeries` | `boolean` | `false` | 是否將各系列分開繪製 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `valueAxis` | `ValueAxis` | 見下表 | 數值軸設定 |
+| `categoryAxis` | `ReversibleCategoryAxis` | 見下表 | 類別軸設定 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 20, 60, 80, 60 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `container` | `Container` | 單一圖表 | 多圖表佈局（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`container`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 GridPlot 的預設值差異（`styles.padding` 預設為 `{ top: 20, right: 60, bottom: 80, left: 60 }`）。
+
+### `valueAxis`（ValueAxis）
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `scaleDomain` | `[number \| 'min' \| 'auto', number \| 'max' \| 'auto']` | `['auto', 'auto']` | 數值範圍 |
+| `scaleRange` | `[number, number]` | `[0, 0.9]` | 對應到繪圖區的比例範圍 |
+| `label` | `string` | `''` | 軸標籤 |
+
+### `categoryAxis`（ReversibleCategoryAxis）
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `reverse` | `boolean` | `false` | 是否反轉類別順序 |
+| `scaleDomain` | `[number, number \| 'max']` | `[0, 'max']` | 類別索引範圍 |
+| `scalePadding` | `number` | `0.5` | 類別間距 |
+| `label` | `string` | `''` | 軸標籤 |
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### Bar（長條）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `barWidth` | `number` | `0` | 長條寬度（像素）；`0` 為自動計算 |
+| `barPadding` | `number` | `1` | 長條之間的間距 |
+| `barGroupPadding` | `number` | `40` | 群組之間的間距 |
+| `barRadius` | `number \| boolean` | `false` | 圓角；`false` 為無圓角，或給數字指定半徑 |
+
+### Line（折線）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `lineCurve` | `string` | `'curveLinear'` | 曲線類型（D3 curve 名稱） |
+| `lineWidth` | `number` | `2` | 線寬 |
+
+### LineArea（區域）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `lineCurve` | `string` | `'curveLinear'` | 曲線類型（D3 curve 名稱） |
+| `linearGradientOpacity` | `[number, number]` | `[1, 0]` | 漸層透明度（起點到終點） |
+
+### Point（資料點）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `radius` | `number` | `4` | 圓點半徑 |
+| `fillColorType` | `ColorType` | `'background'` | 填色 |
+| `strokeColorType` | `ColorType` | `'data'` | 邊框色 |
+| `strokeWidth` | `number` | `2` | 邊框寬度 |
+| `onlyShowHighlighted` | `boolean` | `false` | 是否僅顯示被 highlight 的點 |
+
+### StackedBar（堆疊長條）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `barWidth` | `number` | `0` | 長條寬度（像素）；`0` 為自動計算 |
+| `barGroupPadding` | `number` | `10` | 群組之間的間距 |
+| `barRadius` | `number \| boolean` | `false` | 圓角 |
+
+### TriangleBar（三角長條）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `barWidth` | `number` | `0` | 長條寬度（像素）；`0` 為自動計算 |
+| `barPadding` | `number` | `1` | 長條之間的間距 |
+| `barGroupPadding` | `number` | `20` | 群組之間的間距 |
+| `linearGradientOpacity` | `[number, number]` | `[1, 0]` | 漸層透明度（起點到終點） |
+
+### CategoryAxis（類別軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `true` | 是否顯示軸線 |
+| `axisLineColorType` | `ColorType` | `'primary'` | 軸線顏色 |
+| `ticks` | `number \| null \| 'all'` | `'all'` | 刻度數量 |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `false` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextRotate` | `number` | `0` | 刻度文字旋轉角度 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+
+### ValueAxis（數值軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `false` | 是否顯示軸線 |
+| `ticks` | `number \| null` | `null` | 刻度數量（`null` 為自動） |
+| `tickFormat` | `string \| ((num) => string)` | 千分位格式化函式 | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `true` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+| `opposite` | `boolean` | `false` | 軸是否置於對側 |
+
+### StackedValueAxis（堆疊數值軸）
+
+參數與 [`ValueAxis`](#valueaxis數值軸) 相同，用於堆疊長條圖。
+
+### CategoryGuide（類別輔助線）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | 是否顯示輔助線 |
+| `showLabel` | `boolean` | `true` | 是否顯示標籤 |
+| `lineDashArray` | `string` | `'3, 3'` | 虛線樣式 |
+| `lineColorType` | `ColorType` | `'primary'` | 輔助線顏色 |
+| `labelColorType` | `ColorType` | `'primary'` | 標籤背景顏色 |
+| `labelTextColorType` | `ColorType` | `'background'` | 標籤文字顏色 |
+| `labelPadding` | `number` | `20` | 標籤內距 |
+| `labelRotate` | `number` | `0` | 標籤旋轉角度 |
+
+### CategoryZoom（類別縮放）
+
+啟用後可在類別軸方向進行縮放與平移。此 Layer 無額外參數：
+
+```ts
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {}, CategoryZoom: {} })
+```
+
+## 完整 TypeScript 介面
+
+```ts
+interface GridPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGrid) => boolean | null
+  container: Container
+  direction: 'bottom-up' | 'top-down' | 'left-right' | 'right-left'
+  valueAxis: ValueAxis
+  categoryAxis: ReversibleCategoryAxis
+  separateSeries: boolean
+  datasetIndex: number
+}
+
+interface GridPlotAllLayerParams {
+  Bar: GridPlotBarParams
+  Line: GridPlotLineParams
+  LineArea: GridPlotLineAreaParams
+  Point: GridPlotPointParams
+  StackedBar: GridPlotStackedBarParams
+  TriangleBar: GridPlotTriangleBarParams
+  CategoryAxis: GridPlotCategoryAxisParams
+  ValueAxis: GridPlotValueAxisParams
+  StackedValueAxis: GridPlotStackedValueAxisParams
+  CategoryGuide: GridPlotCategoryGuideParams
+  CategoryZoom: GridPlotCategoryZoomParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new GridPlot(params?: DeepPartial<GridPlotPluginParams & GridPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

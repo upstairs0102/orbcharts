@@ -1,0 +1,116 @@
+---
+title: Legend
+description: Legend is a utility Plugin that adds an interactive legend to any chart, with click-to-toggle series visibility.
+nav:
+  group: Plugins
+  order: 9
+related:
+  - /docs/plugins/grid-plot
+  - /docs/plugins/tooltip
+  - /docs/api/plugin-api
+---
+
+# Legend
+
+`Legend` is a utility Plugin that works with **all charts**. It automatically reads the `series` of the current data and generates the corresponding legend. Legend items are clickable to toggle each series' visibility, notifying other Plugins to update accordingly through events.
+
+Legend has a single Layer (also named `Legend`) that is shown by default, so `new Legend()` is usually all you need.
+
+## Usage
+
+Add Legend to the `plugins` array alongside your chart Plugin. Here is a complete example of GridPlot with Legend:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Legend({ Legend: { placement: 'top' } }),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+A bare `new Legend()` shows the legend with its defaults (`placement: 'bottom'`).
+
+```ts
+new Legend()                                   // placed at the bottom by default
+new Legend({ Legend: { placement: 'top' } })   // placed at the top
+```
+
+> **Tip**: The legend generates items automatically from the `series` of the current data; clicking an item toggles that series' visibility and notifies the other Plugins in the same chart.
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Plugin parameters
+
+These parameters affect the whole Legend's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `sort` | `((a, b) => number) \| null` | `null` | Sort function for legend items; `null` means no sorting |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 60, 60, 60, 60 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum: ModelDatumSeries) => boolean \| null` | `() => true` | Filter which series to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles` and `visibleFilter` are shared by all Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only Legend's default difference is noted here (`styles.padding` defaults to `{ top: 60, right: 60, bottom: 60, left: 60 }`).
+
+## Layer parameters
+
+Legend has a single Layer, also named `Legend`:
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### Legend
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `placement` | see below | `'bottom'` | Legend position |
+| `padding` | `number` | `5` | Legend container padding |
+| `backgroundFill` | `ColorType` | `'none'` | Background fill |
+| `backgroundStroke` | `ColorType` | `'none'` | Background stroke color |
+| `gap` | `number` | `10` | Spacing between items |
+| `listRectWidth` | `number` | `14` | Color swatch width |
+| `listRectHeight` | `number` | `14` | Color swatch height |
+| `listRectRadius` | `number` | `0` | Color swatch corner radius |
+| `textColorType` | `ColorType` | `'primary'` | Text color |
+
+`placement` options: `'top'`, `'top-start'`, `'top-end'`, `'bottom'`, `'bottom-start'`, `'bottom-end'`, `'left'`, `'left-start'`, `'left-end'`, `'right'`, `'right-start'`, `'right-end'`.
+
+## Full TypeScript interface
+
+```ts
+interface LegendPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumSeries) => boolean | null
+  sort: ((a, b) => number) | null
+  datasetIndex: number
+}
+
+interface LegendAllLayerParams {
+  Legend: LegendLayerParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new Legend(params?: DeepPartial<LegendPluginParams & LegendAllLayerParams>)
+```
+
+## Related
+
+- [GridPlot](/docs/plugins/grid-plot) — a chart Plugin to pair with Legend
+- [Tooltip](/docs/plugins/tooltip) — another utility Plugin
+- [Plugin API](/docs/api/plugin-api) — shared parameters and operations

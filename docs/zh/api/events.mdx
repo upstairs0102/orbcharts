@@ -1,0 +1,120 @@
+---
+title: 事件系統
+description: OrbCharts 的事件型別、EventData 結構,以及透過 ChartContext 監聽與觸發事件的方式。
+nav:
+  group: API 參考
+  order: 5
+related:
+  - /docs/api/orbcharts-class
+  - /docs/api/typescript-types
+---
+
+# 事件系統
+
+OrbCharts 的事件以 [RxJS](https://rxjs.dev/) 串流的形式提供,集中在 `chart.context` 上。你可以**監聽** `event$`(例如使用者點擊某筆資料),也可以從外部**觸發** `eventTrigger$`(例如以程式控制 highlight)。
+
+## EventType
+
+```ts
+type EventType =
+  | 'click'
+  | 'mouseover'
+  | 'mousemove'
+  | 'mouseout'
+  | 'dragstart'
+  | 'drag'
+  | 'dragend'
+  | 'zoom'
+  | 'transitionMove'
+  | 'transitionEnd'
+```
+
+| 事件 | 觸發時機 |
+|---|---|
+| `click` | 點擊資料元素 |
+| `mouseover` | 滑鼠移入資料元素 |
+| `mousemove` | 滑鼠在資料元素上移動 |
+| `mouseout` | 滑鼠移出資料元素 |
+| `dragstart` | 開始拖曳 |
+| `drag` | 拖曳進行中 |
+| `dragend` | 結束拖曳 |
+| `zoom` | 縮放(例如可縮放的圖表) |
+| `transitionMove` | 動畫進行中(每一影格) |
+| `transitionEnd` | 動畫結束 |
+
+## EventData
+
+每次事件都會傳遞一個 `EventData` 物件:
+
+```ts
+interface EventData<T = ModelType> {
+  eventName:  EventType
+  pluginName: string
+  layerName:  string
+  target:     RenderDatumBase<T> | null
+  data?:      any
+  tween?:     number   // 0–1 動畫進度
+  event?:     Event    // DOM 事件
+}
+```
+
+| 欄位 | 型別 | 說明 |
+|---|---|---|
+| `eventName` | `EventType` | 事件種類 |
+| `pluginName` | `string` | 觸發事件的 Plugin 名稱 |
+| `layerName` | `string` | 觸發事件的 Layer 名稱 |
+| `target` | `RenderDatumBase<T> \| null` | 事件對應的資料元素;無對應時為 `null` |
+| `data` | `any` | 附帶資料(視事件而定) |
+| `tween` | `number` | 動畫進度,範圍 0–1(僅 `transitionMove` 等動畫事件) |
+| `event` | `Event` | 原始 DOM 事件(若有) |
+
+`target` 為渲染後的資料節點,其欄位(如 `id`、`value`、`series`)依資料維度而異;完整型別見 [TypeScript 型別](/docs/api/typescript-types)。
+
+## 監聽事件
+
+`chart.context.event$` 是一個 RxJS `Observable`。訂閱它即可監聽所有事件:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+import type { EventData } from '@orbcharts/core'
+
+const chart = new OrbCharts(element, {
+  data,
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+
+const subscription = chart.context.event$.subscribe((e: EventData) => {
+  if (e.eventName === 'click' && e.target) {
+    console.log('點擊了:', e.target.id, e.target.value)
+  }
+})
+```
+
+> **提示**:`event$` 會送出**所有**事件,因此通常會用 `e.eventName` 過濾出你關心的事件種類。
+
+> **注意**:呼叫 `chart.destroy()` 會清理圖表內部的訂閱,但**不會**自動取消你在外部建立的 `subscribe`。請在元件卸載時自行 `subscription.unsubscribe()`,再呼叫 `chart.destroy()`,以避免記憶體洩漏。
+
+```ts
+// 元件卸載時
+subscription.unsubscribe()
+chart.destroy()
+```
+
+## 觸發事件
+
+`chart.context.eventTrigger$` 是一個 RxJS `Subject`,可從外部推入事件,例如以程式觸發 highlight 或與其他 UI 連動:
+
+```ts
+chart.context.eventTrigger$.next({
+  eventName: 'mouseover',
+  pluginName: 'GridPlot',
+  layerName: 'Bar',
+  target: someDatum,
+})
+```
+
+## 相關連結
+
+- [OrbCharts 類別](/docs/api/orbcharts-class) — `context` 屬性與 `destroy`
+- [TypeScript 型別](/docs/api/typescript-types) — `EventType`、`EventData` 與 `ChartContext` 串流

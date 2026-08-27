@@ -1,0 +1,155 @@
+---
+title: 自訂 Layer
+description: 使用 defineSVGLayer / defineCanvasLayer 建立 Layer，在所屬的 SVG g 元素上以 D3.js 繪製，並透過 layerParams$ 與 context 串接資料。
+nav:
+  group: 進階
+  order: 2
+related:
+  - /docs/advanced/custom-plugin
+  - /docs/advanced/architecture
+  - /docs/api/plugin-api
+---
+
+# 自訂 Layer
+
+**Layer** 是真正在畫面上繪製視覺元素的單位。每個 Layer 對應一個 SVG `<g>` 元素，負責一種視覺呈現（例如只畫長條、只畫折線、只畫座標軸）。內建 GridPlot 的 `Bar`、`Line`、`CategoryAxis` 都是用 `defineSVGLayer` 建立的 Layer。
+
+> **注意**：這是**進階 API**。Layer 通常隸屬於某個 Plugin（見 [自訂 Plugin](/docs/advanced/custom-plugin)），並依賴 Plugin 透過 ExtendContext 注入的 Observable。建議先閱讀 [架構總覽](/docs/advanced/architecture)。
+
+## `defineSVGLayer`
+
+```ts
+import { defineSVGLayer } from '@orbcharts/core'
+
+const MyLayer = defineSVGLayer<ExtendContext, PluginParams, LayerParams>(config)
+```
+
+`defineSVGLayer` 接受一個 `config` 物件，回傳一個 **Layer 類別**。在 Plugin 的 `config.layers` 中放入它的實例（`new MyLayer()`）即可。三個泛型參數：
+
+| 泛型 | 說明 |
+|---|---|
+| `ExtendContext` | 所屬 Plugin 注入 `context` 的額外 Observable 型別 |
+| `PluginParams` | 所屬 Plugin 層級參數的型別 |
+| `LayerParams` | **此 Layer 自己**的參數型別 |
+
+### config 欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `name` | `string` | 是 | Layer 名稱（大寫開頭，作為顯示時參照的名稱） |
+| `defaultParams` | `LayerParams` | 是 | 此 Layer 參數的預設值 |
+| `layerIndex` | `number` | 是 | 繪製/堆疊順序，數字越小越底層 |
+| `initShow` | `boolean` | 是 | 未明確指定時，是否預設顯示 |
+| `validator` | `(params) => ValidatorResult` | 否 | 驗證使用者傳入的 Layer 參數 |
+| `setup` | `(setupProps) => () => void` | 是 | 繪製/啟用邏輯，**回傳一個 cleanup 函式** |
+
+> **提示**：`layerIndex` 決定同一個 Plugin 內 Layer 的繪製先後（也就是 `<g>` 元素的排列順序），用於控制誰疊在上層。座標軸通常用較小的 index，圖形元素用較大的 index。
+
+### `setup`：繪製與啟用
+
+`setup` 是 Layer 的核心。當 Layer 被啟用（顯示）時呼叫，收到 `setupProps`：
+
+| 屬性 | 型別 | 說明 |
+|---|---|---|
+| `svgG` | `SVGGElement` | 此 Layer 專屬的 SVG `<g>` 元素，**所有繪製都在此元素內進行** |
+| `context` | `ChartContext<ExtendContext>` | 共享 context，含基礎與所屬 Plugin 注入的 Observable |
+| `pluginParams$` | `Observable<PluginParams>` | 所屬 Plugin 層級參數串流 |
+| `layerParams$` | `Observable<LayerParams>` | **此 Layer 自己**的參數串流（已合併預設值） |
+
+繪製方式：用 **D3.js** 選取 `svgG`（`d3.select(svgG)`），訂閱 `context` 上的資料 Observable（如 `computedData$`、`layout$`）與 `layerParams$`，在資料變動時以 data join 更新 SVG 元素。
+
+`setup` 必須回傳一個 **cleanup 函式**，會在 Layer 被隱藏、參數變更而重新繪製、或 `destroy()` 時呼叫，用來取消訂閱與清理。
+
+### 內建 Layer 的實作樣式
+
+以 GridPlot 的 `Bar` Layer 為例，其 `setup` 的典型結構是：以一個 `destroy$` Subject 搭配 `takeUntil` 統一取消訂閱，訂閱 `context.layout$` 設定 `<g>` 的位移，再把 `context` 上的各種運算結果與 `layerParams$` 交給繪製邏輯：
+
+```ts
+setup: ({ svgG, pluginParams$, layerParams$, context }) => {
+  const destroy$ = new Subject()
+
+  // 跟著 layout 變動移動整個 <g>
+  context.layout$
+    .pipe(takeUntil(destroy$))
+    .subscribe((layout) => {
+      d3.select(svgG)
+        .attr('transform', `translate(${layout.left}, ${layout.top})`)
+    })
+
+  // 訂閱 context 上的運算結果 + layerParams$ 進行繪製 ...
+
+  return () => {
+    destroy$.next(undefined)
+    // 其他清理
+  }
+}
+```
+
+## 最小範例
+
+一個只畫單一矩形、寬度跟著 `context.size$` 與自身 `layerParams$` 連動的 Layer：
+
+```ts
+import { defineSVGLayer } from '@orbcharts/core'
+import { combineLatest, Subject, takeUntil } from 'rxjs'
+import * as d3 from 'd3'
+
+interface MyLayerParams {
+  fillColor: string
+  height: number
+}
+
+const MyRect = defineSVGLayer<MyExtendContext, MyPluginParams, MyLayerParams>({
+  name: 'MyRect',
+  layerIndex: 0,
+  initShow: true,
+  defaultParams: {
+    fillColor: '#3b82f6',
+    height: 40,
+  },
+  setup: ({ svgG, context, layerParams$ }) => {
+    const destroy$ = new Subject()
+
+    combineLatest({
+      size: context.size$,
+      params: layerParams$,
+    })
+      .pipe(takeUntil(destroy$))
+      .subscribe(({ size, params }) => {
+        d3.select(svgG)
+          .selectAll('rect')
+          .data([params])
+          .join('rect')
+          .attr('width', size.width)
+          .attr('height', (d) => d.height)
+          .attr('fill', (d) => d.fillColor)
+      })
+
+    return () => {
+      destroy$.next(undefined)
+    }
+  },
+})
+```
+
+把 `new MyRect()` 放進 Plugin 的 `config.layers`，使用者就能透過參數顯示它並調整其 `fillColor`、`height`。
+
+> **提示**：Layer 不要持有自己的 DOM 容器或重複建立 `<g>`——`svgG` 由系統建立並注入，Layer 只需在其內繪製。每次參數變動，`setup` 會以新的串流重新執行（並先呼叫上一次的 cleanup），因此務必在 cleanup 中取消所有訂閱。
+
+## Canvas 版本
+
+若要以 Canvas 繪製，改用 `defineCanvasLayer`，config 欄位與 `defineSVGLayer` 相同；差別在於 `setup` 收到的是 `canvas`（`HTMLCanvasElement`）而非 `svgG`，需以 Canvas 2D context 繪製。
+
+```ts
+import { defineCanvasLayer } from '@orbcharts/core'
+
+const MyCanvasLayer = defineCanvasLayer<ExtendContext, PluginParams, LayerParams>(config)
+```
+
+> **注意**：Canvas Layer 需放進以 `defineCanvasPlugin` 建立的 Plugin 中。
+
+## 相關連結
+
+- [自訂 Plugin](/docs/advanced/custom-plugin) — 組合 Layer 並注入 ExtendContext
+- [架構總覽](/docs/advanced/architecture) — 資料流與 D3 渲染
+- [Plugin 通用 API](/docs/api/plugin-api) — Layer 顯示機制

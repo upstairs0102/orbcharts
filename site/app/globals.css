@@ -1,0 +1,238 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* shadcn/ui base — zinc */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.5rem;
+
+  /* Brand accent — OrbCharts blue（取自 OrbCharts 預設資料色 #0088FF，調暗以符合 AA 對比） */
+  --brand: oklch(0.55 0.19 252);
+  --brand-foreground: oklch(0.985 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+
+  /* OrbCharts blue（dark 資料色 #4BABFF），深色底上改用深色前景字 */
+  --brand: oklch(0.71 0.14 252);
+  --brand-foreground: oklch(0.145 0 0);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Font stacks — set in locale layout body class */
+  --font-sans: var(--font-inter), var(--font-noto-sans-tc), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/* 注意：必須放在 @layer base 內。未分層的樣式會優先於所有 @layer 規則，
+   若寫在外層會蓋掉 Tailwind 的 border 顏色 utilities（如 border-b-brand） */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+}
+
+/* ---- 文件內容（prose）樣式 ---- */
+
+/* prose 連結改用品牌強調色 indigo */
+.prose {
+  --tw-prose-links: var(--brand);
+  --tw-prose-invert-links: var(--brand);
+}
+.prose a {
+  font-weight: 500;
+  text-underline-offset: 2px;
+}
+
+/* 行內程式碼：底色膠囊樣式，並移除 Tailwind Typography 預設的反引號 */
+.prose :not(pre) > code {
+  background-color: var(--muted);
+  color: var(--foreground);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.prose :not(pre) > code::before,
+.prose :not(pre) > code::after {
+  content: none !important;
+}
+
+/* rehype-pretty-code 程式碼區塊（背景由 shiki 主題提供，這裡只設排版） */
+.prose figure[data-rehype-pretty-code-figure] {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+}
+.prose pre {
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  overflow-x: auto;
+  font-size: 0.85em;
+  line-height: 1.6;
+  border: 1px solid var(--border);
+}
+.prose pre code {
+  display: grid;          /* 讓每行 span 成為獨立的 grid row */
+  background: transparent;
+  padding: 0;
+  font-weight: inherit;
+  font-size: inherit;
+  counter-reset: line;
+}
+.prose pre code::before,
+.prose pre code::after {
+  content: none !important;
+}
+
+/* 程式碼區塊標題（rehype-pretty-code 的 title） */
+.prose [data-rehype-pretty-code-title] {
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8em;
+  font-family: var(--font-mono);
+}
+.prose [data-rehype-pretty-code-title] + pre {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* ---- 首頁（landing page）---- */
+
+/* 細格線背景：用於區隔 section 的低調紋理 */
+.home-grid-bg {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 48px 48px;
+  /* 邊緣淡出，避免格線生硬切斷 */
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 30%, transparent 100%);
+}
+
+/* Scroll reveal：預設僅在允許動態效果時啟用，否則直接顯示 */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity 0.6s ease-out,
+      transform 0.6s ease-out;
+  }
+  [data-reveal='visible'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Hero 背景軌道動畫 */
+  .animate-orbit-slow {
+    animation: home-orbit 90s linear infinite;
+  }
+  .animate-orbit-slower {
+    animation: home-orbit 150s linear infinite reverse;
+  }
+}
+
+@keyframes home-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 45° 傾斜橢圓軌道：rx=520 ry=340，每 45° 取一個精確點 */
+@keyframes home-orbit-ellipse-45 {
+  0%    { transform: translate( 367.7px,  367.7px); }
+  12.5% { transform: translate(  90.0px,  430.0px); }
+  25%   { transform: translate(-240.4px,  240.4px); }
+  37.5% { transform: translate(-430.0px,  -90.0px); }
+  50%   { transform: translate(-367.7px, -367.7px); }
+  62.5% { transform: translate( -90.0px, -430.0px); }
+  75%   { transform: translate( 240.4px, -240.4px); }
+  87.5% { transform: translate( 430.0px,   90.0px); }
+  100%  { transform: translate( 367.7px,  367.7px); }
+}
+
+/* 繞藍色泡泡（局部座標）的小圓軌道：半徑 40px，每 45° 取一個精確點 */
+@keyframes home-orbit-moon {
+  0%    { transform: translate( 40px,    0px);   }
+  12.5% { transform: translate( 28.3px,  28.3px); }
+  25%   { transform: translate(  0px,   40px);   }
+  37.5% { transform: translate(-28.3px,  28.3px); }
+  50%   { transform: translate(-40px,    0px);   }
+  62.5% { transform: translate(-28.3px, -28.3px); }
+  75%   { transform: translate(  0px,  -40px);   }
+  87.5% { transform: translate( 28.3px, -28.3px); }
+  100%  { transform: translate( 40px,    0px);   }
+}

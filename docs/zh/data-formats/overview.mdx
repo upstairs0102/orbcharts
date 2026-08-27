@@ -1,0 +1,139 @@
+---
+title: 資料格式概述
+description: 認識 OrbCharts 的核心設計——資料格式（ModelType），以及 RawData 如何透過 Encoding 轉換為圖表。
+nav:
+  group: 資料格式
+  order: 1
+related:
+  - /docs/data-formats/series
+  - /docs/getting-started/core-concepts
+---
+
+# 資料格式概述
+
+OrbCharts 是一個**資料驅動**的圖表函式庫。你不會直接「畫一張長條圖」，而是先**準備資料**，再選擇要套用的 Plugin。同一份資料格式可以對應多種視覺呈現。
+
+理解「資料格式」是使用 OrbCharts 的第一步。
+
+## 什麼是資料格式（ModelType）
+
+OrbCharts 把所有資料歸納成 **5 種資料格式**，稱為 `ModelType`。每一種格式對應一類資料結構，也決定了它能搭配哪些 Plugin。
+
+| 資料格式 | 資料特性 | 對應 Plugin |
+|---|---|---|
+| `series` | 單純的分類數值，無 X 軸概念 | PartitionPlot、CategoricalPlot |
+| `grid` | 具有「類別軸」與「數值軸」的二維資料 | GridPlot、RacingPlot、RankedPlot |
+| `multivariate` | 多維度數值（X / Y / Z…） | ScatterPlot |
+| `graph` | 節點（nodes）與連線（edges） | NetworkPlot |
+| `tree` | 父子層級關係 | HierarchyPlot |
+
+> **提示**：你不需要在程式中手動指定 ModelType。當你選擇某個 Plugin（例如 `GridPlot`），OrbCharts 會自動以對應的資料格式（`grid`）來解讀你的資料。
+
+## 資料流：從 RawData 到圖表
+
+OrbCharts 的資料處理是一條單向管線：
+
+```
+RawData（你提供的原始資料）
+   ↓ 透過 Encoding 對應欄位
+ModelData（標準化後的模型資料）
+   ↓ Plugin 計算座標 + Theme 上色
+SVG 圖表（畫面輸出）
+```
+
+你只需要負責**最上層的 RawData**，其餘轉換由 OrbCharts 完成。
+
+## RawData 的基本結構
+
+`RawData` 是一個物件陣列，每個物件代表一筆資料：
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+]
+```
+
+每一筆資料可使用以下欄位：
+
+| 欄位 | 型別 | 用途 |
+|---|---|---|
+| `value` | `number \| null` | 數值 |
+| `series` | `string` | 系列（常用於分組與上色） |
+| `category` | `string` | 類別（常用於軸標籤） |
+| `x` / `y` / `z` | `number \| null` | 多維度數值（multivariate 用） |
+| `dataset` | `string` | 資料集名稱 |
+| `id` | `string` | 唯一識別（graph / tree 必填） |
+| `name` | `string` | 顯示名稱 |
+| `source` / `target` | `string` | 連線的來源 / 目標節點（graph 用） |
+| `parent` | `string` | 父節點 id（tree 用） |
+| `data` | `any` | 自訂附加資料 |
+
+> **注意**：`id`、`name`、`source`、`target`、`parent`、`data` 為固定欄位名稱；而 `value`、`series`、`category`、`x`、`y`、`z`、`dataset` 的欄位名稱**可透過 Encoding 自訂**（見下節）。
+
+### 單一資料集與多資料集
+
+`RawData` 可以是一維或二維陣列：
+
+```ts
+// 一維：單一資料集
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+]
+
+// 二維：多個資料集（外層每個陣列是一個 dataset）
+const data: RawData = [
+  [{ series: 'A', value: 30 }, { series: 'B', value: 70 }],
+  [{ series: 'A', value: 40 }, { series: 'B', value: 60 }],
+]
+```
+
+多資料集常用於需要「多個時間點 / 多份資料切換」的情境，例如競速圖（RacingPlot）。
+
+## Encoding：欄位對應
+
+`Encoding` 決定 OrbCharts 要用 RawData 的「哪個欄位」來解讀「哪個資料維度」。預設情況下，欄位名稱與資料維度同名，因此**多數情況你不需要設定 Encoding**。
+
+以下是預設值：
+
+```ts
+const defaultEncoding = {
+  dataset:  { from: 'dataset',  sort: 'original' },
+  series:   { from: 'series',   sort: 'original' },
+  category: { from: 'category', sort: 'original' },
+  value:    { from: 'value',    sort: 'original', aggregate: 'none' },
+  multivariate: [
+    { from: 'x', name: 'x' },
+    { from: 'y', name: 'y' },
+    { from: 'z', name: 'z' },
+  ],
+  color: { from: 'series' },
+}
+```
+
+如果你的資料欄位名稱不同（例如用 `amount` 而非 `value`），可以透過 Encoding 對應：
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { from: 'amount' },   // 改用 amount 欄位作為數值
+  },
+})
+```
+
+> **提示**：`aggregate` 預設為 `'none'`，代表**每一筆 RawData 都會獨立成為一個資料點**，不會自動加總。若要把相同分組的數值加總，可設定 `value: { aggregate: 'sum' }`。
+
+## 接下來
+
+每一種資料格式都有獨立的說明頁，包含完整欄位、範例與對應 Plugin：
+
+- [Series 格式](/docs/data-formats/series) — 最簡單的分類數值
+- [Grid 格式](/docs/data-formats/grid) — 類別軸 × 數值軸
+- [Multivariate 格式](/docs/data-formats/multivariate) — 多維數值
+- [Graph 格式](/docs/data-formats/graph) — 節點與連線
+- [Tree 格式](/docs/data-formats/tree) — 層級結構

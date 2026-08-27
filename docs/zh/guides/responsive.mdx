@@ -1,0 +1,81 @@
+---
+title: 響應式尺寸
+description: OrbCharts 預設自動填滿容器並在視窗縮放時重繪——如何設定 RWD 容器,以及如何手動指定尺寸。
+nav:
+  group: 指南
+  order: 2
+related:
+  - /docs/getting-started/core-concepts
+  - /docs/api/orbcharts-class
+---
+
+# 響應式尺寸
+
+OrbCharts 預設就是響應式的。圖表會**自動填滿它所在的容器**,並在視窗縮放時自動重繪,讓你不必手動計算尺寸。
+
+## size 預設值
+
+每張圖表的尺寸由 `size` 選項決定,預設為:
+
+```ts
+{
+  width: 'auto',          // 自動填滿容器寬度
+  height: 'auto',         // 自動填滿容器高度
+  resizeDebounce: 50,     // 視窗縮放後延遲重繪的毫秒數
+}
+```
+
+`width` 與 `height` 為 `'auto'` 時,圖表會以**容器 DOM 的實際寬高**為準。視窗縮放時會自動偵測並重繪,並以 `resizeDebounce`(預設 50ms)做防抖,避免拖曳過程中過度重繪。
+
+> **注意**:因為 `'auto'` 取的是容器尺寸,**容器 DOM 必須有明確的寬高**,否則圖表會塌成 0 高度而看不見。寬高請用 CSS 設定。
+
+## RWD 容器範例
+
+最常見的做法是讓容器寬度撐滿、固定一個高度:
+
+```html
+<div id="chart" class="chart-box"></div>
+```
+
+```css
+.chart-box {
+  width: 100%;
+  height: 400px;
+}
+```
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+容器寬度 `100%` 會隨父層變化,圖表也會跟著重繪;高度固定為 `400px`。你也可以改用 `aspect-ratio`、`vh` 或 Grid/Flex 佈局,只要容器最終有可量測的寬高即可。
+
+## 手動指定尺寸
+
+若不想跟著容器,可在建立時帶入固定尺寸,或之後呼叫 `chart.resize()`:
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  size: { width: 800, height: 400 },
+  plugins: [/* ... */],
+})
+
+// 之後動態調整
+chart.resize({ width: 1000, height: 500, resizeDebounce: 100 })
+```
+
+`resize()` 的三個欄位皆為選填,只帶想改的即可。
+
+> **提示**:即使使用 `'auto'`,在容器尺寸因 JS(而非視窗縮放)改變時——例如展開側邊欄——也可以主動呼叫 `chart.resize()` 觸發一次重繪。
+
+## 相關連結
+
+- [核心概念](/docs/getting-started/core-concepts) — 容器與圖表的關係
+- [OrbCharts 類別](/docs/api/orbcharts-class) — `resize` 與 `size` 選項

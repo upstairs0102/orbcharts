@@ -1,0 +1,120 @@
+---
+title: Tooltip
+description: Tooltip is a utility Plugin that adds a hover tooltip to any chart, with customizable content via renderFn.
+nav:
+  group: Plugins
+  order: 10
+related:
+  - /docs/plugins/grid-plot
+  - /docs/plugins/legend
+  - /docs/api/plugin-api
+---
+
+# Tooltip
+
+`Tooltip` is a utility Plugin that works with **all charts**. It automatically listens to `mouseover`, `mousemove`, and `mouseout` events on the graphics, showing a tooltip near the cursor and rendering its content automatically based on the data type.
+
+Tooltip has a single Layer (also named `Tooltip`) that is shown by default, so `new Tooltip()` is usually all you need.
+
+## Usage
+
+Add Tooltip to the `plugins` array alongside your chart Plugin. Here is a complete example of GridPlot with Tooltip:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Tooltip } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+A bare `new Tooltip()` works out of the box and shows the tooltip automatically when you hover over data.
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Customizing tooltip content (renderFn)
+
+`renderFn` lets you fully customize the tooltip content. It receives the current `eventData` and a set of helpers (`styles`, `utils`, etc.) and returns the content to display; if omitted, Tooltip renders automatically based on the data type.
+
+```ts
+new Tooltip({
+  Tooltip: {
+    renderFn: (eventData, { styles, utils }) => {
+      // Return custom tooltip content (e.g. an SVG string or HTML)
+      return `${eventData.datum.series}: ${eventData.datum.value}`
+    },
+  },
+})
+```
+
+## Plugin parameters
+
+These parameters affect the whole Tooltip's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `sort` | `((a, b) => number) \| null` | `null` | Sort function when there are multiple data points; `null` means no sorting |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | see [Plugin API](/docs/api/plugin-api) | Shared visual styles |
+| `visibleFilter` | `VisibleFilter<'series'>` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles` and `visibleFilter` are shared by all Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api).
+
+## Layer parameters
+
+Tooltip has a single Layer, also named `Tooltip`:
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### Tooltip
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `backgroundColorType` | `ColorType` | `'background'` | Tooltip background color |
+| `strokeColorType` | `ColorType` | `'primary'` | Tooltip border color |
+| `backgroundOpacity` | `number` | `0.8` | Background opacity |
+| `textColorType` | `ColorType` | `'primary'` | Text color |
+| `offset` | `[number, number]` | `[20, 5]` | x, y offset from the cursor (px) |
+| `padding` | `number` | `10` | Tooltip padding |
+| `renderFn` | `(eventData, { styles, utils, ... }) => content` | auto-render by data type | Function to customize tooltip content |
+
+## Full TypeScript interface
+
+```ts
+interface TooltipPluginParams {
+  styles: GraphicStyles
+  visibleFilter: VisibleFilter<'series'>
+  sort: ((a, b) => number) | null
+  datasetIndex: number
+}
+
+interface TooltipAllLayerParams {
+  Tooltip: TooltipLayerParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new Tooltip(params?: DeepPartial<TooltipPluginParams & TooltipAllLayerParams>)
+```
+
+## Related
+
+- [GridPlot](/docs/plugins/grid-plot) — a chart Plugin to pair with Tooltip
+- [Legend](/docs/plugins/legend) — another utility Plugin
+- [Plugin API](/docs/api/plugin-api) — shared parameters and operations

@@ -1,12 +1,12 @@
 # OrbCharts
 
-![logo - light mode](https://orbcharts.blueplanet.com.tw/images/logo_light_temp2.png)
+![logo - light mode](https://bpbase.github.io/orbcharts/images/logo_light_temp2.png)
 
 OrbCharts is a **data-driven JavaScript chart library**. One data format for every chart — data is decoupled from rendering, so you can switch how the same data is visualized at any time. Built for dashboards.
 
-[Official Website](https://orbcharts.blueplanet.com.tw) | [Documentation](https://orbcharts.blueplanet.com.tw/docs)
+[Official Website](https://bpbase.github.io/orbcharts) | [Documentation](https://bpbase.github.io/orbcharts/docs)
 
-> **Note:** `4.0.0-beta.0` is a major redesign of OrbCharts. The API differs significantly from v3.x — see the [migration guide](https://orbcharts.blueplanet.com.tw/docs/advanced/migration-from-v3) if you are upgrading.
+> **Note:** `4.0.0-beta.0` is a major redesign of OrbCharts. The API differs significantly from v3.x — see the [migration guide](https://bpbase.github.io/orbcharts/docs/advanced/migration-from-v3) if you are upgrading.
 
 ## Features
 

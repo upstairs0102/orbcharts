@@ -1,0 +1,142 @@
+---
+title: Plugin API
+description: Operations common to all Plugins—layer visibility control, parameter updates, lifecycle, and shared parameter types.
+nav:
+  group: API Reference
+  order: 2
+related:
+  - /docs/api/theme
+  - /docs/plugins/grid-plot
+---
+
+# Plugin API
+
+Every OrbCharts Plugin (such as `GridPlot` or `PartitionPlot`) shares the same set of operations and common parameter types. This page covers those shared concepts; each Plugin page only describes what is **specific** to it.
+
+## How layer visibility works
+
+Each Plugin is composed of multiple **Layers**, where each Layer renders one visual element (e.g. bars, lines, axes). **The Layer names you list in the params are the Layers that get shown.**
+
+```ts
+// Show Bar + the two axes
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+// List Line instead → a line chart
+new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+The rules:
+
+1. The **Layer names** in the params object (capitalized, e.g. `Bar`, `Line`, `Pie`) determine which Layers are shown.
+2. If you specify **no Layers at all** (e.g. `new GridPlot()`), the Plugin's **system default Layers** are shown (each Plugin page states its defaults).
+3. Plugin-level params (such as `direction`, `styles`, `container`) are **not** Layer names and don't affect which Layers are shown.
+
+> **Tip**: Layer names are always capitalized (`Bar`, `ValueAxis`); Plugin-level params are lowercase (`valueAxis`, `categoryAxis`). Both can appear in the same params object.
+
+### Switching Layers dynamically
+
+After creating a Plugin, you can control visibility at runtime:
+
+```ts
+const plugin = new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+plugin.show('Line')                 // additionally show one or more Layers
+plugin.hide('Bar')                  // hide specified Layers
+plugin.showOnly(['Line', 'ValueAxis'])  // show only these Layers
+plugin.showAll()                    // show all Layers
+plugin.hideAll()                    // hide all Layers
+plugin.toggle('Point')              // toggle on/off
+plugin.getShownLayerNames()         // get the array of currently shown Layer names
+```
+
+| Method | Argument | Description |
+|---|---|---|
+| `show(names)` | `string \| string[]` | Additionally show the given Layers |
+| `hide(names)` | `string \| string[]` | Hide the given Layers |
+| `showOnly(names)` | `string \| string[]` | Show only the given Layers, hide the rest |
+| `showAll()` | — | Show all Layers |
+| `hideAll()` | — | Hide all Layers |
+| `toggle(names)` | `string \| string[]` | Toggle the visibility of the given Layers |
+| `getShownLayerNames()` | — | Return the currently shown Layer names |
+
+## Updating parameters
+
+```ts
+// Partial update (deep-merged with existing params)
+plugin.updateParams({ Bar: { barWidth: 20 } })
+
+// Fully replace a Layer's params
+plugin.forceReplaceParams({ Bar: { barWidth: 20, barPadding: 2, barGroupPadding: 10, barRadius: 4 } })
+
+// Get current params
+const params = plugin.getParams()
+```
+
+| Method | Description |
+|---|---|
+| `updateParams(patch)` | Partially update params, deep-merged with current values |
+| `forceReplaceParams(full)` | Fully replace params |
+| `getParams()` | Get all current params (read-only) |
+
+## Lifecycle
+
+```ts
+plugin.destroy()  // release resources, remove event listeners
+```
+
+> **Tip**: On component unmount (e.g. React's `useEffect` cleanup, Vue's `onUnmounted`), calling `chart.destroy()` cleans up its Plugins as well.
+
+## Shared parameter types
+
+The following parameter types appear in most chart Plugins. Each Plugin may have **different default values**, but the structure is the same.
+
+### `styles` (GraphicStyles)
+
+Controls padding, highlight behavior, and animation—the shared visual styles across all chart Plugins.
+
+| Property | Type | Description |
+|---|---|---|
+| `padding` | `{ top, right, bottom, left }` | Plotting-area padding (px) |
+| `highlightTarget` | `'datum' \| 'series' \| 'category' \| 'none'` | The unit that triggers highlight |
+| `highlightDefault` | `string \| null` | The default highlighted target id |
+| `unhighlightedOpacity` | `number` | Opacity of non-highlighted items |
+| `transitionDuration` | `number` | Animation duration (ms) |
+| `transitionEase` | `string` | Animation easing (D3 ease name, e.g. `'easeCubic'`) |
+
+> **Note**: The defaults for `padding` and `transitionDuration` **vary by Plugin** (e.g. ScatterPlot uses a shorter animation). Refer to the defaults stated on each Plugin's page.
+
+### `container` (Container)
+
+Controls multi-chart layout (arranging several charts of the same type in a grid within one chart).
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `columnAmount` | `number` | `1` | Number of columns |
+| `rowAmount` | `number` | `1` | Number of rows |
+| `columnGap` | `number \| 'auto'` | `'auto'` | Column gap |
+| `rowGap` | `number \| 'auto'` | `'auto'` | Row gap |
+
+### `visibleFilter`
+
+Filters which data to show; data points that return `false` are not drawn.
+
+```ts
+new GridPlot({
+  visibleFilter: (datum) => datum.value !== null && datum.value > 0,
+})
+```
+
+Defaults to `(datum) => true` (show everything).
+
+### `datasetIndex`
+
+When the data is multi-dataset (2D `RawData`), specifies which dataset to use. Defaults to `0`.
+
+## Color settings
+
+Many Layer parameters use `ColorType` to specify colors (e.g. `'data'`, `'primary'`). See [Theme](/docs/api/theme) for the full explanation.
+
+## Related
+
+- [Theme](/docs/api/theme) — themes and `ColorType`
+- [GridPlot](/docs/plugins/grid-plot) — a complete example using GridPlot

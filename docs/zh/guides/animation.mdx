@@ -1,0 +1,64 @@
+---
+title: 動畫
+description: 用 styles.transitionDuration 與 styles.transitionEase 控制圖表的過場動畫,各 Plugin 預設值不同。
+nav:
+  group: 指南
+  order: 3
+related:
+  - /docs/api/plugin-api
+  - /docs/plugins/grid-plot
+---
+
+# 動畫
+
+OrbCharts 在資料或參數變動時會以過場動畫平滑切換。動畫由每個圖表 Plugin 的 `styles` 中兩個欄位控制:
+
+- `transitionDuration`:動畫時間(毫秒)。
+- `transitionEase`:緩動函式(D3 ease 名稱,如 `'easeCubic'`、`'easeLinear'`)。
+
+`styles` 是所有圖表 Plugin 共用的視覺樣式,完整結構見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 各 Plugin 的預設值不同
+
+不同圖表的節奏需求不同,因此預設值因 Plugin 而異,例如:
+
+| Plugin | `transitionDuration` | `transitionEase` |
+|---|---|---|
+| GridPlot | `800` | `'easeCubic'` |
+| ScatterPlot | `100` | `'easeCubic'` |
+| RacingPlot | `500` | `'easeLinear'` |
+
+> **注意**:上表為示意。實際預設值請以各 Plugin 頁面標示為準。RacingPlot 採用 `'easeLinear'`,讓連續的名次動畫保持等速、不忽快忽慢。
+
+## 調整動畫
+
+`styles` 與 Layer 名稱並列在同一個參數物件中。建立時帶入,或之後用 `updateParams` 局部更新:
+
+```ts
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+// 建立時設定
+const plugin = new GridPlot({
+  Bar: {},
+  CategoryAxis: {},
+  ValueAxis: {},
+  styles: {
+    transitionDuration: 1200,
+    transitionEase: 'easeCubicInOut',
+  },
+})
+
+// 建立後動態調整(深層合併,只改 styles)
+plugin.updateParams({
+  styles: { transitionDuration: 400 },
+})
+```
+
+`updateParams` 會與現有參數深層合併,因此只需提供想改的欄位,其餘(包含各 Layer 設定)維持不變。
+
+> **提示**:把 `transitionDuration` 設為 `0` 可關閉動畫,適合需要即時反應、不要過場效果的情境。
+
+## 相關連結
+
+- [Plugin 通用 API](/docs/api/plugin-api) — `styles`(GraphicStyles)結構與 `updateParams`
+- [GridPlot](/docs/plugins/grid-plot) — Plugin 參數與 `styles` 預設值

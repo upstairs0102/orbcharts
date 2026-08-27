@@ -1,0 +1,142 @@
+---
+title: Plugin 通用 API
+description: 所有 Plugin 共通的操作方式——Layer 顯示控制、參數更新、生命週期，以及共用的參數型別。
+nav:
+  group: API 參考
+  order: 2
+related:
+  - /docs/api/theme
+  - /docs/plugins/grid-plot
+---
+
+# Plugin 通用 API
+
+OrbCharts 的每個 Plugin（如 `GridPlot`、`PartitionPlot`）都共用同一套操作方式與共用參數型別。本頁集中說明這些通用概念，各 Plugin 頁面只會描述自己**專屬**的部分。
+
+## Layer 顯示機制
+
+每個 Plugin 由多個 **Layer** 組成，每個 Layer 負責一種視覺元素（例如長條、折線、座標軸）。**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer。**
+
+```ts
+// 顯示 Bar + 兩個座標軸
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+// 改列出 Line → 變成折線圖
+new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+規則如下：
+
+1. 參數物件中的 **Layer 名稱**（大寫開頭，如 `Bar`、`Line`、`Pie`）決定要顯示哪些 Layer。
+2. 若**完全不指定任何 Layer**（例如 `new GridPlot()`），則顯示該 Plugin 的**系統預設 Layer**（每個 Plugin 頁面會標明預設顯示哪些）。
+3. Plugin 層級的參數（如 `direction`、`styles`、`container`）**不算** Layer 名稱，不影響顯示哪些 Layer。
+
+> **提示**：Layer 名稱一律為大寫開頭（`Bar`、`ValueAxis`）；Plugin 層級參數為小寫開頭（`valueAxis`、`categoryAxis`）。兩者可同時出現在同一個參數物件中。
+
+### 動態切換 Layer
+
+建立 Plugin 後，可用以下方法動態控制顯示：
+
+```ts
+const plugin = new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+plugin.show('Line')                 // 額外顯示一個或多個 Layer
+plugin.hide('Bar')                  // 隱藏指定 Layer
+plugin.showOnly(['Line', 'ValueAxis'])  // 只顯示這些 Layer
+plugin.showAll()                    // 顯示全部 Layer
+plugin.hideAll()                    // 隱藏全部 Layer
+plugin.toggle('Point')              // 切換顯示與否
+plugin.getShownLayerNames()         // 取得目前顯示的 Layer 名稱陣列
+```
+
+| 方法 | 參數 | 說明 |
+|---|---|---|
+| `show(names)` | `string \| string[]` | 額外顯示指定 Layer |
+| `hide(names)` | `string \| string[]` | 隱藏指定 Layer |
+| `showOnly(names)` | `string \| string[]` | 只顯示指定 Layer，其餘隱藏 |
+| `showAll()` | — | 顯示全部 Layer |
+| `hideAll()` | — | 隱藏全部 Layer |
+| `toggle(names)` | `string \| string[]` | 切換指定 Layer 的顯示狀態 |
+| `getShownLayerNames()` | — | 回傳目前顯示中的 Layer 名稱 |
+
+## 更新參數
+
+```ts
+// 局部更新（與現有參數深層合併）
+plugin.updateParams({ Bar: { barWidth: 20 } })
+
+// 完整取代某 Layer 的參數
+plugin.forceReplaceParams({ Bar: { barWidth: 20, barPadding: 2, barGroupPadding: 10, barRadius: 4 } })
+
+// 取得目前參數
+const params = plugin.getParams()
+```
+
+| 方法 | 說明 |
+|---|---|
+| `updateParams(patch)` | 局部更新參數，與現有值深層合併 |
+| `forceReplaceParams(full)` | 完整取代參數 |
+| `getParams()` | 取得目前所有參數（唯讀） |
+
+## 生命週期
+
+```ts
+plugin.destroy()  // 釋放資源、移除事件監聽
+```
+
+> **提示**：在元件卸載（例如 React 的 `useEffect` cleanup、Vue 的 `onUnmounted`）時，呼叫 `chart.destroy()` 會一併清理其 Plugin。
+
+## 共用參數型別
+
+以下參數型別出現在多數圖表 Plugin 中。各 Plugin 可能有**不同的預設值**，但結構一致。
+
+### `styles`（GraphicStyles）
+
+控制內距、highlight 行為與動畫，是所有圖表 Plugin 共用的視覺樣式。
+
+| 屬性 | 型別 | 說明 |
+|---|---|---|
+| `padding` | `{ top, right, bottom, left }` | 繪圖區內距（像素） |
+| `highlightTarget` | `'datum' \| 'series' \| 'category' \| 'none'` | highlight 的觸發單位 |
+| `highlightDefault` | `string \| null` | 預設 highlight 的目標 id |
+| `unhighlightedOpacity` | `number` | 未被 highlight 時的透明度 |
+| `transitionDuration` | `number` | 動畫時間（毫秒） |
+| `transitionEase` | `string` | 動畫緩動函式（D3 ease 名稱，如 `'easeCubic'`） |
+
+> **注意**：`padding` 與 `transitionDuration` 的**預設值因 Plugin 而異**（例如 ScatterPlot 的動畫較短）。請以各 Plugin 頁面標示的預設值為準。
+
+### `container`（Container）
+
+控制多圖表佈局（在同一張圖中以網格排列多個相同類型的圖表）。
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `columnAmount` | `number` | `1` | 欄數 |
+| `rowAmount` | `number` | `1` | 列數 |
+| `columnGap` | `number \| 'auto'` | `'auto'` | 欄間距 |
+| `rowGap` | `number \| 'auto'` | `'auto'` | 列間距 |
+
+### `visibleFilter`
+
+過濾要顯示的資料；回傳 `false` 的資料點不繪製。
+
+```ts
+new GridPlot({
+  visibleFilter: (datum) => datum.value !== null && datum.value > 0,
+})
+```
+
+預設為 `(datum) => true`（顯示全部）。
+
+### `datasetIndex`
+
+當資料為多資料集（二維 `RawData`）時，指定使用第幾個資料集，預設 `0`。
+
+## 顏色設定
+
+許多 Layer 參數使用 `ColorType` 來指定顏色（如 `'data'`、`'primary'`）。完整說明請見 [Theme](/docs/api/theme)。
+
+## 相關連結
+
+- [Theme](/docs/api/theme) — 主題與 `ColorType`
+- [GridPlot](/docs/plugins/grid-plot) — 以 GridPlot 為例的完整用法

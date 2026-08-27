@@ -1,0 +1,70 @@
+---
+title: Highlight 互動
+description: 用 styles.highlightTarget、unhighlightedOpacity 與 highlightDefault 控制資料的強調與淡化,以及如何預設 highlight。
+nav:
+  group: 指南
+  order: 4
+related:
+  - /docs/api/plugin-api
+  - /docs/api/events
+---
+
+# Highlight 互動
+
+Highlight 讓使用者把滑鼠移到圖表上時,**被指向的資料變得醒目、其餘淡化**。這是圖表 Plugin 內建的互動,只需設定 `styles` 中幾個欄位即可。`styles` 的完整結構見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 三個關鍵欄位
+
+| 欄位 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `highlightTarget` | `'datum' \| 'series' \| 'category' \| 'none'` | 依 Plugin | highlight 的觸發單位 |
+| `unhighlightedOpacity` | `number` | `0.3` | 未被 highlight 項目的透明度 |
+| `highlightDefault` | `string \| null` | `null` | 預設要 highlight 的目標 id |
+
+- `highlightTarget` 決定「一次強調多少」:`'datum'` 只強調單一資料點,`'series'` 強調整個系列,`'category'` 強調整個類別,`'none'` 則關閉 highlight。
+- `unhighlightedOpacity` 是其餘項目淡化後的透明度,值越小對比越強。
+
+## 設定 highlight
+
+`styles` 與 Layer 名稱並列。滑鼠移入時會**自動 highlight**,你只需設定觸發單位與淡化程度:
+
+```ts
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const plugin = new GridPlot({
+  Bar: {},
+  CategoryAxis: {},
+  ValueAxis: {},
+  styles: {
+    highlightTarget: 'series',     // 移入時強調整個系列
+    unhighlightedOpacity: 0.2,     // 其餘淡到 0.2
+  },
+})
+```
+
+## 預設 highlight 某筆資料
+
+`highlightDefault` 可在初始或無滑鼠互動時,預先強調某個 id:
+
+```ts
+const plugin = new GridPlot({
+  Bar: {},
+  CategoryAxis: {},
+  ValueAxis: {},
+  styles: {
+    highlightTarget: 'series',
+    highlightDefault: 'A',   // 一載入就強調系列 A
+  },
+})
+```
+
+> **提示**:`highlightDefault` 的 id 需對應 `highlightTarget` 的單位——`'series'` 用系列 id、`'category'` 用類別 id、`'datum'` 用資料點 id。
+
+## 進一步的互動
+
+若想在 highlight 之外做更多事(例如點擊資料後更新外部 UI、用程式控制要 highlight 哪一筆),可透過事件系統監聽 `event$` 或從外部觸發 `eventTrigger$`。詳見 [事件系統](/docs/api/events)。
+
+## 相關連結
+
+- [Plugin 通用 API](/docs/api/plugin-api) — `styles`(GraphicStyles)中的 highlight 欄位
+- [事件系統](/docs/api/events) — 監聽與程式化觸發互動

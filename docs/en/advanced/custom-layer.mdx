@@ -1,0 +1,155 @@
+---
+title: Custom Layer
+description: Build a Layer with defineSVGLayer / defineCanvasLayer, draw with D3.js inside its own SVG g element, and wire up data via layerParams$ and context.
+nav:
+  group: Advanced
+  order: 2
+related:
+  - /docs/advanced/custom-plugin
+  - /docs/advanced/architecture
+  - /docs/api/plugin-api
+---
+
+# Custom Layer
+
+A **Layer** is the unit that actually draws visual elements on screen. Each Layer corresponds to one SVG `<g>` element and renders one kind of visual (e.g. just the bars, just the line, just an axis). GridPlot's built-in `Bar`, `Line`, and `CategoryAxis` are all Layers built with `defineSVGLayer`.
+
+> **Note**: This is an **advanced API**. A Layer normally belongs to a Plugin (see [Custom Plugin](/docs/advanced/custom-plugin)) and relies on the Observables that Plugin injects via ExtendContext. We recommend reading the [Architecture Overview](/docs/advanced/architecture) first.
+
+## `defineSVGLayer`
+
+```ts
+import { defineSVGLayer } from '@orbcharts/core'
+
+const MyLayer = defineSVGLayer<ExtendContext, PluginParams, LayerParams>(config)
+```
+
+`defineSVGLayer` takes a `config` object and returns a **Layer class**. Place an instance of it (`new MyLayer()`) in a Plugin's `config.layers`. Three generic parameters:
+
+| Generic | Description |
+|---|---|
+| `ExtendContext` | The type of extra Observables the owning Plugin injects into `context` |
+| `PluginParams` | The owning Plugin's Plugin-level params type |
+| `LayerParams` | The params type **of this Layer itself** |
+
+### config fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Layer name (capitalized; the name used to reference it for visibility) |
+| `defaultParams` | `LayerParams` | Yes | Default values for this Layer's params |
+| `layerIndex` | `number` | Yes | Draw/stack order; smaller numbers render underneath |
+| `initShow` | `boolean` | Yes | Whether to show by default when not explicitly specified |
+| `validator` | `(params) => ValidatorResult` | No | Validates the Layer params passed by the user |
+| `setup` | `(setupProps) => () => void` | Yes | Draw/enable logic that **returns a cleanup function** |
+
+> **Tip**: `layerIndex` determines the draw order of Layers within the same Plugin (i.e. the order of the `<g>` elements), controlling what sits on top. Axes usually use a smaller index and graphic elements a larger one.
+
+### `setup`: drawing and enabling
+
+`setup` is the heart of a Layer. It is called when the Layer is enabled (shown), and receives `setupProps`:
+
+| Property | Type | Description |
+|---|---|---|
+| `svgG` | `SVGGElement` | This Layer's own SVG `<g>` element—**all drawing happens inside it** |
+| `context` | `ChartContext<ExtendContext>` | The shared context, with base and owning-Plugin-injected Observables |
+| `pluginParams$` | `Observable<PluginParams>` | The owning Plugin's Plugin-level params stream |
+| `layerParams$` | `Observable<LayerParams>` | **This Layer's own** params stream (merged with defaults) |
+
+How to draw: select `svgG` with **D3.js** (`d3.select(svgG)`), subscribe to data Observables on `context` (such as `computedData$`, `layout$`) and to `layerParams$`, and update SVG elements with a data join whenever the data changes.
+
+`setup` must return a **cleanup function**, called when the Layer is hidden, re-rendered due to a param change, or destroyed—use it to unsubscribe and clean up.
+
+### How built-in Layers are structured
+
+Take GridPlot's `Bar` Layer as an example. Its `setup` typically uses a `destroy$` Subject with `takeUntil` to unsubscribe uniformly, subscribes to `context.layout$` to position the `<g>`, then hands the various computed results from `context` plus `layerParams$` to the drawing logic:
+
+```ts
+setup: ({ svgG, pluginParams$, layerParams$, context }) => {
+  const destroy$ = new Subject()
+
+  // Move the whole <g> as layout changes
+  context.layout$
+    .pipe(takeUntil(destroy$))
+    .subscribe((layout) => {
+      d3.select(svgG)
+        .attr('transform', `translate(${layout.left}, ${layout.top})`)
+    })
+
+  // Subscribe to computed results on context + layerParams$ to draw ...
+
+  return () => {
+    destroy$.next(undefined)
+    // other cleanup
+  }
+}
+```
+
+## Minimal example
+
+A Layer that draws a single rectangle whose width follows `context.size$` and whose look is driven by its own `layerParams$`:
+
+```ts
+import { defineSVGLayer } from '@orbcharts/core'
+import { combineLatest, Subject, takeUntil } from 'rxjs'
+import * as d3 from 'd3'
+
+interface MyLayerParams {
+  fillColor: string
+  height: number
+}
+
+const MyRect = defineSVGLayer<MyExtendContext, MyPluginParams, MyLayerParams>({
+  name: 'MyRect',
+  layerIndex: 0,
+  initShow: true,
+  defaultParams: {
+    fillColor: '#3b82f6',
+    height: 40,
+  },
+  setup: ({ svgG, context, layerParams$ }) => {
+    const destroy$ = new Subject()
+
+    combineLatest({
+      size: context.size$,
+      params: layerParams$,
+    })
+      .pipe(takeUntil(destroy$))
+      .subscribe(({ size, params }) => {
+        d3.select(svgG)
+          .selectAll('rect')
+          .data([params])
+          .join('rect')
+          .attr('width', size.width)
+          .attr('height', (d) => d.height)
+          .attr('fill', (d) => d.fillColor)
+      })
+
+    return () => {
+      destroy$.next(undefined)
+    }
+  },
+})
+```
+
+Put `new MyRect()` in a Plugin's `config.layers`, and users can show it through params and tune its `fillColor` and `height`.
+
+> **Tip**: A Layer should not own its own DOM container or create its own `<g>`—`svgG` is created and injected by the system, and the Layer only draws inside it. On every param change, `setup` re-runs with the new streams (after calling the previous cleanup), so always unsubscribe everything in cleanup.
+
+## Canvas variant
+
+To render with Canvas, use `defineCanvasLayer` instead. Its config fields are the same as `defineSVGLayer`; the difference is that `setup` receives a `canvas` (`HTMLCanvasElement`) instead of `svgG`, and you draw with the Canvas 2D context.
+
+```ts
+import { defineCanvasLayer } from '@orbcharts/core'
+
+const MyCanvasLayer = defineCanvasLayer<ExtendContext, PluginParams, LayerParams>(config)
+```
+
+> **Note**: A Canvas Layer must be placed in a Plugin built with `defineCanvasPlugin`.
+
+## Related
+
+- [Custom Plugin](/docs/advanced/custom-plugin) — compose Layers and inject ExtendContext
+- [Architecture Overview](/docs/advanced/architecture) — data flow and D3 rendering
+- [Plugin API](/docs/api/plugin-api) — how layer visibility works

@@ -1,0 +1,213 @@
+---
+title: ScatterPlot
+description: ScatterPlot is the core Plugin for the multivariate data format, drawing scatter plots and XY bubble charts.
+nav:
+  group: Plugins
+  order: 3
+charts:
+  - scatter-plot
+  - bubble-chart-xy
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# ScatterPlot
+
+`ScatterPlot` is the core Plugin for the `multivariate` data format. It has both an X axis and a Y axis as value axes, and can draw scatter plots and XY bubble charts by switching its internal Layers.
+
+**Data format:** `multivariate`
+
+## Supported charts
+
+ScatterPlot renders different charts through different Layer combinations:
+
+- [Scatter Plot](#scatter-plot) — `Point` Layer
+- [XY Bubble Chart](#xy-bubble-chart) — `Bubble` Layer
+
+## Quick start
+
+A minimal configuration draws a scatter plot. ScatterPlot shows two Layers by default: `Point` and `XYAxes`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { ScatterPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', x: 30, y: 10, z: 10, name: 'a' },
+  { series: 'A', x: 50, y: 20, z: 20, name: 'b' },
+  { series: 'B', x: 70, y: 30, z: 30, name: 'c' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new ScatterPlot({ Point: {}, XYAxes: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+Each record in this `multivariate` data has `series`, `x`, `y`, `z`, and `name`: `x` maps to the X axis, `y` maps to the Y axis, `z` is used for bubble size, and `series` is used for grouping and coloring.
+
+## How layer visibility works
+
+ScatterPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new ScatterPlot()`), it shows `Point`, `XYAxes` by default (a scatter plot). You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+```ts
+new ScatterPlot({ Point: {}, XYAxes: {} })   // scatter plot
+new ScatterPlot({ Bubble: {}, XYAxes: {} })  // XY bubble chart
+```
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Chart examples
+
+All examples below use the same `multivariate` data—just swap the Layer to change the chart type.
+
+### Scatter Plot
+
+```ts
+new ScatterPlot({ Point: {}, XYAxes: {} })
+```
+
+`Point` draws each record's `(x, y)` position as a fixed-size dot, paired with `XYAxes` to show the X and Y axes.
+
+### XY Bubble Chart
+
+```ts
+new ScatterPlot({ Bubble: {}, XYAxes: {}, XYGuide: {}, XZoom: {} })
+```
+
+`Bubble` draws circular bubbles whose size varies with the `z` value; add `XYGuide` to show guide lines and `XZoom` to enable zooming along the X axis.
+
+> **Tip**: Pair with [Legend](/docs/plugins/legend) and [Tooltip](/docs/plugins/tooltip) for interactivity, added the same way as in [GridPlot](/docs/plugins/grid-plot).
+
+## Plugin parameters
+
+These parameters affect the whole ScatterPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `xAxis` | `XYAxis` | see below | X axis settings |
+| `yAxis` | `XYAxis` | see below | Y axis settings |
+| `separateSeries` | `boolean` | `false` | Whether to draw each series separately |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 20, 60, 80, 60 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `container` | `Container` | single chart | Multi-chart layout (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles`, `container`, and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only ScatterPlot's default differences are noted here (`styles.padding` defaults to `{ top: 20, right: 60, bottom: 80, left: 60 }`, and `transitionDuration` is shorter, defaulting to `100`).
+
+### `xAxis` / `yAxis` (XYAxis)
+
+The X axis and Y axis each use an `XYAxis` config with the same structure:
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `scaleDomain` | `[number \| 'min' \| 'auto', number \| 'max' \| 'auto']` | `['auto', 'auto']` | Value range |
+| `scaleRange` | `[number, number]` | `[0, 0.9]` | Proportional range mapped to the plotting area |
+| `label` | `string` | `''` | Axis label |
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### Point
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `radius` | `number` | `5` | Dot radius |
+| `fillColorType` | `ColorType` | `'data'` | Fill color |
+| `strokeColorType` | `ColorType` | `'data'` | Stroke color |
+| `strokeWidth` | `number` | `0` | Stroke width |
+
+### Bubble
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `fillColorType` | `ColorType` | `'data'` | Fill color |
+| `strokeColorType` | `ColorType` | `'data'` | Stroke color |
+| `strokeWidth` | `number` | `0` | Stroke width |
+| `valueLinearOpacity` | `[number, number]` | `[0.8, 0.8]` | Opacity range based on the value |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | How values map (radius or area) |
+| `sizeAdjust` | `number` | `0.5` | Bubble size adjustment factor |
+
+### XYAxes
+
+Contains an `xAxis` and a `yAxis` config with the same structure:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `false` | Whether to show the axis line |
+| `ticks` | `number \| null` | `null` | Number of ticks (`null` for auto) |
+| `tickFormat` | `string \| ((num) => string)` | thousands-separator formatter | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `true` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+
+### XYGuide
+
+Contains an `xAxis` and a `yAxis` config with the same structure; shows the corresponding guide lines and labels when hovering over a data point:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | Whether to show the guide line |
+| `showLabel` | `boolean` | `true` | Whether to show the label |
+| `lineDashArray` | `string` | `'3, 3'` | Dash pattern |
+| `lineColorType` | `ColorType` | `'primary'` | Guide line color |
+| `labelColorType` | `ColorType` | `'primary'` | Label background color |
+| `labelTextColorType` | `ColorType` | `'background'` | Label text color |
+| `labelPadding` | `number` | `20` | Label padding |
+
+### XZoom
+
+When enabled, allows zooming and panning along the X axis. This Layer has no extra parameters:
+
+```ts
+new ScatterPlot({ Point: {}, XYAxes: {}, XZoom: {} })
+```
+
+## Full TypeScript interface
+
+```ts
+interface ScatterPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumMultiValue) => boolean | null
+  container: Container
+  xAxis: XYAxis
+  yAxis: XYAxis
+  separateSeries: boolean
+  datasetIndex: number
+}
+
+interface ScatterPlotAllLayerParams {
+  Point: ScatterPlotPointParams
+  Bubble: ScatterPlotBubbleParams
+  XYGuide: ScatterPlotXYGuideParams
+  XYAxes: ScatterPlotXYAxesParams
+  XZoom: ScatterPlotXZoomParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new ScatterPlot(params?: DeepPartial<ScatterPlotPluginParams & ScatterPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

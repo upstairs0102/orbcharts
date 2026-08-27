@@ -1,0 +1,90 @@
+---
+title: Theming & Colors
+description: How to set OrbCharts' palette, light/dark mode, and font size—pass theme at creation, or switch dynamically with updateTheme.
+nav:
+  group: Guides
+  order: 1
+related:
+  - /docs/api/theme
+  - /docs/api/orbcharts-class
+---
+
+# Theming & Colors
+
+All of OrbCharts' colors, light/dark mode, and font sizing live in the `Theme`. This guide covers the two most common tasks: **switching to dark mode** and **swapping out the data palette**. For the full `Theme` structure and field reference, see [Theme](/docs/api/theme).
+
+## Passing a theme at creation
+
+The theme is passed through the `theme` option when creating the chart. Override only what you want to change; the rest keeps its defaults (deep merge):
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  theme: {
+    colorScheme: 'dark',
+    fontSize: '1rem',
+  },
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+`colorScheme` can be `'light'`, `'dark'`, or `'auto'` (follows the system preference). `fontSize` sets the chart's base font size.
+
+> **Tip**: OrbCharts uses an understated, Tableau-style palette by default, so the colors don't overpower the data.
+
+## Switching to dark mode
+
+You don't need to rebuild the chart to switch modes—just call `chart.updateTheme()`:
+
+```ts
+// Switch to dark
+chart.updateTheme({ colorScheme: 'dark' })
+
+// Back to light
+chart.updateTheme({ colorScheme: 'light' })
+
+// Follow the system preference
+chart.updateTheme({ colorScheme: 'auto' })
+```
+
+Wiring it to a button:
+
+```ts
+document.querySelector('#toggle-dark')!.addEventListener('click', () => {
+  const current = chart.getTheme().colorScheme
+  chart.updateTheme({ colorScheme: current === 'dark' ? 'light' : 'dark' })
+})
+```
+
+## Swapping the data palette
+
+`colors.light` and `colors.dark` each define a `Colors` set, where `data` is the palette applied to each record in order. Override it to change the data colors:
+
+```ts
+chart.updateTheme({
+  colors: {
+    light: {
+      data: ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2'],
+    },
+  },
+})
+```
+
+Because it's a deep merge, you only supply the palette you want to change; the other fields like `primary` and `background` keep their defaults. Light and dark are independent, so **set both modes** if you want correct colors in either.
+
+> **Note**: Color-related Layer parameters mostly use `ColorType` (e.g. `'data'`, `'primary'`), which points to a color defined in the Theme rather than a hard-coded value. That way colors adapt automatically when the theme changes. See [Theme](/docs/api/theme) for the full explanation of `ColorType`.
+
+## Getting and fully replacing
+
+```ts
+chart.getTheme()                   // get the current theme (read-only)
+chart.forceReplaceTheme(fullTheme) // fully replace the entire theme
+```
+
+## Related
+
+- [Theme](/docs/api/theme) — `Theme` structure, default palette, and `ColorType`
+- [OrbCharts Class](/docs/api/orbcharts-class) — `updateTheme` / `getTheme` / `forceReplaceTheme`

@@ -1,0 +1,121 @@
+---
+title: Tree 格式
+description: Tree 以 parent 欄位串成父子層級關係，適合樹狀圖、矩形樹圖（TreeMap）等呈現階層結構的圖表。
+nav:
+  group: 資料格式
+  order: 6
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/hierarchy-plot
+---
+
+# Tree 格式
+
+`tree` 用於描述**父子層級關係**。每一筆資料以 `id` 為唯一識別，並透過 `parent` 欄位指向其父節點的 `id`，藉此串成一棵樹。根節點沒有 `parent`、`value` 可為 `null`；葉節點則帶有實際 `value`。
+
+它適合呈現階層結構的圖表，例如樹狀圖與矩形樹圖（TreeMap）。
+
+## 適用場景
+
+- 想呈現「具有層級的分類結構」（組織、分類目錄）
+- 想以面積表達「各層級的數值佔比」（矩形樹圖）
+- 資料具有明確的父子關係
+
+## 資料結構
+
+Tree 資料以 `id` 與 `parent` 構成層級。根節點無 `parent`，中間節點 `value` 可為 `null`，葉節點帶有數值：
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { id: 'Movies', name: 'Movies', value: null, series: '' },
+  { id: 'Movies.Action', name: 'Action', value: null, parent: 'Movies', series: '' },
+  { id: 'Movies.Action.Avatar', name: 'Avatar', value: 760505847, parent: 'Movies.Action', series: 'Action' },
+]
+```
+
+### 可用欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `id` | `string` | 是 | 唯一識別；供子節點以 `parent` 引用 |
+| `parent` | `string` | 否 | 父節點的 `id`；根節點省略此欄位 |
+| `value` | `number \| null` | 否 | 此節點的數值；根/中間節點可為 `null` |
+| `series` | `string` | 否 | 系列名稱，預設用於分組與上色 |
+| `name` | `string` | 否 | 顯示名稱（例如 Tooltip 中顯示的文字） |
+| `data` | `any` | 否 | 自訂附加資料，會原樣保留 |
+
+> **提示**：根節點（無 `parent`）的 `value` 通常設為 `null`，因為它的數值會由子節點累加而來。請確保每個 `parent` 都對應到既有節點的 `id`，否則該節點無法被正確掛載到樹上。
+
+## 模型資料（ModelDatumTree）
+
+當 OrbCharts 處理完 RawData 後，每筆資料會轉換為 `ModelDatumTree`。它繼承自 `ModelDatumBase`，並加上層級相關欄位（`parent`、`depth`、`children` 等）：
+
+```ts
+interface ModelDatumTree {
+  // 來自 ModelDatumBase
+  id: string
+  index: number
+  modelType: 'tree'
+  name: string
+  data: any
+  value: number | null
+  color: string
+  // Tree 專屬欄位
+  parent: string | null
+  parentIndex: number | null
+  depth: number                  // 在樹中的深度（根為 0）
+  seq: number                    // 在同層中的順序
+  children: ModelDatumTree[]     // 子節點
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+## 對應的 Plugin
+
+`tree` 格式可搭配以下 Plugin：
+
+| Plugin | 可繪製的圖表 |
+|---|---|
+| [HierarchyPlot](/docs/plugins/hierarchy-plot) | 矩形樹圖（TreeMap）、樹狀圖 |
+
+## 完整範例
+
+以下是一個矩形樹圖，使用 `HierarchyPlot`（預設顯示 TreeMap）：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { HierarchyPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { id: 'Movies', name: 'Movies', value: null, series: '' },
+  { id: 'Movies.Action', name: 'Action', value: null, parent: 'Movies', series: '' },
+  { id: 'Movies.Action.Avatar', name: 'Avatar', value: 760505847, parent: 'Movies.Action', series: 'Action' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new HierarchyPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// 元件卸載時記得銷毀，釋放資源與事件監聽
+// chart.destroy()
+```
+
+> **注意**：OrbCharts 預設會自動填滿容器尺寸（`size` 預設為 `'auto'`），請確保 `#chart` 容器有明確的寬度與高度，否則圖表可能無法顯示。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+## 相關連結
+
+- 回到 [資料格式概述](/docs/data-formats/overview)
+- 查看 [HierarchyPlot](/docs/plugins/hierarchy-plot) 的完整參數與更多圖表範例
+- 了解尺寸與色彩設定請見 [核心概念](/docs/getting-started/core-concepts)
+- 色彩與 ColorType 設定請見 [Theme API](/docs/api/theme)

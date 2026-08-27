@@ -1,0 +1,308 @@
+---
+title: GridPlot
+description: GridPlot is the core Plugin for the grid data format, drawing bar, line, area, stacked bar, and triangle bar charts.
+nav:
+  group: Plugins
+  order: 1
+charts:
+  - bar-chart
+  - line-chart
+  - area-chart
+  - stacked-bar
+  - triangle-bar
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# GridPlot
+
+`GridPlot` is the core Plugin for the `grid` data format. It has a "category axis" and a "value axis", and can draw several common chart types by switching its internal Layers.
+
+**Data format:** `grid`
+
+## Supported charts
+
+GridPlot renders different charts through different Layer combinations:
+
+- [Bar Chart](#bar-chart) — `Bar` Layer
+- [Line Chart](#line-chart) — `Line` Layer
+- [Area Chart](#area-chart) — `LineArea` Layer
+- [Stacked Bar](#stacked-bar) — `StackedBar` Layer
+- [Triangle Bar](#triangle-bar) — `TriangleBar` Layer
+
+## Quick start
+
+A minimal configuration draws a bar chart. GridPlot shows three Layers by default: `Bar`, `CategoryAxis`, and `ValueAxis`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'A', category: 'category3', value: 45 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+  { series: 'B', category: 'category3', value: 90 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+Each record in this `grid` data has `series`, `category`, and `value`: `category` maps to the category axis, `value` maps to the value axis, and `series` is used for grouping and coloring.
+
+## How layer visibility works
+
+GridPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new GridPlot()`), it shows `Bar`, `CategoryAxis`, `ValueAxis` by default (a bar chart). You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+```ts
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })   // bar chart
+new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} })  // line chart
+```
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Chart examples
+
+All examples below use the same `grid` data—just swap the Layer to change the chart type.
+
+### Bar Chart
+
+```ts
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+The most basic chart. `Bar` draws the bars, alongside the category and value axes.
+
+### Line Chart
+
+```ts
+new GridPlot({ Line: {}, Point: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`Line` draws the line; add `Point` to show dots at each data point.
+
+### Area Chart
+
+```ts
+new GridPlot({ LineArea: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`LineArea` fills a gradient area below the line—good for showing volume or trends.
+
+### Stacked Bar
+
+```ts
+new GridPlot({ StackedBar: {}, CategoryAxis: {}, StackedValueAxis: {} })
+```
+
+`StackedBar` stacks the values of each series within the same category, paired with `StackedValueAxis` to show the stacked value axis.
+
+### Triangle Bar
+
+```ts
+new GridPlot({ TriangleBar: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`TriangleBar` renders triangular gradient bars, often used for funnels or to emphasize a descending effect.
+
+## Plugin parameters
+
+These parameters affect the whole GridPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `direction` | `'bottom-up' \| 'top-down' \| 'left-right' \| 'right-left'` | `'bottom-up'` | Chart direction (axis origin and growth direction) |
+| `separateSeries` | `boolean` | `false` | Whether to draw each series separately |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `valueAxis` | `ValueAxis` | see below | Value axis settings |
+| `categoryAxis` | `ReversibleCategoryAxis` | see below | Category axis settings |
+| `styles` | `GraphicStyles` | `padding` is `{ 20, 60, 80, 60 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `container` | `Container` | single chart | Multi-chart layout (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles`, `container`, and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only GridPlot's default difference is noted here (`styles.padding` defaults to `{ top: 20, right: 60, bottom: 80, left: 60 }`).
+
+### `valueAxis` (ValueAxis)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `scaleDomain` | `[number \| 'min' \| 'auto', number \| 'max' \| 'auto']` | `['auto', 'auto']` | Value range |
+| `scaleRange` | `[number, number]` | `[0, 0.9]` | Proportional range mapped to the plotting area |
+| `label` | `string` | `''` | Axis label |
+
+### `categoryAxis` (ReversibleCategoryAxis)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `reverse` | `boolean` | `false` | Whether to reverse the category order |
+| `scaleDomain` | `[number, number \| 'max']` | `[0, 'max']` | Category index range |
+| `scalePadding` | `number` | `0.5` | Spacing between categories |
+| `label` | `string` | `''` | Axis label |
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### Bar
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `barWidth` | `number` | `0` | Bar width (px); `0` means auto-calculated |
+| `barPadding` | `number` | `1` | Spacing between bars |
+| `barGroupPadding` | `number` | `40` | Spacing between groups |
+| `barRadius` | `number \| boolean` | `false` | Corner radius; `false` for none, or a number for the radius |
+
+### Line
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `lineCurve` | `string` | `'curveLinear'` | Curve type (D3 curve name) |
+| `lineWidth` | `number` | `2` | Line width |
+
+### LineArea
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `lineCurve` | `string` | `'curveLinear'` | Curve type (D3 curve name) |
+| `linearGradientOpacity` | `[number, number]` | `[1, 0]` | Gradient opacity (start to end) |
+
+### Point
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `radius` | `number` | `4` | Dot radius |
+| `fillColorType` | `ColorType` | `'background'` | Fill color |
+| `strokeColorType` | `ColorType` | `'data'` | Stroke color |
+| `strokeWidth` | `number` | `2` | Stroke width |
+| `onlyShowHighlighted` | `boolean` | `false` | Whether to show only highlighted points |
+
+### StackedBar
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `barWidth` | `number` | `0` | Bar width (px); `0` means auto-calculated |
+| `barGroupPadding` | `number` | `10` | Spacing between groups |
+| `barRadius` | `number \| boolean` | `false` | Corner radius |
+
+### TriangleBar
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `barWidth` | `number` | `0` | Bar width (px); `0` means auto-calculated |
+| `barPadding` | `number` | `1` | Spacing between bars |
+| `barGroupPadding` | `number` | `20` | Spacing between groups |
+| `linearGradientOpacity` | `[number, number]` | `[1, 0]` | Gradient opacity (start to end) |
+
+### CategoryAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `true` | Whether to show the axis line |
+| `axisLineColorType` | `ColorType` | `'primary'` | Axis line color |
+| `ticks` | `number \| null \| 'all'` | `'all'` | Number of ticks |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `false` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextRotate` | `number` | `0` | Tick text rotation angle |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+
+### ValueAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `false` | Whether to show the axis line |
+| `ticks` | `number \| null` | `null` | Number of ticks (`null` for auto) |
+| `tickFormat` | `string \| ((num) => string)` | thousands-separator formatter | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `true` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+| `opposite` | `boolean` | `false` | Whether to place the axis on the opposite side |
+
+### StackedValueAxis
+
+Same parameters as [`ValueAxis`](#valueaxis), used for stacked bar charts.
+
+### CategoryGuide
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | Whether to show the guide line |
+| `showLabel` | `boolean` | `true` | Whether to show the label |
+| `lineDashArray` | `string` | `'3, 3'` | Dash pattern |
+| `lineColorType` | `ColorType` | `'primary'` | Guide line color |
+| `labelColorType` | `ColorType` | `'primary'` | Label background color |
+| `labelTextColorType` | `ColorType` | `'background'` | Label text color |
+| `labelPadding` | `number` | `20` | Label padding |
+| `labelRotate` | `number` | `0` | Label rotation angle |
+
+### CategoryZoom
+
+When enabled, allows zooming and panning along the category axis. This Layer has no extra parameters:
+
+```ts
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {}, CategoryZoom: {} })
+```
+
+## Full TypeScript interface
+
+```ts
+interface GridPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGrid) => boolean | null
+  container: Container
+  direction: 'bottom-up' | 'top-down' | 'left-right' | 'right-left'
+  valueAxis: ValueAxis
+  categoryAxis: ReversibleCategoryAxis
+  separateSeries: boolean
+  datasetIndex: number
+}
+
+interface GridPlotAllLayerParams {
+  Bar: GridPlotBarParams
+  Line: GridPlotLineParams
+  LineArea: GridPlotLineAreaParams
+  Point: GridPlotPointParams
+  StackedBar: GridPlotStackedBarParams
+  TriangleBar: GridPlotTriangleBarParams
+  CategoryAxis: GridPlotCategoryAxisParams
+  ValueAxis: GridPlotValueAxisParams
+  StackedValueAxis: GridPlotStackedValueAxisParams
+  CategoryGuide: GridPlotCategoryGuideParams
+  CategoryZoom: GridPlotCategoryZoomParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new GridPlot(params?: DeepPartial<GridPlotPluginParams & GridPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

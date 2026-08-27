@@ -1,0 +1,182 @@
+---
+title: RankedPlot
+description: RankedPlot is the ranking Plugin for the grid data format, drawing ranked bubble charts ordered by value.
+nav:
+  group: Plugins
+  order: 7
+charts:
+  - ranked-bubble
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/grid-plot
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# RankedPlot
+
+`RankedPlot` is the ranking Plugin for the `grid` data format. It sorts data by `value` and renders the ranking as bubbles (circles), paired with a rank axis and a category axis.
+
+**Data format:** `grid`
+
+## Supported charts
+
+- [Ranked Bubble](#quick-start) — `RankedBubble` Layer
+
+## Quick start
+
+A minimal configuration draws a ranked bubble chart. RankedPlot shows three Layers by default: `RankedBubble`, `RankAxis`, and `CategoryAxis`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { RankedPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: '0', value: 5 },
+  { series: 'B', category: '0', value: 8 },
+  { series: 'C', category: '0', value: 3 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new RankedPlot({ RankedBubble: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+Each record in this `grid` data has `series`, `category`, and `value`: RankedPlot ranks the data by `value`, bubble size maps to the value, and `series` is used for grouping and coloring.
+
+## How layer visibility works
+
+RankedPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new RankedPlot()`), it shows `RankedBubble`, `RankAxis`, `CategoryAxis` by default (a ranked bubble chart). `CategoryGuide` and `CategoryZoom` are hidden by default and must be listed explicitly. You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+```ts
+new RankedPlot({ RankedBubble: {} })                          // ranked bubble chart (ranked by value)
+new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })        // also enable zoom
+```
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Plugin parameters
+
+These parameters affect the whole RankedPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | Rank axis settings; `limit` is the maximum number of ranks to show |
+| `categoryAxis` | `CategoryAxis` | see [CategoryAxis](#categoryaxis) | Category axis settings |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 60, 60, 60, 200 }`, `transitionDuration` is `100` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles` and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only RankedPlot's default differences are noted here (`styles.padding` defaults to `{ top: 60, right: 60, bottom: 60, left: 200 }`, and `transitionDuration` defaults to `100`).
+
+### `rankedAxis`
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `label` | `string` | `''` | Rank axis label |
+| `limit` | `number \| 'auto'` | `10` | Maximum number of ranks to show; `'auto'` for automatic |
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### RankedBubble
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `sizeAdjust` | `number` | `0.8` | Bubble size adjustment factor |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | How bubble size maps to value |
+| `valueLinearOpacity` | `[number, number]` | `[0.5, 1]` | Opacity range mapped linearly to value |
+| `showZeroValue` | `boolean` | `false` | Whether to show data with a value of 0 |
+
+### RankAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `axisLabel.offset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `axisLabel.colorType` | `ColorType` | `'primary'` | Axis label color |
+| `seriesLabel.padding` | `number` | `20` | Series label padding |
+| `seriesLabel.colorType` | `ColorType` | `'primary'` | Series label color |
+
+### CategoryAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `true` | Whether to show the axis line |
+| `axisLineColorType` | `ColorType` | `'primary'` | Axis line color |
+| `ticks` | `number \| null \| 'all'` | `'all'` | Number of ticks |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `false` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextRotate` | `number` | `0` | Tick text rotation angle |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+| `placement` | `'top' \| 'bottom'` | `'top'` | Category axis position |
+
+### CategoryGuide
+
+Hidden by default; enabled when listed.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | Whether to show the guide line |
+| `showLabel` | `boolean` | `true` | Whether to show the label |
+| `lineDashArray` | `string` | `'3, 3'` | Dash pattern |
+| `lineColorType` | `ColorType` | `'primary'` | Guide line color |
+| `labelColorType` | `ColorType` | `'primary'` | Label background color |
+| `labelTextColorType` | `ColorType` | `'background'` | Label text color |
+| `labelTextFormat` | `string \| ((text) => string)` | `text => text` | Label text formatter |
+| `labelPadding` | `number` | `20` | Label padding |
+
+### CategoryZoom
+
+Hidden by default. When enabled, allows zooming and panning along the category axis. This Layer has no extra parameters:
+
+```ts
+new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })
+```
+
+## Full TypeScript interface
+
+```ts
+interface RankedPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGrid) => boolean | null
+  categoryAxis: CategoryAxis
+  rankedAxis: { label: string; limit: number | 'auto' }
+  datasetIndex: number
+}
+
+interface RankedPlotAllLayerParams {
+  RankedBubble: RankedPlotRankedBubbleParams
+  RankAxis: RankedPlotRankAxisParams
+  CategoryAxis: RankedPlotCategoryAxisParams
+  CategoryGuide: RankedPlotCategoryGuideParams
+  CategoryZoom: RankedPlotCategoryZoomParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new RankedPlot(params?: DeepPartial<RankedPlotPluginParams & RankedPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [GridPlot](/docs/plugins/grid-plot) — the core Plugin for the same `grid` data format
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

@@ -1,0 +1,110 @@
+---
+title: Your First Chart
+description: Build your first pie chart step by step, understand what each block does, and add a Tooltip and Legend.
+nav:
+  group: Getting Started
+  order: 2
+related:
+  - /docs/getting-started/installation
+  - /docs/getting-started/core-concepts
+  - /docs/plugins/partition-plot
+---
+
+# Your First Chart
+
+This page walks you through building a **pie chart** step by step and explains what each block of code does. By the end you'll understand the basic OrbCharts workflow: prepare a container → prepare data → choose a Plugin → create the chart.
+
+> **Tip**: Haven't installed yet? See [Installation](/docs/getting-started/installation) first.
+
+## Step 1: Prepare a container
+
+OrbCharts fills its container by default, so the container must have an explicit width and height, otherwise the chart will not be visible.
+
+```html
+<div id="chart" style="width: 600px; height: 400px;"></div>
+```
+
+> **Note**: The sizing and container mechanism is the most common pitfall for beginners. See [Core Concepts — Sizing and container mechanism](/docs/getting-started/core-concepts).
+
+## Step 2: Prepare data
+
+The raw data OrbCharts accepts is called `RawData`. The simplest format is `series`—each record has a `value` and is grouped and colored by its `series` field.
+
+```ts
+import type { RawData } from 'orbcharts'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+```
+
+Each `{ series, value }` becomes one slice in the pie chart. Records sharing the same `series` use the same color by default. For the full data format reference, see [Series Format](/docs/data-formats/series).
+
+## Step 3: Choose a Plugin
+
+Charts are drawn by **Plugins**. To draw a pie chart, use `PartitionPlot` and enable its `Pie` layer:
+
+```ts
+import { PartitionPlot } from 'orbcharts'
+
+new PartitionPlot({ Pie: {} })
+```
+
+Here `Pie` is a **Layer** (a single visual element). The Layer names you list in the parameters determine which Layers are shown—this is the OrbCharts Layer display mechanism, detailed in [Plugin API](/docs/api/plugin-api).
+
+## Step 4: Create the chart
+
+Combine the container, data, and Plugin, and pass them to the `OrbCharts` constructor:
+
+```ts
+import { OrbCharts } from 'orbcharts'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new PartitionPlot({ Pie: {} })],
+})
+```
+
+The first argument of `new OrbCharts(element, options)` is the container DOM, and the second is the options object (here using `data` and `plugins`). Once run, the pie chart renders into the `#chart` container.
+
+## Step 5: Add a Tooltip and Legend
+
+`Tooltip` (a hover tooltip) and `Legend` are also Plugins—just add them to the `plugins` array:
+
+```ts
+import { OrbCharts, PartitionPlot, Tooltip, Legend } from 'orbcharts'
+import type { RawData } from 'orbcharts'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new PartitionPlot({ Pie: {} }), new Tooltip(), new Legend()],
+})
+```
+
+Now hovering over a slice shows a tooltip, and an interactive legend appears around the chart.
+
+## Step 6: Cleanup
+
+When the chart is no longer needed (for example on component unmount), call `destroy()` to release resources and remove event listeners:
+
+```ts
+chart.destroy()
+```
+
+> **Tip**: Calling `chart.destroy()` in a React `useEffect` cleanup or a Vue `onUnmounted` avoids memory leaks.
+
+## Related
+
+- [Core Concepts](/docs/getting-started/core-concepts) — data flow, Plugin, Layer, and the sizing mechanism
+- [Series Format](/docs/data-formats/series) — the data format used in this example
+- [PartitionPlot](/docs/plugins/partition-plot) — full parameters for pie, rose, and bubble charts

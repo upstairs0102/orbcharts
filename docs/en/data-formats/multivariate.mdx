@@ -1,0 +1,147 @@
+---
+title: Multivariate Format
+description: Multivariate describes multi-dimensional values (X / Y / Z…), ideal for scatter and bubble charts that present several dimensions at once.
+nav:
+  group: Data Formats
+  order: 4
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/scatter-plot
+---
+
+# Multivariate Format
+
+`multivariate` describes **multi-dimensional values**. Besides `series`, each record contains several dimensions (e.g. `x`, `y`, `z`), which map to the model data through `Encoding.multivariate`.
+
+It suits charts that present multiple value dimensions at once, such as scatter and bubble charts (positioned by `x` and `y`, with `z` controlling size).
+
+## When to use
+
+- Showing "the relationship between two variables" (scatter chart)
+- Expressing extra information with a third dimension (`z`), such as bubble size
+- Data that is multi-dimensional numeric points rather than a single value
+
+## Data structure
+
+Each multivariate record contains `series` and several dimension fields:
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', x: 30, y: 10, z: 10, name: 'a' },
+  { series: 'A', x: 50, y: 20, z: 20, name: 'b' },
+  { series: 'B', x: 70, y: 30, z: 30, name: 'c' },
+]
+```
+
+### Available fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `x` | `number \| null` | No | First dimension (maps to the X axis by default) |
+| `y` | `number \| null` | No | Second dimension (maps to the Y axis by default) |
+| `z` | `number \| null` | No | Third dimension (maps to bubble size by default) |
+| `series` | `string` | No | Series name; used for grouping and coloring by default |
+| `name` | `string` | No | Display name (e.g. the text shown in a Tooltip) |
+| `data` | `any` | No | Custom attached data, preserved as-is |
+
+> **Tip**: The default color source is `series` (`color: { from: 'series' }`); points with the same `series` share the same color.
+
+## Encoding.multivariate
+
+The dimension fields are mapped through `Encoding.multivariate`. The default maps the `x`, `y`, and `z` fields to three dimensions in order:
+
+```ts
+const defaultMultivariate = [
+  { from: 'x', name: 'x' },
+  { from: 'y', name: 'y' },
+  { from: 'z', name: 'z' },
+]
+```
+
+If your data uses different field names (e.g. `width`, `height`), you can customize the mapping:
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    multivariate: [
+      { from: 'width', name: 'x' },
+      { from: 'height', name: 'y' },
+    ],
+  },
+})
+```
+
+## Model data (ModelDatumMultivariate)
+
+After OrbCharts processes RawData, each record is converted into a `ModelDatumMultivariate`. It extends `ModelDatumBase` and collects the dimensions in a `multivariate` array:
+
+```ts
+interface ModelDatumMultivariate {
+  // From ModelDatumBase
+  id: string            // unique identifier
+  index: number         // index within the same category
+  modelType: 'multivariate'
+  name: string          // from the original data's name
+  data: any             // from the original data's data
+  value: number | null  // the value after aggregation
+  color: string         // the mapped color (hex)
+  // Multivariate-specific fields
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+  multivariate: Array<{
+    index: number
+    name: string
+    value: number | null
+  }>
+}
+```
+
+## Corresponding Plugins
+
+The `multivariate` format works with the following Plugins:
+
+| Plugin | Charts |
+|---|---|
+| [ScatterPlot](/docs/plugins/scatter-plot) | Scatter, Bubble |
+
+## Full example
+
+Below is a bubble chart using the `Bubble` layer of `ScatterPlot` together with `XYAxes`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { ScatterPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', x: 30, y: 10, z: 10, name: 'a' },
+  { series: 'A', x: 50, y: 20, z: 20, name: 'b' },
+  { series: 'B', x: 70, y: 30, z: 30, name: 'c' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new ScatterPlot({ Bubble: {}, XYAxes: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// Remember to destroy the chart on unmount to release resources and listeners
+// chart.destroy()
+```
+
+> **Note**: OrbCharts fills its container by default (`size` defaults to `'auto'`). Make sure the `#chart` container has an explicit width and height, otherwise the chart may not be visible. See [Core Concepts](/docs/getting-started/core-concepts).
+
+## Related links
+
+- Back to [Data Formats Overview](/docs/data-formats/overview)
+- See the full parameters and more chart examples in [ScatterPlot](/docs/plugins/scatter-plot)
+- For size and color settings, see [Core Concepts](/docs/getting-started/core-concepts)
+- For color and ColorType settings, see [Theme API](/docs/api/theme)

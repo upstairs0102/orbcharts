@@ -1,0 +1,115 @@
+---
+title: 從 v3 遷移
+description: OrbCharts v4 是重大改版，與 v3 的 API 差異甚大。本頁說明核心模型轉變與新舊 API 對照。
+nav:
+  group: 進階
+  order: 4
+related:
+  - /docs/getting-started/installation
+  - /docs/data-formats/overview
+  - /docs/api/orbcharts-class
+---
+
+# 從 v3 遷移
+
+OrbCharts v4 是一次**重大改版**，與 v3 在設計與 API 上差異甚大。**v4 不向後相容 v3**，無法只靠改幾行程式碼升級——多數情況需要依新模型重寫圖表的建立流程。
+
+> **注意**：本頁協助你理解差異的「形狀」。若你是全新專案，建議直接從 [安裝](/docs/getting-started/installation) 開始，不需要先學 v3。
+
+## 核心模型的轉變
+
+最關鍵的差異是建立圖表的心智模型：
+
+- **v3**：以「圖表類別 + preset」為核心。你選一個圖表類別（如 `SeriesChart`），套用一個預設（如 `PRESET_PIE_BASIC`），再用 RxJS Subject（`data$`、`plugins$`）推送資料與設定。
+- **v4**：改採「**資料格式 + Plugin/Layer**」模型。你準備符合某種[資料格式](/docs/data-formats/overview)的資料，建立一個 `OrbCharts` 實例，再選用對應的 Plugin（如 `GridPlot`、`PartitionPlot`），並在 Plugin 中列出要顯示的 **Layer**（如 `Bar`、`Line`、`Pie`）來決定圖表外觀。
+
+換句話說，v4 取消了 preset 機制，改由「資料的格式」搭配「Plugin/Layer 的組合」來描述一張圖。
+
+## API 對照表
+
+| 功能 | v3 | v4 |
+|---|---|---|
+| 建立圖表 | `new SeriesChart(el, { preset })` | `new OrbCharts(el, options?)` |
+| 設定資料 | `chart.data$.next(data)` | `chart.setData(data)` 或建構式 `options.data` |
+| 設定 Plugin | `chart.plugins$.next([...])` | `chart.setPlugins([...])` 或 `options.plugins` |
+| Plugin | `new Pie()`、`new Bar()` | `new PartitionPlot({ Pie: {} })`、`new GridPlot({ Bar: {} })` |
+| Preset | `PRESET_PIE_BASIC` | 無 preset 機制 |
+| 資料格式 | 二維數字陣列 `[[1, 2, 3]]` | 物件陣列 `[{ series, category, value }]` |
+
+## 資料格式：從數字陣列到物件陣列
+
+v3 以二維數字陣列描述資料，欄與列的意義隱含在位置上：
+
+```ts
+// v3
+chart.data$.next([
+  [1, 2, 3],
+  [4, 5, 6],
+])
+```
+
+v4 改用**物件陣列**，每筆資料明確標示 `series`、`category`、`value` 等欄位，語意清楚也更易維護：
+
+```ts
+// v4
+chart.setData([
+  { series: 'A', category: 'Q1', value: 1 },
+  { series: 'A', category: 'Q2', value: 2 },
+  { series: 'A', category: 'Q3', value: 3 },
+  { series: 'B', category: 'Q1', value: 4 },
+  { series: 'B', category: 'Q2', value: 5 },
+  { series: 'B', category: 'Q3', value: 6 },
+])
+```
+
+若你的原始欄位名稱不同，可透過 [Encoding](/docs/api/encoding) 重新映射，不必硬改資料。各種資料格式的細節見 [資料格式概述](/docs/data-formats/overview)。
+
+## Plugin：從圖表類別到 Plugin + Layer
+
+v3 的每種圖表是獨立的 Plugin 類別（`new Pie()`、`new Bar()`）。v4 改為一個 Plugin 對應一種**資料格式**，再以 Layer 切換實際圖形：
+
+```ts
+// v3
+chart.plugins$.next([new Pie(), new Bar()])
+
+// v4：grid 格式用 GridPlot，列出 Bar Layer
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+// v4：series 格式用 PartitionPlot，列出 Pie Layer
+new PartitionPlot({ Pie: {} })
+```
+
+只要更換列出的 Layer（例如把 `Bar` 換成 `Line`），同一個 Plugin 就能切換圖表類型。Layer 顯示機制與共用操作見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 完整對照範例
+
+把一張 v3 長條圖改寫為 v4：
+
+```ts
+// === v3 ===
+import { SeriesChart, PRESET_BAR_BASIC } from 'orbcharts'
+
+const chart = new SeriesChart(element, { preset: PRESET_BAR_BASIC })
+chart.data$.next([[30, 20, 45]])
+
+// === v4 ===
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(element, {
+  data: [
+    { series: 'A', category: 'Q1', value: 30 },
+    { series: 'A', category: 'Q2', value: 20 },
+    { series: 'A', category: 'Q3', value: 45 },
+  ],
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+> **提示**：v4 的方法（`setData`、`setPlugins` 等）可在建立後隨時呼叫以更新圖表；也可全部在建構式 `options` 中一次給定。完整方法見 [OrbCharts 類別](/docs/api/orbcharts-class)。
+
+## 相關連結
+
+- [安裝](/docs/getting-started/installation) — 從頭開始建立 v4 圖表
+- [資料格式概述](/docs/data-formats/overview) — v4 的資料模型
+- [OrbCharts 類別](/docs/api/orbcharts-class) — v4 的進入點與所有方法

@@ -1,0 +1,258 @@
+---
+title: OrbCharts Class
+description: The OrbCharts class constructor, options, and all methods for data, Encoding, Plugins, Theme, sizing, and lifecycle.
+nav:
+  group: API Reference
+  order: 1
+related:
+  - /docs/api/encoding
+  - /docs/api/theme
+  - /docs/api/plugin-api
+---
+
+# OrbCharts Class
+
+`OrbCharts` is the entry point to the library. You create an instance from a DOM container and an options object, then use its methods to dynamically update data, Encoding, Plugins, Theme, and size—and release resources when you no longer need it.
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+
+const chart = new OrbCharts(element, options)
+```
+
+## Constructor
+
+```ts
+new OrbCharts(element: HTMLElement | Element, options?: PartialChartOptions)
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `element` | `HTMLElement \| Element` | The chart's container DOM. Must have an explicit width and height, or the chart won't render. |
+| `options` | `PartialChartOptions` | Optional initial configuration; any field not provided uses its default. |
+
+All fields of `PartialChartOptions` are optional:
+
+```ts
+interface PartialChartOptions {
+  size?:     SizeConfig
+  theme?:    DeepPartial<Theme>
+  data?:     RawData
+  encoding?: DeepPartial<Encoding>
+  plugins?:  PluginEntity[]
+}
+```
+
+| Field | Description | Related method |
+|---|---|---|
+| `size` | Width, height, and resize settings | [`resize`](#resize) |
+| `theme` | Colors, light/dark mode, font size | [Theme](/docs/api/theme) |
+| `data` | The raw data `RawData` | [`setData`](#setdata) |
+| `encoding` | Field mapping, sorting, aggregation | [Encoding](/docs/api/encoding) |
+| `plugins` | The array of Plugins to apply | [`setPlugins`](#setplugins) |
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'Q1', value: 30 },
+  { series: 'A', category: 'Q2', value: 55 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  theme: { colorScheme: 'dark' },
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+> **Tip**: `theme` and `encoding` accept a `DeepPartial`, so you only override the fields you want to change; the rest keep their defaults (deep merge).
+
+## Data
+
+### `setData`
+
+```ts
+setData(data: RawData): void
+```
+
+Fully replaces the chart's raw data and re-renders. For the structure of `RawData` and each dimension's format, see [Data formats overview](/docs/data-formats/overview).
+
+```ts
+chart.setData([
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+])
+```
+
+## Encoding
+
+Encoding determines how raw-data fields map to the chart's dimensions (dataset, series, category, value, etc.), and lets you specify sorting and aggregation. See [Encoding](/docs/api/encoding) for the full field reference.
+
+### `updateEncoding`
+
+```ts
+updateEncoding(patch: DeepPartial<Encoding>): void
+```
+
+Partially updates the Encoding, **deep-merged** with the current value. Ideal for tweaking a single setting.
+
+```ts
+// Only remap the value field to "amount"; everything else stays the same
+chart.updateEncoding({ value: { from: 'amount' } })
+```
+
+### `forceReplaceEncoding`
+
+```ts
+forceReplaceEncoding(full: Encoding): void
+```
+
+**Replaces** the current settings entirely with a complete `Encoding` object. Fields you omit do not keep their old values.
+
+### `getEncoding`
+
+```ts
+getEncoding(): Readonly<Encoding>
+```
+
+Returns the currently effective Encoding (read-only).
+
+## Plugins
+
+Plugins do the actual rendering. For operations common to all Plugins, see [Plugin API](/docs/api/plugin-api).
+
+### `setPlugins`
+
+```ts
+setPlugins(plugins: PluginEntity[]): void
+```
+
+**Replaces** all current Plugins with a new array.
+
+```ts
+import { GridPlot, Tooltip } from '@orbcharts/plugin-basic'
+
+chart.setPlugins([new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} }), new Tooltip()])
+```
+
+### `addPlugin`
+
+```ts
+addPlugin(plugin: PluginEntity): void
+```
+
+Adds a single Plugin without affecting the other existing Plugins.
+
+```ts
+import { Legend } from '@orbcharts/plugin-basic'
+
+chart.addPlugin(new Legend())
+```
+
+### `removePlugin`
+
+```ts
+removePlugin(id: string): void
+```
+
+Removes a Plugin by its `id`.
+
+```ts
+chart.removePlugin('Legend')
+```
+
+## Theme
+
+### `updateTheme`
+
+```ts
+updateTheme(patch: DeepPartial<Theme>): void
+```
+
+Partially updates the theme, deep-merged with the current value. See [Theme](/docs/api/theme) for the full structure.
+
+```ts
+chart.updateTheme({ colorScheme: 'dark' })
+```
+
+### `forceReplaceTheme`
+
+```ts
+forceReplaceTheme(full: Theme): void
+```
+
+Replaces the current theme entirely with a complete `Theme` object.
+
+### `getTheme`
+
+```ts
+getTheme(): Readonly<Theme>
+```
+
+Returns the currently effective theme (read-only).
+
+## Sizing
+
+### `resize`
+
+```ts
+resize(sizeConfig: SizeConfig): void
+```
+
+Sets the chart size and auto-resize behavior.
+
+```ts
+interface SizeConfig {
+  width:  number | 'auto'
+  height: number | 'auto'
+  resizeDebounce: number
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `width` | `number \| 'auto'` | `'auto'` | Width (px); `'auto'` fills the container |
+| `height` | `number \| 'auto'` | `'auto'` | Height (px); `'auto'` fills the container |
+| `resizeDebounce` | `number` | `50` | Debounce delay (ms) for recomputing on container resize |
+
+```ts
+// Fixed width, auto height, with a shorter debounce
+chart.resize({ width: 800, height: 'auto', resizeDebounce: 30 })
+```
+
+> **Tip**: `'auto'` follows the container's size, so the container itself must have an explicit width and height. Sizing and the container mechanism are the most common beginner pitfall.
+
+## Lifecycle
+
+### `destroy`
+
+```ts
+destroy(): void
+```
+
+Releases all resources, removes event listeners, and cleans up its Plugins as well.
+
+```ts
+chart.destroy()
+```
+
+> **Tip**: On component unmount (React's `useEffect` cleanup, Vue's `onUnmounted`), always call `chart.destroy()` to avoid memory leaks and dangling event subscriptions.
+
+## The `context` property
+
+```ts
+chart.context: ChartContext
+```
+
+`context` exposes the chart's internal RxJS streams (such as `event$`, `encoding$`, `theme$`) and root nodes (`root`, `svg`, `canvas`) for advanced subscription and integration. For event usage see [Events](/docs/api/events); for the full list of streams see [TypeScript Types](/docs/api/typescript-types).
+
+## Related
+
+- [Encoding](/docs/api/encoding) — field mapping, sorting, and aggregation
+- [Theme](/docs/api/theme) — colors and light/dark mode
+- [Plugin API](/docs/api/plugin-api) — operations common to all Plugins
+- [Events](/docs/api/events) — listening to and triggering chart events
+- [TypeScript Types](/docs/api/typescript-types) — the full list of types
