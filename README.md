@@ -6,7 +6,7 @@ OrbCharts is a **data-driven JavaScript chart library**. One data format for eve
 
 [Official Website](https://bpbase.github.io/orbcharts) | [Documentation](https://bpbase.github.io/orbcharts/docs)
 
-> **Note:** `4.0.0-beta.0` is a major redesign of OrbCharts. The API differs significantly from v3.x — see the [migration guide](https://bpbase.github.io/orbcharts/docs/advanced/migration-from-v3) if you are upgrading.
+> **Note:** `4.0.0-beta.1` is a major redesign of OrbCharts. The API differs significantly from v3.x — see the [migration guide](https://bpbase.github.io/orbcharts/docs/advanced/migration-from-v3) if you are upgrading.
 
 ## Features
 
@@ -46,14 +46,14 @@ npm i orbcharts@beta
 
 ```html
 <script type="module">
-import * as orbcharts from 'https://cdn.jsdelivr.net/npm/orbcharts@4.0.0-beta.0/+esm'
+import * as orbcharts from 'https://cdn.jsdelivr.net/npm/orbcharts@4.0.0-beta.1/+esm'
 </script>
 ```
 
 3. UMD format CDN download
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/orbcharts@4.0.0-beta.0/dist/orbcharts.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/orbcharts@4.0.0-beta.1/dist/orbcharts.umd.js"></script>
 ```
 
 ### Execution
