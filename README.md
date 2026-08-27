@@ -1,6 +1,6 @@
 # OrbCharts
 
-![logo - light mode](https://bpbase.github.io/orbcharts/images/logo_light_temp2.png)
+![logo - light mode](https://bpbase.github.io/orbcharts/images/logo_light_xl_temp2.png)
 
 OrbCharts is a **data-driven JavaScript chart library**. One data format for every chart — data is decoupled from rendering, so you can switch how the same data is visualized at any time. Built for dashboards.
 
