@@ -1,0 +1,114 @@
+---
+title: Theme
+description: 設定 OrbCharts 的色彩、明暗模式與字級，以及 Layer 參數中常見的 ColorType。
+nav:
+  group: API 參考
+  order: 4
+related:
+  - /docs/api/plugin-api
+  - /docs/api/orbcharts-class
+---
+
+# Theme
+
+`Theme` 控制整張圖表的色彩、明暗模式與字級。它在建立圖表時透過 `theme` 選項傳入，也可之後用 `chart.updateTheme()` 動態調整。
+
+## Theme 結構
+
+```ts
+interface Theme {
+  colorScheme: 'light' | 'dark' | 'auto'
+  colors: {
+    light: Colors
+    dark: Colors
+  }
+  fontSize: string | number
+}
+
+interface Colors {
+  data: string[]          // 資料色系（依序套用到各筆資料）
+  primary: string         // 主要色（文字、軸線）
+  secondary: string       // 次要色（格線等）
+  dataContrast: string[]  // 高對比色（用於資料上的文字）
+  background: string      // 背景色
+}
+```
+
+| 欄位 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `colorScheme` | `'light' \| 'dark' \| 'auto'` | `'light'` | 明暗模式 |
+| `fontSize` | `string \| number` | `'0.875rem'` | 基準字級 |
+
+## 預設色盤
+
+OrbCharts 預設採用低調的 Tableau 風格色彩，避免過度鮮豔搶走資料焦點。
+
+**Light（淺色）**
+
+| 用途 | 值 |
+|---|---|
+| `data` | `#4E79A7` `#F28E2B` `#E15759` `#76B7B2` `#59A14F` `#EDC948` `#B07AA1` `#FF9DA7` `#9C755F` `#BAB0AC` |
+| `primary` | `#000000` |
+| `secondary` | `#e0e0e0` |
+| `dataContrast` | `['#ffffff', '#000000']` |
+| `background` | `#FFFFFF` |
+
+**Dark（深色）**
+
+| 用途 | 值 |
+|---|---|
+| `data` | `#7EA6E0` `#FFB86B` `#FF7A7A` `#6ED0CC` `#7ED97A` `#FFE06E` `#D4A5D8` `#FFB3BA` `#C89F7A` `#D3D3D3` |
+| `primary` | `#FFFFFF` |
+| `secondary` | `#e0e0e0` |
+| `dataContrast` | `['#ffffff', '#000000']` |
+| `background` | `#000000` |
+
+## ColorType
+
+許多 Layer 參數（如 `fillColorType`、`strokeColorType`、`tickColorType`）使用 `ColorType` 來指定顏色。它不是直接寫色碼，而是**指向 Theme 中定義的色彩**，讓圖表在切換主題時自動套用對應顏色。
+
+```ts
+type ColorType = 'none' | 'data' | 'primary' | 'secondary' | 'dataContrast' | 'background'
+```
+
+| 值 | 對應 |
+|---|---|
+| `'data'` | 資料色系（依資料的 series/category 索引取色） |
+| `'primary'` | 主要色 |
+| `'secondary'` | 次要色 |
+| `'dataContrast'` | 高對比色 |
+| `'background'` | 背景色 |
+| `'none'` | 不上色（透明） |
+
+## 自訂主題
+
+只需覆寫想改的部分，其餘沿用預設（深層合併）：
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  theme: {
+    colorScheme: 'dark',
+    fontSize: '1rem',
+    colors: {
+      dark: {
+        data: ['#7EA6E0', '#FFB86B', '#FF7A7A'],
+      },
+    },
+  },
+  plugins: [/* ... */],
+})
+```
+
+### 建立後動態調整
+
+```ts
+chart.updateTheme({ colorScheme: 'dark' })   // 局部更新（深層合併）
+chart.getTheme()                              // 取得目前主題
+chart.forceReplaceTheme(fullTheme)            // 完整取代
+```
+
+## 相關連結
+
+- [Plugin 通用 API](/docs/api/plugin-api) — Layer 參數中的 `ColorType`
+- [OrbCharts 類別](/docs/api/orbcharts-class) — `updateTheme` / `getTheme`

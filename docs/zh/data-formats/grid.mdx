@@ -1,0 +1,165 @@
+---
+title: Grid 格式
+description: Grid 是具有「類別軸」與「數值軸」的二維資料格式，適合長條圖、折線圖、競速圖等需要座標軸的圖表。
+nav:
+  group: 資料格式
+  order: 3
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/grid-plot
+---
+
+# Grid 格式
+
+`grid` 是 OrbCharts 中最常見的二維資料格式。每一筆資料同時具有 `series`、`category` 與 `value`：`category` 對應**類別軸**、`value` 對應**數值軸**，而 `series` 用於**分組與上色**。
+
+它適合需要座標軸的圖表，例如長條圖、折線圖與競速圖。
+
+## 適用場景
+
+- 想比較「不同類別之間的數值大小」（長條圖）
+- 想呈現「數值隨類別變化的趨勢」（折線圖、面積圖）
+- 想以動態方式比較多個時間點的排名（競速圖）
+
+## 資料結構
+
+Grid 資料的每一筆都建議包含 `series`、`category` 與 `value`：
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+```
+
+上例會形成一個 2 個 `series`（A、B）× 2 個 `category`（category1、category2）的網格。
+
+### 可用欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `value` | `number \| null` | 是 | 此筆資料的數值，對應數值軸 |
+| `category` | `string` | 否 | 類別名稱，對應類別軸 |
+| `series` | `string` | 否 | 系列名稱，預設用於分組與上色 |
+| `name` | `string` | 否 | 顯示名稱（例如 Tooltip 中顯示的文字） |
+| `data` | `any` | 否 | 自訂附加資料，會原樣保留 |
+
+> **提示**：預設的色彩來源是 `series`（`color: { from: 'series' }`）。相同 `series` 的資料會用同一個顏色，因此在多系列長條圖中，每個系列會自動以不同顏色區分。
+
+## 聚合行為
+
+預設 `aggregate` 為 `'none'`，因此**每一筆資料都是獨立的一個資料點**，即使它們的 `series` 與 `category` 都相同。
+
+```ts
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category1', value: 50 },  // 不會與上一筆自動加總
+  { series: 'B', category: 'category1', value: 70 },
+]
+```
+
+若你希望把相同 `series` 與 `category` 組合的數值加總成一筆，請設定 Encoding：
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { aggregate: 'sum' },  // 相同分組加總
+  },
+})
+```
+
+可用的 `aggregate` 值：`'sum'`、`'mean'`、`'median'`、`'min'`、`'max'`、`'count'`、`'none'`。
+
+## 模型資料（ModelDatumGrid）
+
+當 OrbCharts 處理完 RawData 後，每筆資料會轉換為 `ModelDatumGrid`。它繼承自所有模型資料共用的 `ModelDatumBase`，並加上 `series`、`category` 相關欄位：
+
+```ts
+interface ModelDatumGrid {
+  // 來自 ModelDatumBase
+  id: string            // 唯一識別
+  index: number         // 在同類別中的索引
+  modelType: 'grid'
+  name: string          // 來自原始資料的 name
+  data: any             // 來自原始資料的 data
+  value: number | null  // 經過 aggregate 後的數值
+  color: string         // 對應後的顏色（hex）
+  // Grid 專屬欄位
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+## 對應的 Plugin
+
+`grid` 格式可搭配以下 Plugin：
+
+| Plugin | 可繪製的圖表 |
+|---|---|
+| [GridPlot](/docs/plugins/grid-plot) | 長條圖（Bar）、折線圖（Line）、面積圖等 |
+| [RacingPlot](/docs/plugins/racing-plot) | 競速圖（需多資料集） |
+| [RankedPlot](/docs/plugins/ranked-plot) | 排名圖 |
+
+## 完整範例
+
+以下是一個多系列長條圖，使用 `GridPlot` 並搭配類別軸與數值軸：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// 元件卸載時記得銷毀，釋放資源與事件監聽
+// chart.destroy()
+```
+
+> **注意**：OrbCharts 預設會自動填滿容器尺寸（`size` 預設為 `'auto'`），請確保 `#chart` 容器有明確的寬度與高度，否則圖表可能無法顯示。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+### 多資料集（競速圖）
+
+若要繪製競速圖（RacingPlot），可提供二維的 `RawData`，外層每個陣列代表一個資料集（例如一個時間點）：
+
+```ts
+const data: RawData = [
+  // 第一個時間點
+  [
+    { series: 'A', category: 'category1', value: 30 },
+    { series: 'B', category: 'category1', value: 70 },
+  ],
+  // 第二個時間點
+  [
+    { series: 'A', category: 'category1', value: 45 },
+    { series: 'B', category: 'category1', value: 60 },
+  ],
+]
+```
+
+## 相關連結
+
+- 回到 [資料格式概述](/docs/data-formats/overview)
+- 查看 [GridPlot](/docs/plugins/grid-plot) 的完整參數與更多圖表範例
+- 了解尺寸與色彩設定請見 [核心概念](/docs/getting-started/core-concepts)
+- 色彩與 ColorType 設定請見 [Theme API](/docs/api/theme)

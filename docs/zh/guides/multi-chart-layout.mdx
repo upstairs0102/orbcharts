@@ -1,0 +1,60 @@
+---
+title: 多圖表佈局
+description: 用 Plugin 的 container 參數在同一張圖以網格排列多個相同類型的子圖。
+nav:
+  group: 指南
+  order: 6
+related:
+  - /docs/api/plugin-api
+  - /docs/plugins/grid-plot
+---
+
+# 多圖表佈局
+
+當資料包含多個資料集時,你可以在**同一張圖**中,以網格排列多個相同類型的子圖(small multiples)。這由 Plugin 的 `container` 參數控制。
+
+## container 參數
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `columnAmount` | `number` | `1` | 欄數 |
+| `rowAmount` | `number` | `1` | 列數 |
+| `columnGap` | `number \| 'auto'` | `'auto'` | 欄間距 |
+| `rowGap` | `number \| 'auto'` | `'auto'` | 列間距 |
+
+預設 `{ columnAmount: 1, rowAmount: 1, columnGap: 'auto', rowGap: 'auto' }`,也就是單一圖表。`container` 的完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 排成兩欄
+
+`container` 與 Layer 名稱並列在同一個參數物件中。把 `columnAmount` 設為 `2`,子圖就會排成兩欄:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({
+      Bar: {},
+      CategoryAxis: {},
+      ValueAxis: {},
+      container: {
+        columnAmount: 2,
+        columnGap: 40,
+      },
+    }),
+  ],
+})
+```
+
+每個子圖共用相同的 Layer 組合與樣式,只是各自繪製不同的資料集。
+
+> **提示**:`columnGap` 與 `rowGap` 留在預設的 `'auto'` 時會自動分配間距;若想精準控制,改填數字(像素)即可。
+
+> **注意**:子圖會在容器內均分空間,因此**容器仍需有明確的寬高**(見 [響應式尺寸](/docs/guides/responsive))。網格越密,每個子圖越小,記得保留足夠的整體尺寸。
+
+## 相關連結
+
+- [Plugin 通用 API](/docs/api/plugin-api) — `container`(Container)的完整欄位
+- [GridPlot](/docs/plugins/grid-plot) — 可套用 `container` 的圖表 Plugin

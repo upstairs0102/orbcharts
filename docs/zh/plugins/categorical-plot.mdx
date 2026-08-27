@@ -1,0 +1,204 @@
+---
+title: CategoricalPlot
+description: CategoricalPlot 是 series 資料格式的核心 Plugin，可繪製類別泡泡圖。
+nav:
+  group: Plugins
+  order: 8
+charts:
+  - categorical-bubble
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# CategoricalPlot
+
+`CategoricalPlot` 是處理 `series` 資料格式的核心 Plugin。它以一條「類別軸」與一條「數值軸」呈現類別泡泡圖：在每個類別位置堆放大小對應數值的泡泡。
+
+**資料格式：** `series`
+
+## 支援的圖表
+
+- 類別泡泡圖（Categorical Bubble） — `RaisedBubble` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張類別泡泡圖。CategoricalPlot 預設會顯示 `RaisedBubble`、`CategoryAxis`、`ValueAxis` 三個 Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { CategoricalPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: '0', value: 5 },
+  { series: 'A', category: '1', value: 8 },
+  { series: 'B', category: '0', value: 3 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new CategoricalPlot({ RaisedBubble: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+這份 `series` 資料每筆包含 `series`、`category`、`value`：`category` 對應到類別軸，`value` 決定泡泡大小並對應數值軸，`series` 用於分組與上色。
+
+## 圖表範例
+
+### 類別泡泡圖
+
+```ts
+new CategoricalPlot({ RaisedBubble: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`RaisedBubble` 在每個類別位置依數值大小繪製泡泡，搭配類別軸與數值軸。可再加上 `CategoryGuide` 顯示輔助線、`CategoryZoom` 啟用類別軸縮放。
+
+> **提示**：可搭配 [Legend](/docs/plugins/legend) 與 [Tooltip](/docs/plugins/tooltip) 增加互動，加入方式與 [GridPlot](/docs/plugins/grid-plot) 相同。
+
+## Layer 顯示機制
+
+CategoricalPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new CategoricalPlot()`），預設顯示 `RaisedBubble`、`CategoryAxis`、`ValueAxis`（即一張類別泡泡圖）。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## Plugin 參數
+
+這些參數影響整個 CategoricalPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `position` | `'left' \| 'right'` | `'left'` | 數值軸所在位置 |
+| `categoryAxis` | `CategoryAxis` | 見下表 | 類別軸設定 |
+| `valueAxis` | `ValueAxis` | 見下表 | 數值軸設定 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 20, 60, 80, 60 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `container` | `Container` | 單一圖表 | 多圖表佈局（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `VisibleFilter<'series'>` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`container`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 CategoricalPlot 的預設值差異（`styles.padding` 預設為 `{ top: 20, right: 60, bottom: 80, left: 60 }`，`transitionDuration` 預設 `200`）。
+
+### `categoryAxis`（CategoryAxis）
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `scaleDomain` | `[number, number \| 'max']` | `[0, 'max']` | 類別索引範圍 |
+| `scalePadding` | `number` | `0.5` | 類別間距 |
+| `label` | `string` | `''` | 軸標籤 |
+
+### `valueAxis`（ValueAxis）
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `scaleDomain` | `[number \| 'min' \| 'auto', number \| 'max' \| 'auto']` | `['auto', 'auto']` | 數值範圍 |
+| `scaleRange` | `[number, number]` | `[0, 0.9]` | 對應到繪圖區的比例範圍 |
+| `label` | `string` | `''` | 軸標籤 |
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### RaisedBubble（類別泡泡）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `sizeAdjust` | `number` | `0.8` | 泡泡大小調整係數 |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | 數值映射方式（半徑或面積） |
+| `valueLinearOpacity` | `[number, number]` | `[0.5, 1]` | 依數值的透明度範圍 |
+| `showZeroValue` | `boolean` | `false` | 是否顯示數值為 0 的泡泡 |
+
+### CategoryAxis（類別軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `true` | 是否顯示軸線 |
+| `axisLineColorType` | `ColorType` | `'primary'` | 軸線顏色 |
+| `ticks` | `number \| null \| 'all'` | `'all'` | 刻度數量 |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `false` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextRotate` | `number` | `0` | 刻度文字旋轉角度 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+
+### ValueAxis（數值軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `false` | 是否顯示軸線 |
+| `ticks` | `number \| null` | `null` | 刻度數量（`null` 為自動） |
+| `tickFormat` | `string \| ((num) => string)` | 千分位格式化函式 | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `true` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+
+### CategoryGuide（類別輔助線）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | 是否顯示輔助線 |
+| `showLabel` | `boolean` | `true` | 是否顯示標籤 |
+| `lineDashArray` | `string` | `'3, 3'` | 虛線樣式 |
+| `lineColorType` | `ColorType` | `'primary'` | 輔助線顏色 |
+| `labelColorType` | `ColorType` | `'primary'` | 標籤背景顏色 |
+| `labelTextColorType` | `ColorType` | `'background'` | 標籤文字顏色 |
+| `labelTextFormat` | `string \| ((text) => string)` | `text => text` | 標籤文字格式化 |
+| `labelPadding` | `number` | `20` | 標籤內距 |
+| `labelRotate` | `number` | `0` | 標籤旋轉角度 |
+
+### CategoryZoom（類別縮放）
+
+啟用後可在類別軸方向進行縮放與平移。此 Layer 無額外參數：
+
+```ts
+new CategoricalPlot({ RaisedBubble: {}, CategoryAxis: {}, ValueAxis: {}, CategoryZoom: {} })
+```
+
+## 完整 TypeScript 介面
+
+```ts
+interface CategoricalPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: VisibleFilter<'series'>
+  container: Container
+  position: 'left' | 'right'
+  categoryAxis: CategoryAxis
+  valueAxis: ValueAxis
+  datasetIndex: number
+}
+
+interface CategoricalPlotAllLayerParams {
+  RaisedBubble: CategoricalPlotRaisedBubbleParams
+  CategoryAxis: CategoricalPlotCategoryAxisParams
+  CategoryZoom: CategoricalPlotCategoryZoomParams
+  ValueAxis: CategoricalPlotValueAxisParams
+  CategoryGuide: CategoricalPlotCategoryGuideParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new CategoricalPlot(params?: DeepPartial<CategoricalPlotPluginParams & CategoricalPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

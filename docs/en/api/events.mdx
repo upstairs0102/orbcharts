@@ -1,0 +1,120 @@
+---
+title: Events
+description: OrbCharts' event types, the EventData structure, and how to listen for and trigger events through ChartContext.
+nav:
+  group: API Reference
+  order: 5
+related:
+  - /docs/api/orbcharts-class
+  - /docs/api/typescript-types
+---
+
+# Events
+
+OrbCharts' events are exposed as [RxJS](https://rxjs.dev/) streams, all on `chart.context`. You can **listen** to `event$` (e.g. when a user clicks a datum), and you can **trigger** `eventTrigger$` from the outside (e.g. to control highlighting programmatically).
+
+## EventType
+
+```ts
+type EventType =
+  | 'click'
+  | 'mouseover'
+  | 'mousemove'
+  | 'mouseout'
+  | 'dragstart'
+  | 'drag'
+  | 'dragend'
+  | 'zoom'
+  | 'transitionMove'
+  | 'transitionEnd'
+```
+
+| Event | Fires when |
+|---|---|
+| `click` | A data element is clicked |
+| `mouseover` | The pointer enters a data element |
+| `mousemove` | The pointer moves over a data element |
+| `mouseout` | The pointer leaves a data element |
+| `dragstart` | A drag begins |
+| `drag` | A drag is in progress |
+| `dragend` | A drag ends |
+| `zoom` | A zoom occurs (e.g. on zoomable charts) |
+| `transitionMove` | An animation is in progress (each frame) |
+| `transitionEnd` | An animation finishes |
+
+## EventData
+
+Each event carries an `EventData` object:
+
+```ts
+interface EventData<T = ModelType> {
+  eventName:  EventType
+  pluginName: string
+  layerName:  string
+  target:     RenderDatumBase<T> | null
+  data?:      any
+  tween?:     number   // 0–1 animation progress
+  event?:     Event    // DOM event
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `eventName` | `EventType` | The kind of event |
+| `pluginName` | `string` | Name of the Plugin that fired the event |
+| `layerName` | `string` | Name of the Layer that fired the event |
+| `target` | `RenderDatumBase<T> \| null` | The data element for the event; `null` when there is none |
+| `data` | `any` | Additional payload (depends on the event) |
+| `tween` | `number` | Animation progress, range 0–1 (only animation events such as `transitionMove`) |
+| `event` | `Event` | The original DOM event (if any) |
+
+`target` is the rendered data node; its fields (such as `id`, `value`, `series`) vary by data dimension. For the full types, see [TypeScript Types](/docs/api/typescript-types).
+
+## Listening for events
+
+`chart.context.event$` is an RxJS `Observable`. Subscribe to it to listen for all events:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+import type { EventData } from '@orbcharts/core'
+
+const chart = new OrbCharts(element, {
+  data,
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+
+const subscription = chart.context.event$.subscribe((e: EventData) => {
+  if (e.eventName === 'click' && e.target) {
+    console.log('Clicked:', e.target.id, e.target.value)
+  }
+})
+```
+
+> **Tip**: `event$` emits **all** events, so you'll usually filter by `e.eventName` to pick out the kind you care about.
+
+> **Note**: Calling `chart.destroy()` cleans up the chart's internal subscriptions, but it does **not** automatically cancel a `subscribe` you created on the outside. Call `subscription.unsubscribe()` yourself on component unmount, then call `chart.destroy()`, to avoid memory leaks.
+
+```ts
+// On component unmount
+subscription.unsubscribe()
+chart.destroy()
+```
+
+## Triggering events
+
+`chart.context.eventTrigger$` is an RxJS `Subject` that lets you push events in from the outside—for example to trigger a highlight programmatically or to sync with other UI:
+
+```ts
+chart.context.eventTrigger$.next({
+  eventName: 'mouseover',
+  pluginName: 'GridPlot',
+  layerName: 'Bar',
+  target: someDatum,
+})
+```
+
+## Related
+
+- [OrbCharts Class](/docs/api/orbcharts-class) — the `context` property and `destroy`
+- [TypeScript Types](/docs/api/typescript-types) — `EventType`, `EventData`, and `ChartContext` streams

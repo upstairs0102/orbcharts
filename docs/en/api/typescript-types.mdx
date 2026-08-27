@@ -1,0 +1,121 @@
+---
+title: TypeScript Types
+description: The main types OrbCharts exports from @orbcharts/core, grouped by purpose and linked to their reference pages.
+nav:
+  group: API Reference
+  order: 6
+related:
+  - /docs/api/orbcharts-class
+  - /docs/api/encoding
+  - /docs/api/events
+---
+
+# TypeScript Types
+
+OrbCharts is written in TypeScript, and its main types are all exported from `@orbcharts/core`. This page lists them grouped by purpose, with links to the relevant detail pages.
+
+```ts
+import type { RawData, Encoding, EventData } from '@orbcharts/core'
+```
+
+## Data input
+
+The raw data you provide to a chart. For the full format, see [Data formats overview](/docs/data-formats/overview).
+
+```ts
+type RawData = RawDataColumn[] | RawDataColumn[][]
+```
+
+- `RawDataColumn[]` is a single dataset; `RawDataColumn[][]` is multi-dataset (2D).
+
+The fields of `RawDataColumn`:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier |
+| `name` | `string` | Display name |
+| `source` | `string` | Source node (for graphs) |
+| `target` | `string` | Target node (for graphs) |
+| `parent` | `string` | Parent node (for trees) |
+| `data` | `any` | Attached custom data |
+| `value` | `number \| null` | Numeric value |
+| `x` / `y` / `z` | `number \| null` | Multivariate coordinate values |
+| `dataset` | — | Dataset grouping (renamable via [Encoding](/docs/api/encoding)) |
+| `series` | — | Series grouping (renamable via Encoding) |
+| `category` | — | Category grouping (renamable via Encoding) |
+
+> **Tip**: The first six fields (`id`, `name`, `source`, `target`, `parent`, `data`) are fixed; `dataset`, `series`, `category`, and the like can be mapped to other field names via [Encoding](/docs/api/encoding).
+
+## Configuration types
+
+| Type | Description | See |
+|---|---|---|
+| `PartialChartOptions` | Options for creating a chart (`size`, `theme`, `data`, `encoding`, `plugins`) | [OrbCharts Class](/docs/api/orbcharts-class) |
+| `SizeConfig` | Size and resize settings | [OrbCharts Class](/docs/api/orbcharts-class#sizing) |
+| `Encoding` | Field mapping, sorting, aggregation | [Encoding](/docs/api/encoding) |
+| `Theme` | Colors, light/dark mode, font size | [Theme](/docs/api/theme) |
+| `Colors` | The palette for a single light/dark mode | [Theme](/docs/api/theme) |
+| `ColorType` | The type Layer params use to point at a Theme color | [Theme](/docs/api/theme) |
+| `PluginEntity` | The type of a Plugin instance | [Plugin API](/docs/api/plugin-api) |
+| `DeepPartial<T>` | A deeply optional version of a type, used for `updateXxx` patches | — |
+
+## Data models
+
+The data nodes the chart produces after transforming `RawData`. The `modelType` marks which model a datum belongs to:
+
+```ts
+type ModelType = 'series' | 'grid' | 'multivariate' | 'graph' | 'tree'
+```
+
+Every model node extends `ModelDatumBase`:
+
+```ts
+interface ModelDatumBase {
+  id:        string
+  index:     number
+  modelType: ModelType
+  name:      string
+  data:      any
+  value:     number | null
+  color:     string
+}
+```
+
+Each model adds fields on top of `ModelDatumBase`:
+
+| Type | Additional fields |
+|---|---|
+| `ModelDatumSeries` | `series`, `seriesIndex`, `category`, `categoryIndex` |
+| `ModelDatumGrid` | `series`, `seriesIndex`, `category`, `categoryIndex` |
+| `ModelDatumMultivariate` | The above + `multivariate: Array<{ index, name, value }>` |
+| `ModelDatumGraphNode` | `series`, `seriesIndex`, `category`, `categoryIndex` |
+| `ModelDatumGraphEdge` | The above + `source`, `sourceIndex`, `target`, `targetIndex` |
+| `ModelDatumTree` | `parent: string \| null`, `parentIndex: number \| null`, `depth`, `seq`, `children: ModelDatumTree[]`, `series`… |
+
+## Event types
+
+| Type | Description | See |
+|---|---|---|
+| `EventType` | A string union of event kinds | [Events](/docs/api/events) |
+| `EventData<T>` | The data object carried by an event | [Events](/docs/api/events) |
+
+## ChartContext
+
+The type of `chart.context`, which gathers the chart's RxJS streams and root nodes:
+
+| Category | Members |
+|---|---|
+| Data streams | `encoding$`, `seriesData$`, `gridData$`, `multivariateData$`, `graphData$`, `treeData$` |
+| Config streams | `plugins$`, `theme$`, `size$` |
+| Event streams | `event$`, `eventTrigger$` |
+| Root nodes | `root`, `svg`, `canvas` |
+
+The streams are RxJS `Observable`s or `Subject`s. For event usage, see [Events](/docs/api/events).
+
+## Related
+
+- [OrbCharts Class](/docs/api/orbcharts-class) — `PartialChartOptions`, `SizeConfig`, `ChartContext`
+- [Encoding](/docs/api/encoding) — `Encoding` and `RawData` field mapping
+- [Events](/docs/api/events) — `EventType`, `EventData`
+- [Theme](/docs/api/theme) — `Theme`, `Colors`, `ColorType`
+- [Data formats overview](/docs/data-formats/overview) — the full `RawData` format

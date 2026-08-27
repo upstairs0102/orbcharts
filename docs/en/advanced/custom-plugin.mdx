@@ -1,0 +1,188 @@
+---
+title: Custom Plugin
+description: Build your own Plugin with defineSVGPlugin / defineCanvasPlugin—compose Layers, inject shared Observables (ExtendContext), and control setup and cleanup.
+nav:
+  group: Advanced
+  order: 1
+related:
+  - /docs/advanced/custom-layer
+  - /docs/advanced/architecture
+  - /docs/api/plugin-api
+---
+
+# Custom Plugin
+
+Built-in Plugins like `GridPlot` and `PartitionPlot` are all built with `defineSVGPlugin`. When the built-in Plugins don't fit your needs, you can use the same API to create your own.
+
+> **Note**: This is an **advanced API**. It assumes you are comfortable with [Core Concepts](/docs/getting-started/core-concepts) and the [Plugin API](/docs/api/plugin-api), and have a basic understanding of RxJS Observables and D3.js. Most use cases never need a custom Plugin.
+
+## How Plugins and Layers relate
+
+A **Plugin** is a complete chart logic unit. It does not draw anything directly; instead it:
+
+- Holds the **Plugin-level params** (which affect overall behavior).
+- Composes a set of **Layers** that do the actual SVG rendering.
+- Computes shared data in `setup()` and injects it into `context` via **ExtendContext**, so its Layers can share it.
+
+Rendering is the Layer's job—see [Custom Layer](/docs/advanced/custom-layer).
+
+## `defineSVGPlugin`
+
+```ts
+import { defineSVGPlugin } from '@orbcharts/core'
+
+const MyPlugin = defineSVGPlugin<ExtendContext, PluginParams, AllLayerParams>(config)
+```
+
+`defineSVGPlugin` takes a `config` object and returns a **Plugin class** (instantiate with `new MyPlugin(params?)`). It has three generic parameters:
+
+| Generic | Description |
+|---|---|
+| `ExtendContext` | The type of extra Observables this Plugin injects into `context` |
+| `PluginParams` | The type of the Plugin-level params |
+| `AllLayerParams` | A dictionary mapping each Layer name to its params type |
+
+### config fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `name` | `string` | Yes | Plugin name, used as the default id |
+| `defaultParams` | `PluginParams` | No | Default values for the Plugin-level params |
+| `layers` | `LayerEntity[]` | No | Array of Layer instances this Plugin contains |
+| `validator` | `(params) => ValidatorResult` | No | Validates the params passed by the user |
+| `setup` | `(props) => () => void` | No | Setup function that **returns a cleanup function** |
+
+> **Tip**: `config.layers` holds **Layer instances** (`new MyLayer()`), not the classes themselves. Which Layers show by default is determined by each Layer's `initShow`; users can override this by listing Layer names in the constructor params.
+
+### `setup` and ExtendContext
+
+`setup` runs once after the Plugin receives its `context`. The `props` it receives contain:
+
+| Property | Type | Description |
+|---|---|---|
+| `props.context` | `ChartContext<ExtendContext>` | The shared chart context (with Observables such as `gridData$`, `theme$`, `size$`, `event$`) |
+| `props.pluginParams$` | `Observable<PluginParams>` | The Plugin params stream, merged with defaults |
+
+**ExtendContext** is the Plugin's most important extension mechanism: in `setup` you derive data from the base Observables on `context` (such as coordinate transforms or highlight state), then merge those Observables back into `props.context`. As a result, all of the Plugin's Layers can read the **same computed result** from `context`, avoiding redundant recomputation in each Layer.
+
+`setup` must return a **cleanup function**, which is called when the Plugin re-initializes or is destroyed—use it to unsubscribe and release resources.
+
+```ts
+setup: (props) => {
+  // 1. Derive data from the base Observables on context
+  const layout$ = props.context.size$.pipe(
+    map((size) => computeLayout(size)),
+    shareReplay(1),
+  )
+
+  // 2. Inject via ExtendContext so the Plugin's Layers can share it
+  props.context = {
+    ...props.context,
+    layout$,
+  }
+
+  // 3. Return cleanup
+  return () => {
+    // unsubscribe, release resources
+  }
+}
+```
+
+## Minimal example
+
+A heavily simplified Plugin that composes a single Layer and injects a shared `layout$`:
+
+```ts
+import { defineSVGPlugin, defineSVGLayer } from '@orbcharts/core'
+import { map, shareReplay } from 'rxjs'
+import * as d3 from 'd3'
+
+// The extra Observable this Plugin injects into context
+interface MyExtendContext {
+  layout$: import('rxjs').Observable<{ width: number; height: number }>
+}
+
+interface MyPluginParams {
+  padding: number
+}
+
+interface MyLayerParams {
+  fillColor: string
+}
+
+interface MyAllLayerParams {
+  MyRect: MyLayerParams
+}
+
+// Layer: draws within its own SVG <g> (see "Custom Layer")
+const MyRect = defineSVGLayer<MyExtendContext, MyPluginParams, MyAllLayerParams>({
+  name: 'MyRect',
+  layerIndex: 0,
+  initShow: true,
+  defaultParams: { fillColor: '#3b82f6' },
+  setup: ({ svgG, context, layerParams$ }) => {
+    const sub = context.layout$.subscribe((layout) => {
+      d3.select(svgG)
+        .selectAll('rect')
+        .data([layout])
+        .join('rect')
+        .attr('width', (d) => d.width)
+        .attr('height', (d) => d.height)
+    })
+    return () => sub.unsubscribe()
+  },
+})
+
+const myRect = new MyRect()
+
+export const MyPlugin = defineSVGPlugin<
+  MyExtendContext,
+  MyPluginParams,
+  MyAllLayerParams
+>({
+  name: 'MyPlugin',
+  defaultParams: { padding: 20 },
+  layers: [myRect],
+  setup: (props) => {
+    const layout$ = props.context.size$.pipe(
+      map((size) => ({ width: size.width, height: size.height })),
+      shareReplay(1),
+    )
+
+    props.context = { ...props.context, layout$ }
+
+    return () => {}
+  },
+})
+```
+
+Usage is identical to the built-in Plugins:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new MyPlugin({ padding: 30 })],
+})
+```
+
+> **Tip**: Instances support all of the [Plugin API](/docs/api/plugin-api) methods (`show`, `hide`, `updateParams`, `destroy`, etc.). These are provided automatically by `defineSVGPlugin`—you don't implement them yourself.
+
+## Canvas variant
+
+To render with Canvas, use `defineCanvasPlugin` instead. Its config fields are identical to `defineSVGPlugin`; the difference is that its Layers must be built with `defineCanvasLayer` (a Layer receives a `canvas` element instead of `svgG`).
+
+```ts
+import { defineCanvasPlugin } from '@orbcharts/core'
+
+const MyCanvasPlugin = defineCanvasPlugin<ExtendContext, PluginParams, AllLayerParams>(config)
+```
+
+> **Note**: The Canvas rendering API is defined in core, but the built-in `@orbcharts/plugin-basic` is currently all SVG-based.
+
+## Related
+
+- [Custom Layer](/docs/advanced/custom-layer) — do the actual drawing in a Layer
+- [Architecture Overview](/docs/advanced/architecture) — data flow and ChartContext
+- [Plugin API](/docs/api/plugin-api) — shared operations on an instance

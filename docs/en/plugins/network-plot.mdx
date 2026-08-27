@@ -1,0 +1,191 @@
+---
+title: NetworkPlot
+description: NetworkPlot is the core Plugin for the graph data format, drawing relationship graphs and force-directed bubble charts with a force-directed layout.
+nav:
+  group: Plugins
+  order: 4
+charts:
+  - force-graph
+  - network-bubble
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# NetworkPlot
+
+`NetworkPlot` is the core Plugin for the `graph` data format. It arranges nodes and links with a force-directed layout, and can draw relationship graphs and force-directed bubble charts by switching its internal Layers.
+
+**Data format:** `graph`
+
+## Supported charts
+
+NetworkPlot renders different charts through different Layer combinations:
+
+- [Force Graph](#force-graph) — `ForceDirected` Layer
+- [Network Bubble](#network-bubble) — `ForceDirectedBubble` Layer
+
+## Quick start
+
+A minimal configuration draws a force graph. NetworkPlot shows the `ForceDirected` Layer by default:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { NetworkPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { id: 'id0', name: 'label0', value: 19800000, series: 'series1' },
+  { id: 'id2', name: 'label2', value: 9800000, series: 'series1' },
+  { id: 'id14', name: 'label8', series: 'series2', source: 'id0', target: 'id2', value: 100 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new NetworkPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+`graph` data contains both "nodes" and "links": records with `id`, `name`, `value`, and `series` represent nodes; records that also carry `source` and `target` represent a link from `source` to `target`, and `series` is used for grouping and coloring.
+
+## How layer visibility works
+
+NetworkPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new NetworkPlot()`), it shows `ForceDirected` by default (a force graph). You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+```ts
+new NetworkPlot()                          // force graph (default)
+new NetworkPlot({ ForceDirectedBubble: {} })  // force-directed bubble chart
+```
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Chart examples
+
+All examples below use the same `graph` data—just swap the Layer to change the chart type.
+
+### Force Graph
+
+```ts
+new NetworkPlot({ ForceDirected: {} })
+```
+
+`ForceDirected` draws nodes as fixed-radius dots and the relationships between them as arrowed links, with node positions arranged automatically by a force simulation.
+
+### Network Bubble
+
+```ts
+new NetworkPlot({ ForceDirectedBubble: {} })
+```
+
+`ForceDirectedBubble` draws nodes as bubbles whose size varies with the `value`, with labels inside the bubbles showing the node names.
+
+> **Tip**: Pair it with [Legend](/docs/plugins/legend) and [Tooltip](/docs/plugins/tooltip) for interactivity—added the same way as in [GridPlot](/docs/plugins/grid-plot).
+
+## Plugin parameters
+
+These parameters affect the whole NetworkPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 20, 20, 20, 20 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles` and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only NetworkPlot's default differences are noted here (`styles.padding` defaults to `{ top: 20, right: 20, bottom: 20, left: 20 }`, and `transitionDuration` defaults to `800`).
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### ForceDirected
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `point.radius` | `number` | `10` | Node dot radius |
+| `point.fillColorType` | `ColorType` | `'data'` | Node fill color |
+| `point.strokeColorType` | `ColorType` | `'data'` | Node stroke color |
+| `point.strokeWidth` | `number` | `1` | Node stroke width |
+| `pointLabel.colorType` | `ColorType` | `'primary'` | Node label color |
+| `pointLabel.sizeFixed` | `boolean` | `false` | Whether the label size is fixed (does not scale with zoom) |
+| `arrow.colorType` | `ColorType` | `'primary'` | Link arrow color |
+| `arrow.strokeWidth` | `number` | `1.5` | Link line width |
+| `arrow.pointerWidth` | `number` | `5` | Arrowhead width |
+| `arrow.pointerHeight` | `number` | `5` | Arrowhead height |
+| `arrowLabel.colorType` | `ColorType` | `'primary'` | Link label color |
+| `arrowLabel.sizeFixed` | `boolean` | `false` | Whether the link label size is fixed |
+| `force.nodeStrength` | `number` | `-500` | Force between nodes (negative is repulsion) |
+| `force.linkDistance` | `number` | `100` | Link length |
+| `force.velocityDecay` | `number` | `0.1` | Velocity decay factor |
+| `force.alphaDecay` | `number` | `0.05` | Simulation convergence decay factor |
+| `zoomable` | `boolean` | `true` | Whether zooming and panning are allowed |
+| `transform` | `{ x, y, k }` | `{ x: 0, y: 0, k: 1 }` | Initial offset and zoom level |
+| `scaleExtent` | `{ min, max }` | `{ min: 0, max: Infinity }` | Zoom level range |
+
+> **Tip**: `point`, `pointLabel`, `arrow`, and `arrowLabel` each also have a `styleFn` function parameter that returns a CSS string to customize individual elements.
+
+### ForceDirectedBubble
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `bubble.radiusMin` | `number` | `15` | Bubble radius for the minimum `value` |
+| `bubble.radiusMax` | `number` | `45` | Bubble radius for the maximum `value` |
+| `bubble.arcScaleType` | `'area' \| 'radius'` | `'area'` | Value mapping method (area or radius) |
+| `bubble.fillColorType` | `ColorType` | `'data'` | Bubble fill color |
+| `bubble.strokeColorType` | `ColorType` | `'data'` | Bubble stroke color |
+| `bubble.strokeWidth` | `number` | `1` | Bubble stroke width |
+| `bubbleLabel.fillRate` | `number` | `0.9` | Ratio of the label filling the bubble |
+| `bubbleLabel.lineHeight` | `number` | `1` | Label line height |
+| `bubbleLabel.maxLineLength` | `number` | `6` | Maximum characters per line |
+| `bubbleLabel.wordBreakAll` | `boolean` | `true` | Whether to allow breaking at any position |
+| `bubbleLabel.colorType` | `ColorType` | `'dataContrast'` | Label text color |
+| `arrow.colorType` | `ColorType` | `'primary'` | Link arrow color |
+| `arrow.strokeWidthMin` | `number` | `1.5` | Link line width for the minimum `value` |
+| `arrow.strokeWidthMax` | `number` | `4.5` | Link line width for the maximum `value` |
+| `arrow.pointerWidth` | `number` | `5` | Arrowhead width |
+| `arrow.pointerHeight` | `number` | `5` | Arrowhead height |
+| `arrowLabel.colorType` | `ColorType` | `'primary'` | Link label color |
+| `arrowLabel.sizeFixed` | `boolean` | `false` | Whether the link label size is fixed |
+| `force.nodeStrength` | `number` | `-500` | Force between nodes (negative is repulsion) |
+| `force.linkDistance` | `number` | `130` | Link length |
+| `force.velocityDecay` | `number` | `0.1` | Velocity decay factor |
+| `force.alphaDecay` | `number` | `0.05` | Simulation convergence decay factor |
+| `zoomable` | `boolean` | `true` | Whether zooming and panning are allowed |
+| `transform` | `{ x, y, k }` | `{ x: 0, y: 0, k: 1 }` | Initial offset and zoom level |
+| `scaleExtent` | `{ min, max }` | `{ min: 0, max: Infinity }` | Zoom level range |
+
+> **Tip**: `bubble`, `bubbleLabel`, `arrow`, and `arrowLabel` each also have a `styleFn` function parameter that returns a CSS string to customize individual elements.
+
+## Full TypeScript interface
+
+```ts
+interface NetworkPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGraph) => boolean | null
+  datasetIndex: number
+}
+
+interface NetworkPlotAllLayerParams {
+  ForceDirected: ForceDirectedParams
+  ForceDirectedBubble: ForceDirectedBubbleParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new NetworkPlot(params?: DeepPartial<NetworkPlotPluginParams & NetworkPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

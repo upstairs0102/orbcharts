@@ -1,0 +1,79 @@
+---
+title: Installation
+description: Install OrbCharts, prepare a container, and render your first chart with a minimal example.
+nav:
+  group: Getting Started
+  order: 1
+related:
+  - /docs/getting-started/first-chart
+  - /docs/getting-started/core-concepts
+---
+
+# Installation
+
+OrbCharts is a **data-driven** JavaScript charting library built on top of D3.js and RxJS. It supports both JavaScript and TypeScript, and is **framework-agnostic**—you can use it with plain JavaScript, React, Vue, or any environment.
+
+## Install the packages
+
+Install the `orbcharts` package to get everything:
+
+```bash
+npm i orbcharts@beta
+```
+
+> **Note**: v4 is currently in beta, so the `@beta` tag is required when installing.
+
+The `orbcharts` package re-exports the full API of `@orbcharts/core` (the core engine) and `@orbcharts/plugin-basic` (the built-in Plugin collection). If you prefer to manage the modules separately for finer-grained dependency control, you can also install them individually:
+
+```bash
+npm i @orbcharts/core@beta @orbcharts/plugin-basic@beta
+```
+
+(With individual installation, import from each package instead, e.g. `import { OrbCharts } from '@orbcharts/core'`.)
+
+| Package | Purpose |
+|---|---|
+| `orbcharts` | Umbrella package that re-exports the full API of the two packages below |
+| `@orbcharts/core` | The core engine, providing the `OrbCharts` class and data processing |
+| `@orbcharts/plugin-basic` | A built-in Plugin collection (charts, Tooltip, Legend, etc.) |
+
+## Prepare a container
+
+OrbCharts renders charts as SVG into a DOM container you specify. By default the chart **fills its container**, so the container must have an **explicit width and height**.
+
+```html
+<div id="chart" style="width: 600px; height: 400px;"></div>
+```
+
+> **Note**: If the container has no explicit width and height (for example a height of `0`), the chart will not be visible. See [Core Concepts](/docs/getting-started/core-concepts) for the full sizing and container mechanism.
+
+## Minimal runnable example
+
+Below is a complete minimal example that draws a pie chart using the `Pie` layer of `PartitionPlot`, with a Tooltip and Legend:
+
+```ts
+import { OrbCharts, PartitionPlot, Tooltip, Legend } from 'orbcharts'
+import type { RawData } from 'orbcharts'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new PartitionPlot({ Pie: {} }), new Tooltip(), new Legend()],
+})
+
+// Remember to destroy when no longer needed to release resources and listeners
+// chart.destroy()
+```
+
+> **Tip**: To understand what each line does and how to build it step by step, continue with [Your First Chart](/docs/getting-started/first-chart).
+
+## Related
+
+- [Your First Chart](/docs/getting-started/first-chart) — build and explain the example above step by step
+- [Core Concepts](/docs/getting-started/core-concepts) — data flow, Plugin, Layer, and the sizing mechanism

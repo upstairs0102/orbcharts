@@ -1,0 +1,129 @@
+---
+title: Encoding
+description: Encoding 將 RawData 的欄位對應到圖表的資料維度,並可指定排序與聚合方式。
+nav:
+  group: API 參考
+  order: 3
+related:
+  - /docs/data-formats/overview
+  - /docs/api/orbcharts-class
+---
+
+# Encoding
+
+`Encoding` 是 OrbCharts 的「欄位對應層」:它決定 `RawData` 中的哪個欄位對應到圖表的哪個**資料維度**(dataset、series、category、value 等),並可在過程中改欄位名、排序、做聚合。換句話說,你不必為了符合圖表而改寫資料,而是用 Encoding 把現有資料**對映**進來。
+
+Encoding 在建立圖表時透過 `encoding` 選項傳入,也可之後用 `chart.updateEncoding()` 動態調整。資料本身的格式請見 [資料格式總覽](/docs/data-formats/overview)。
+
+## Encoding 結構
+
+```ts
+interface Encoding {
+  dataset:  { from: string; sort: 'original' | 'alphabetical' | string[] }
+  series:   { from: string; sort: 'original' | 'alphabetical' | string[] }
+  category: { from: string; sort: 'original' | 'alphabetical' | string[] }
+  value:    { from: string; sort: 'original' | 'asc' | 'desc'; aggregate: 'sum' | 'mean' | 'median' | 'min' | 'max' | 'count' | 'none' }
+  multivariate: Array<{ from: string; name: string }>
+  color:    { from: 'index' | 'series' | 'category' | 'dataset' }
+}
+```
+
+| 維度 | 用途 | `from` 預設 | `sort` 預設 |
+|---|---|---|---|
+| `dataset` | 資料集分組(二維 `RawData`) | `'dataset'` | `'original'` |
+| `series` | 系列分組(常用於上色、圖例) | `'series'` | `'original'` |
+| `category` | 類別分組(常用於座標軸) | `'category'` | `'original'` |
+| `value` | 數值欄位 | `'value'` | `'original'` |
+| `multivariate` | 多變量欄位陣列 | — | — |
+| `color` | 取色依據 | — | — |
+
+### 各欄位預設值
+
+- 各維度的 `from` 預設與維度**同名**(例如 `series.from` 預設為 `'series'`)。
+- 各維度的 `sort` 預設為 `'original'`(維持原始順序)。
+- `value.aggregate` 預設為 `'none'`(不聚合)。
+- `multivariate` 預設為 `[{ from: 'x', name: 'x' }, { from: 'y', name: 'y' }, { from: 'z', name: 'z' }]`。
+- `color.from` 預設為 `'series'`(依系列上色)。
+
+> **提示**:Encoding 採**深層合併**。用 `updateEncoding` 時只需寫出想改的欄位,其餘維度與設定都會沿用預設。
+
+## 改欄位名
+
+當資料的欄位名與預設不同時,用 `from` 指向實際欄位。例如資料用 `amount` 而非 `value`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', amount: 30 },
+  { series: 'B', amount: 70 },
+]
+
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { from: 'amount' },
+  },
+})
+```
+
+如此一來 `amount` 欄位就會被當作數值維度使用。
+
+## 排序
+
+`sort` 控制該維度的排列順序:
+
+```ts
+chart.updateEncoding({
+  category: { sort: 'alphabetical' },  // 類別依字母排序
+  value:    { sort: 'desc' },          // 數值由大到小
+})
+```
+
+- `dataset` / `series` / `category` 支援 `'original'`、`'alphabetical'`,或自訂順序的 `string[]`。
+- `value` 支援 `'original'`、`'asc'`、`'desc'`。
+
+```ts
+// 以自訂順序排列 series
+chart.updateEncoding({
+  series: { sort: ['北區', '中區', '南區'] },
+})
+```
+
+## 聚合
+
+`value.aggregate` 會在同一分組內把多筆數值合併成一個值,適合原始資料較細、需要彙總的情況:
+
+```ts
+chart.updateEncoding({
+  value: { aggregate: 'sum' },  // 同分組數值加總
+})
+```
+
+可用的聚合方式:
+
+| 值 | 說明 |
+|---|---|
+| `'sum'` | 加總 |
+| `'mean'` | 平均 |
+| `'median'` | 中位數 |
+| `'min'` | 最小值 |
+| `'max'` | 最大值 |
+| `'count'` | 筆數 |
+| `'none'` | 不聚合(預設) |
+
+## 動態調整
+
+```ts
+chart.updateEncoding({ value: { from: 'amount' } })  // 局部更新(深層合併)
+chart.getEncoding()                                   // 取得目前 Encoding(唯讀)
+chart.forceReplaceEncoding(fullEncoding)              // 完整取代
+```
+
+詳見 [OrbCharts 類別](/docs/api/orbcharts-class) 中的 `updateEncoding` / `forceReplaceEncoding` / `getEncoding`。
+
+## 相關連結
+
+- [資料格式總覽](/docs/data-formats/overview) — `RawData` 的欄位與各維度格式
+- [OrbCharts 類別](/docs/api/orbcharts-class) — `updateEncoding` 等方法

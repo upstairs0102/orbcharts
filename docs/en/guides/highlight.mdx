@@ -1,0 +1,70 @@
+---
+title: Highlight Interaction
+description: Control data emphasis and dimming with styles.highlightTarget, unhighlightedOpacity, and highlightDefault, plus how to preset a highlight.
+nav:
+  group: Guides
+  order: 4
+related:
+  - /docs/api/plugin-api
+  - /docs/api/events
+---
+
+# Highlight Interaction
+
+Highlight makes the data a user points at **stand out while everything else dims**. It's a built-in interaction of chart Plugins—you only set a few fields in `styles`. For the full `styles` structure, see [Plugin API](/docs/api/plugin-api).
+
+## The three key fields
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `highlightTarget` | `'datum' \| 'series' \| 'category' \| 'none'` | by Plugin | the unit that triggers highlight |
+| `unhighlightedOpacity` | `number` | `0.3` | opacity of non-highlighted items |
+| `highlightDefault` | `string \| null` | `null` | the id to highlight by default |
+
+- `highlightTarget` decides "how much gets emphasized at once": `'datum'` emphasizes a single data point, `'series'` the whole series, `'category'` the whole category, and `'none'` disables highlight.
+- `unhighlightedOpacity` is the dimmed opacity of the rest—the lower the value, the stronger the contrast.
+
+## Setting up highlight
+
+`styles` sits alongside the Layer names. Moving the mouse over data **highlights automatically**; you only set the trigger unit and dimming level:
+
+```ts
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const plugin = new GridPlot({
+  Bar: {},
+  CategoryAxis: {},
+  ValueAxis: {},
+  styles: {
+    highlightTarget: 'series',     // emphasize the whole series on hover
+    unhighlightedOpacity: 0.2,     // dim the rest to 0.2
+  },
+})
+```
+
+## Presetting a highlight
+
+`highlightDefault` lets you emphasize an id at startup or when there's no mouse interaction:
+
+```ts
+const plugin = new GridPlot({
+  Bar: {},
+  CategoryAxis: {},
+  ValueAxis: {},
+  styles: {
+    highlightTarget: 'series',
+    highlightDefault: 'A',   // emphasize series A on load
+  },
+})
+```
+
+> **Tip**: The `highlightDefault` id must match the unit of `highlightTarget`—a series id for `'series'`, a category id for `'category'`, a datum id for `'datum'`.
+
+## Going further
+
+To do more than highlight (e.g. update external UI on click, or programmatically control which item is highlighted), use the event system to listen on `event$` or trigger `eventTrigger$` from the outside. See [Events](/docs/api/events).
+
+## Related
+
+- [Plugin API](/docs/api/plugin-api) — the highlight fields in `styles` (GraphicStyles)
+- [Events](/docs/api/events) — listening for and programmatically triggering interaction

@@ -1,0 +1,75 @@
+---
+title: Documentation
+description: OrbCharts v4 documentation home—chart index and quick navigation.
+nav:
+  group: Start
+  order: 1
+related:
+  - /docs/getting-started/installation
+  - /docs/getting-started/core-concepts
+---
+
+# OrbCharts Documentation
+
+OrbCharts is a **data-driven** JavaScript chart library built on D3.js and RxJS. Its core idea: prepare a **data format** first, then choose a **Plugin** to render it. Each Plugin is composed of composable **Layers**, and the same data can map to several different visualizations.
+
+> **First time here?** We recommend starting with [Installation](/docs/getting-started/installation) and [Your First Chart](/docs/getting-started/first-chart), then reading [Core Concepts](/docs/getting-started/core-concepts).
+
+## Chart index
+
+Find the right Plugin by "what chart do I want to draw". Each Plugin page has full examples and parameter references.
+
+### Grid (category axis × value axis)
+
+| Chart | Layer | Plugin |
+|---|---|---|
+| Bar chart | `Bar` | [GridPlot](/docs/plugins/grid-plot) |
+| Line chart | `Line` | [GridPlot](/docs/plugins/grid-plot) |
+| Area chart | `LineArea` | [GridPlot](/docs/plugins/grid-plot) |
+| Stacked bar | `StackedBar` | [GridPlot](/docs/plugins/grid-plot) |
+| Triangle bar | `TriangleBar` | [GridPlot](/docs/plugins/grid-plot) |
+| Racing chart | `RacingBar` | [RacingPlot](/docs/plugins/racing-plot) |
+| Ranked bubble | `RankedBubble` | [RankedPlot](/docs/plugins/ranked-plot) |
+
+### Series (categorical values)
+
+| Chart | Layer | Plugin |
+|---|---|---|
+| Pie chart | `Pie` | [PartitionPlot](/docs/plugins/partition-plot) |
+| Rose chart | `Rose` | [PartitionPlot](/docs/plugins/partition-plot) |
+| Bubble chart | `Bubble` | [PartitionPlot](/docs/plugins/partition-plot) |
+| Categorical bubble | `RaisedBubble` | [CategoricalPlot](/docs/plugins/categorical-plot) |
+
+### Multivariate (multi-dimensional values)
+
+| Chart | Layer | Plugin |
+|---|---|---|
+| Scatter plot | `Point` | [ScatterPlot](/docs/plugins/scatter-plot) |
+| Bubble chart (XY) | `Bubble` | [ScatterPlot](/docs/plugins/scatter-plot) |
+
+### Graph (nodes and edges)
+
+| Chart | Layer | Plugin |
+|---|---|---|
+| Force-directed graph | `ForceDirected` | [NetworkPlot](/docs/plugins/network-plot) |
+| Force-directed bubble | `ForceDirectedBubble` | [NetworkPlot](/docs/plugins/network-plot) |
+
+### Tree (hierarchy)
+
+| Chart | Layer | Plugin |
+|---|---|---|
+| TreeMap | `TreeMap` | [HierarchyPlot](/docs/plugins/hierarchy-plot) |
+
+## Utility Plugins
+
+| Plugin | Purpose |
+|---|---|
+| [Legend](/docs/plugins/legend) | Interactive legend |
+| [Tooltip](/docs/plugins/tooltip) | Hover tooltip |
+
+## More topics
+
+- [Data Formats](/docs/data-formats/overview) — the 5 data formats explained
+- [Plugin API](/docs/api/plugin-api) — layer visibility, parameter operations
+- [Theme](/docs/api/theme) — colors and theming
+- [OrbCharts Class](/docs/api/orbcharts-class) — the chart instance API

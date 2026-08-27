@@ -1,0 +1,129 @@
+---
+title: Encoding
+description: Encoding maps RawData fields onto the chart's data dimensions and lets you specify sorting and aggregation.
+nav:
+  group: API Reference
+  order: 3
+related:
+  - /docs/data-formats/overview
+  - /docs/api/orbcharts-class
+---
+
+# Encoding
+
+`Encoding` is OrbCharts' "field-mapping layer": it determines which field in `RawData` maps to which of the chart's **data dimensions** (dataset, series, category, value, etc.), and lets you rename fields, sort, and aggregate along the way. In other words, instead of rewriting your data to fit the chart, you use Encoding to **map** your existing data in.
+
+Encoding is passed through the `encoding` option when creating a chart, and can also be adjusted later with `chart.updateEncoding()`. For the data's own format, see [Data formats overview](/docs/data-formats/overview).
+
+## Encoding structure
+
+```ts
+interface Encoding {
+  dataset:  { from: string; sort: 'original' | 'alphabetical' | string[] }
+  series:   { from: string; sort: 'original' | 'alphabetical' | string[] }
+  category: { from: string; sort: 'original' | 'alphabetical' | string[] }
+  value:    { from: string; sort: 'original' | 'asc' | 'desc'; aggregate: 'sum' | 'mean' | 'median' | 'min' | 'max' | 'count' | 'none' }
+  multivariate: Array<{ from: string; name: string }>
+  color:    { from: 'index' | 'series' | 'category' | 'dataset' }
+}
+```
+
+| Dimension | Purpose | `from` default | `sort` default |
+|---|---|---|---|
+| `dataset` | Dataset grouping (2D `RawData`) | `'dataset'` | `'original'` |
+| `series` | Series grouping (often used for color, legend) | `'series'` | `'original'` |
+| `category` | Category grouping (often used for axes) | `'category'` | `'original'` |
+| `value` | The numeric field | `'value'` | `'original'` |
+| `multivariate` | Array of multivariate fields | — | — |
+| `color` | What color is based on | — | — |
+
+### Default values
+
+- Each dimension's `from` defaults to the **same name** as the dimension (e.g. `series.from` defaults to `'series'`).
+- Each dimension's `sort` defaults to `'original'` (keep the original order).
+- `value.aggregate` defaults to `'none'` (no aggregation).
+- `multivariate` defaults to `[{ from: 'x', name: 'x' }, { from: 'y', name: 'y' }, { from: 'z', name: 'z' }]`.
+- `color.from` defaults to `'series'` (color by series).
+
+> **Tip**: Encoding is **deep-merged**. With `updateEncoding`, you only write the fields you want to change; every other dimension and setting keeps its default.
+
+## Renaming fields
+
+When your data's field names differ from the defaults, point `from` at the actual field. For example, if your data uses `amount` instead of `value`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', amount: 30 },
+  { series: 'B', amount: 70 },
+]
+
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { from: 'amount' },
+  },
+})
+```
+
+Now the `amount` field is used as the value dimension.
+
+## Sorting
+
+`sort` controls the ordering of a dimension:
+
+```ts
+chart.updateEncoding({
+  category: { sort: 'alphabetical' },  // categories sorted alphabetically
+  value:    { sort: 'desc' },          // values from high to low
+})
+```
+
+- `dataset` / `series` / `category` accept `'original'`, `'alphabetical'`, or a custom-order `string[]`.
+- `value` accepts `'original'`, `'asc'`, `'desc'`.
+
+```ts
+// Order series in a custom sequence
+chart.updateEncoding({
+  series: { sort: ['North', 'Central', 'South'] },
+})
+```
+
+## Aggregation
+
+`value.aggregate` combines multiple values within the same group into a single value—useful when your raw data is fine-grained and needs rolling up:
+
+```ts
+chart.updateEncoding({
+  value: { aggregate: 'sum' },  // sum values within each group
+})
+```
+
+Available aggregations:
+
+| Value | Description |
+|---|---|
+| `'sum'` | Sum |
+| `'mean'` | Mean |
+| `'median'` | Median |
+| `'min'` | Minimum |
+| `'max'` | Maximum |
+| `'count'` | Count of records |
+| `'none'` | No aggregation (default) |
+
+## Adjusting at runtime
+
+```ts
+chart.updateEncoding({ value: { from: 'amount' } })  // partial update (deep merge)
+chart.getEncoding()                                   // get the current Encoding (read-only)
+chart.forceReplaceEncoding(fullEncoding)              // fully replace
+```
+
+See `updateEncoding` / `forceReplaceEncoding` / `getEncoding` on the [OrbCharts Class](/docs/api/orbcharts-class) page.
+
+## Related
+
+- [Data formats overview](/docs/data-formats/overview) — `RawData` fields and each dimension's format
+- [OrbCharts Class](/docs/api/orbcharts-class) — `updateEncoding` and related methods

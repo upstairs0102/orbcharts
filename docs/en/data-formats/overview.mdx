@@ -1,0 +1,139 @@
+---
+title: Data Formats Overview
+description: Understand OrbCharts' core design—data formats (ModelType)—and how RawData is transformed into charts through Encoding.
+nav:
+  group: Data Formats
+  order: 1
+related:
+  - /docs/data-formats/series
+  - /docs/getting-started/core-concepts
+---
+
+# Data Formats Overview
+
+OrbCharts is a **data-driven** chart library. You don't directly "draw a bar chart"—instead, you **prepare your data** first, then choose which Plugin to apply. The same data format can map to several different visualizations.
+
+Understanding "data formats" is the first step to using OrbCharts.
+
+## What is a data format (ModelType)?
+
+OrbCharts groups all data into **5 data formats**, called `ModelType`. Each format corresponds to a kind of data structure and determines which Plugins it can work with.
+
+| Data format | Characteristics | Plugins |
+|---|---|---|
+| `series` | Simple categorical values, no X-axis concept | PartitionPlot, CategoricalPlot |
+| `grid` | Two-dimensional data with a "category axis" and a "value axis" | GridPlot, RacingPlot, RankedPlot |
+| `multivariate` | Multi-dimensional numeric values (X / Y / Z…) | ScatterPlot |
+| `graph` | Nodes and edges | NetworkPlot |
+| `tree` | Parent-child hierarchy | HierarchyPlot |
+
+> **Tip**: You don't need to specify the ModelType manually in code. When you choose a Plugin (e.g. `GridPlot`), OrbCharts automatically interprets your data using the corresponding format (`grid`).
+
+## Data flow: from RawData to chart
+
+OrbCharts processes data through a one-way pipeline:
+
+```
+RawData (the raw data you provide)
+   ↓ map fields via Encoding
+ModelData (normalized model data)
+   ↓ Plugin computes coordinates + Theme applies colors
+SVG chart (rendered output)
+```
+
+You are only responsible for the **top-level RawData**; OrbCharts handles the rest.
+
+## The basic shape of RawData
+
+`RawData` is an array of objects, where each object represents one data record:
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+]
+```
+
+Each record may use the following fields:
+
+| Field | Type | Purpose |
+|---|---|---|
+| `value` | `number \| null` | Numeric value |
+| `series` | `string` | Series (commonly used for grouping and coloring) |
+| `category` | `string` | Category (commonly used for axis labels) |
+| `x` / `y` / `z` | `number \| null` | Multi-dimensional values (for multivariate) |
+| `dataset` | `string` | Dataset name |
+| `id` | `string` | Unique identifier (required for graph / tree) |
+| `name` | `string` | Display name |
+| `source` / `target` | `string` | Source / target node of an edge (for graph) |
+| `parent` | `string` | Parent node id (for tree) |
+| `data` | `any` | Custom attached data |
+
+> **Note**: `id`, `name`, `source`, `target`, `parent`, and `data` are fixed field names; whereas the names of `value`, `series`, `category`, `x`, `y`, `z`, and `dataset` **can be customized through Encoding** (see the next section).
+
+### Single dataset vs. multiple datasets
+
+`RawData` can be a one- or two-dimensional array:
+
+```ts
+// 1D: a single dataset
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+]
+
+// 2D: multiple datasets (each inner array is one dataset)
+const data: RawData = [
+  [{ series: 'A', value: 30 }, { series: 'B', value: 70 }],
+  [{ series: 'A', value: 40 }, { series: 'B', value: 60 }],
+]
+```
+
+Multiple datasets are commonly used when you need to switch between several points in time or several data snapshots—for example, a racing chart (RacingPlot).
+
+## Encoding: field mapping
+
+`Encoding` determines which RawData field OrbCharts uses to interpret each data dimension. By default, field names match the data dimension names, so **in most cases you don't need to configure Encoding**.
+
+Here are the defaults:
+
+```ts
+const defaultEncoding = {
+  dataset:  { from: 'dataset',  sort: 'original' },
+  series:   { from: 'series',   sort: 'original' },
+  category: { from: 'category', sort: 'original' },
+  value:    { from: 'value',    sort: 'original', aggregate: 'none' },
+  multivariate: [
+    { from: 'x', name: 'x' },
+    { from: 'y', name: 'y' },
+    { from: 'z', name: 'z' },
+  ],
+  color: { from: 'series' },
+}
+```
+
+If your data uses different field names (e.g. `amount` instead of `value`), you can remap them through Encoding:
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { from: 'amount' },   // use the amount field as the value
+  },
+})
+```
+
+> **Tip**: `aggregate` defaults to `'none'`, which means **each RawData record becomes its own data point** and values are not summed automatically. To sum values within the same group, set `value: { aggregate: 'sum' }`.
+
+## Next steps
+
+Each data format has its own dedicated page with full fields, examples, and corresponding Plugins:
+
+- [Series format](/docs/data-formats/series) — the simplest categorical values
+- [Grid format](/docs/data-formats/grid) — category axis × value axis
+- [Multivariate format](/docs/data-formats/multivariate) — multi-dimensional values
+- [Graph format](/docs/data-formats/graph) — nodes and edges
+- [Tree format](/docs/data-formats/tree) — hierarchy

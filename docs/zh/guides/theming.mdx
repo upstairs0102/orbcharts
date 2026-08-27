@@ -1,0 +1,90 @@
+---
+title: 主題與色彩
+description: 如何設定 OrbCharts 的色盤、明暗模式與字級——建立時帶入 theme,或之後用 updateTheme 動態切換。
+nav:
+  group: 指南
+  order: 1
+related:
+  - /docs/api/theme
+  - /docs/api/orbcharts-class
+---
+
+# 主題與色彩
+
+OrbCharts 的所有色彩、明暗模式與字級都集中在 `Theme`。本篇示範常見的兩件事:**切換深色模式**與**換掉資料色盤**。完整的 `Theme` 結構與欄位說明請見 [Theme](/docs/api/theme)。
+
+## 建立時帶入主題
+
+主題透過建立圖表時的 `theme` 選項傳入。你只需覆寫想改的部分,其餘沿用預設(深層合併):
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  theme: {
+    colorScheme: 'dark',
+    fontSize: '1rem',
+  },
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+`colorScheme` 可為 `'light'`、`'dark'` 或 `'auto'`(跟隨系統偏好)。`fontSize` 設定圖表的基準字級。
+
+> **提示**:OrbCharts 預設採用低調的 Tableau 風格色盤,避免過度鮮豔搶走資料焦點。
+
+## 切換深色模式
+
+明暗模式不必重建圖表,直接呼叫 `chart.updateTheme()` 即可即時切換:
+
+```ts
+// 切到深色
+chart.updateTheme({ colorScheme: 'dark' })
+
+// 切回淺色
+chart.updateTheme({ colorScheme: 'light' })
+
+// 跟隨系統偏好
+chart.updateTheme({ colorScheme: 'auto' })
+```
+
+搭配按鈕做切換:
+
+```ts
+document.querySelector('#toggle-dark')!.addEventListener('click', () => {
+  const current = chart.getTheme().colorScheme
+  chart.updateTheme({ colorScheme: current === 'dark' ? 'light' : 'dark' })
+})
+```
+
+## 換掉資料色盤
+
+`colors.light` 與 `colors.dark` 各自定義一組 `Colors`,其中 `data` 是依序套用到每筆資料的色系。覆寫它就能換掉資料顏色:
+
+```ts
+chart.updateTheme({
+  colors: {
+    light: {
+      data: ['#4E79A7', '#F28E2B', '#E15759', '#76B7B2'],
+    },
+  },
+})
+```
+
+由於是深層合併,只需提供想改的色階,`primary`、`background` 等其餘欄位會沿用預設。淺色與深色各自獨立,記得**兩種模式都要設定**才能在切換時都正確。
+
+> **注意**:Layer 參數中的顏色多半使用 `ColorType`(如 `'data'`、`'primary'`),它指向 Theme 中定義的色彩,而非直接寫死色碼。如此一來切換主題時顏色會自動套用。`ColorType` 的完整說明見 [Theme](/docs/api/theme)。
+
+## 取得與完整取代
+
+```ts
+chart.getTheme()                   // 取得目前主題(唯讀)
+chart.forceReplaceTheme(fullTheme) // 完整取代整個主題
+```
+
+## 相關連結
+
+- [Theme](/docs/api/theme) — `Theme` 結構、預設色盤與 `ColorType`
+- [OrbCharts 類別](/docs/api/orbcharts-class) — `updateTheme` / `getTheme` / `forceReplaceTheme`

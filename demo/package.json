@@ -1,23 +1,27 @@
 {
-  "name": "nuxt-app",
+  "name": "demo",
+  "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
-    "deploy": "gh-pages --dotfiles -d .output/public"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "nuxt": "^3.11.2",
-    "orbcharts": "^3.0.12",
-    "rxjs": "npm:@esm-bundle/rxjs@^7.8.1",
-    "vue": "^3.4.27",
-    "vue-router": "^4.3.2"
+    "orbcharts": "workspace:*",
+    "@orbcharts/core": "workspace:*",
+    "@orbcharts/plugin-basic": "workspace:*",
+    "next": "16.1.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
-    "gh-pages": "^6.1.1"
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

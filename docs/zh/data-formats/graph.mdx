@@ -1,0 +1,154 @@
+---
+title: Graph 格式
+description: Graph 由「節點」與「連線」兩種資料列組成，適合關係圖、力導向圖等呈現節點之間關聯的圖表。
+nav:
+  group: 資料格式
+  order: 5
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/network-plot
+---
+
+# Graph 格式
+
+`graph` 用於描述**節點與節點之間的關聯**。它由兩種資料列組成：**節點（node）**與**連線（edge）**。節點代表實體，連線則用 `source` 與 `target`（皆為節點 `id`）描述兩個節點之間的關係。
+
+它適合呈現網路、關係或流向的圖表，例如力導向圖（Force Directed）。
+
+## 適用場景
+
+- 想呈現「實體之間的關聯網路」（社群關係、相依關係）
+- 想表達「節點之間的流向或連結強度」
+- 資料具有 node / edge 的圖論結構
+
+## 資料結構
+
+Graph 資料同時混合節點與連線兩種資料列。節點用 `id`、`name`、`value`、`series`；連線額外需要 `source` 與 `target`（指向節點的 `id`）：
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  // 節點
+  { id: 'id0', name: 'label0', value: 19800000, series: 'series1' },
+  { id: 'id2', name: 'label2', value: 9800000, series: 'series1' },
+  // 連線
+  { id: 'id14', name: 'label8', series: 'series2', source: 'id0', target: 'id2', value: 100 },
+]
+```
+
+### 可用欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `id` | `string` | 是 | 唯一識別；節點以此被連線引用 |
+| `value` | `number \| null` | 否 | 節點或連線的數值 |
+| `series` | `string` | 否 | 系列名稱，預設用於分組與上色 |
+| `name` | `string` | 否 | 顯示名稱（例如 Tooltip 中顯示的文字） |
+| `source` | `string` | 連線必填 | 連線的來源節點 `id` |
+| `target` | `string` | 連線必填 | 連線的目標節點 `id` |
+| `data` | `any` | 否 | 自訂附加資料，會原樣保留 |
+
+> **提示**：一筆資料是否被視為「連線」，取決於它是否同時具有 `source` 與 `target`；其餘資料列則視為「節點」。節點的 `id` 必填，連線的 `source` / `target` 必須對應到既有節點的 `id`。
+
+## 模型資料（ModelDataGraph）
+
+當 OrbCharts 處理完 RawData 後，graph 資料會被拆分為節點與連線兩個陣列，整體結構為 `ModelDataGraph`：
+
+```ts
+interface ModelDataGraph {
+  nodes: ModelDatumGraphNode[]
+  edges: ModelDatumGraphEdge[]
+}
+```
+
+節點 `ModelDatumGraphNode` 繼承自 `ModelDatumBase`：
+
+```ts
+interface ModelDatumGraphNode {
+  // 來自 ModelDatumBase
+  id: string
+  index: number
+  modelType: 'graph'
+  name: string
+  data: any
+  value: number | null
+  color: string
+  // Graph 節點專屬欄位
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+連線 `ModelDatumGraphEdge` 在節點欄位之外，額外帶有 `source` / `target` 及其索引：
+
+```ts
+interface ModelDatumGraphEdge {
+  // 來自 ModelDatumBase
+  id: string
+  index: number
+  modelType: 'graph'
+  name: string
+  data: any
+  value: number | null
+  color: string
+  // Graph 連線專屬欄位
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+  source: ModelDatumGraphNode
+  sourceIndex: number
+  target: ModelDatumGraphNode
+  targetIndex: number
+}
+```
+
+## 對應的 Plugin
+
+`graph` 格式可搭配以下 Plugin：
+
+| Plugin | 可繪製的圖表 |
+|---|---|
+| [NetworkPlot](/docs/plugins/network-plot) | 力導向圖（Force Directed） |
+
+## 完整範例
+
+以下是一個關係圖，使用 `NetworkPlot`（預設顯示力導向圖）：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { NetworkPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  // 節點
+  { id: 'id0', name: 'label0', value: 19800000, series: 'series1' },
+  { id: 'id2', name: 'label2', value: 9800000, series: 'series1' },
+  // 連線
+  { id: 'id14', name: 'label8', series: 'series2', source: 'id0', target: 'id2', value: 100 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new NetworkPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// 元件卸載時記得銷毀，釋放資源與事件監聽
+// chart.destroy()
+```
+
+> **注意**：OrbCharts 預設會自動填滿容器尺寸（`size` 預設為 `'auto'`），請確保 `#chart` 容器有明確的寬度與高度，否則圖表可能無法顯示。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+## 相關連結
+
+- 回到 [資料格式概述](/docs/data-formats/overview)
+- 查看 [NetworkPlot](/docs/plugins/network-plot) 的完整參數與更多圖表範例
+- 了解尺寸與色彩設定請見 [核心概念](/docs/getting-started/core-concepts)
+- 色彩與 ColorType 設定請見 [Theme API](/docs/api/theme)

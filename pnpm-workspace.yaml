@@ -1,4 +1,20 @@
 packages:
-  - 'packages-v4/@orbcharts/*'
-  - 'packages-v4/orbcharts'
-  - 'demo-v4'
+  - 'packages/@orbcharts/*'
+  - 'packages/orbcharts'
+  - 'demo'
+  - 'site'
+
+onlyBuiltDependencies:
+  - '@swc/core'
+  - '@parcel/watcher'
+  - esbuild
+  - sharp
+  - unrs-resolver
+
+# @next/mdx 沒有把 next 宣告成 peerDependency，pnpm 因此不會依各 workspace 專案各自的
+# next 版本分別 link，導致 site（next 16.2.7）誤連到 demo（next 16.1.1）的型別，造成 build 時型別衝突。
+# 補上這個宣告讓 pnpm 依消費者各自的 next 版本分開解析。
+packageExtensions:
+  '@next/mdx':
+    peerDependencies:
+      next: '*'

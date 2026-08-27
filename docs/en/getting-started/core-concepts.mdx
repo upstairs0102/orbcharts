@@ -1,0 +1,130 @@
+---
+title: Core Concepts
+description: Understand the OrbCharts data flow, the 5 data formats, Plugins and Layers, Theme, and the sizing and container mechanism.
+nav:
+  group: Getting Started
+  order: 3
+related:
+  - /docs/getting-started/first-chart
+  - /docs/data-formats/overview
+  - /docs/api/plugin-api
+  - /docs/api/theme
+---
+
+# Core Concepts
+
+This page explains the design ideas behind OrbCharts. Once you understand these concepts, you can freely combine data, Plugins, and Theme to draw any chart.
+
+## Data flow
+
+OrbCharts is **data-driven**: you provide raw data, and the library runs a series of transformations that ultimately output SVG. The flow is as follows:
+
+```text
+RawData ──(Encoding field mapping)──▶ ModelData ──(Plugin computes coordinates + Theme applies colors)──▶ SVG
+```
+
+1. **RawData**: the raw data array you provide.
+2. **Encoding**: maps your raw fields to the fields OrbCharts uses internally (for example which field is the `value`, and whether to aggregate).
+3. **ModelData**: the standardized data after mapping and computation. This is also the structure you receive in events (such as click or Tooltip).
+4. **Plugin + Theme**: the Plugin computes the coordinates and shapes for each record, the Theme determines colors, and the result is rendered as SVG.
+
+## The 5 data formats
+
+OrbCharts uses `ModelType` to distinguish the "shape" of your data. Each data format corresponds to different Plugins:
+
+| ModelType | Description | Corresponding Plugins |
+|---|---|---|
+| `'series'` | Categorical values (one value per record) | PartitionPlot, CategoricalPlot |
+| `'grid'` | Category axis × value axis | GridPlot, RacingPlot, RankedPlot |
+| `'multivariate'` | Multivariate values (e.g. XY scatter) | ScatterPlot |
+| `'graph'` | Nodes and links | NetworkPlot |
+| `'tree'` | Hierarchical structure | HierarchyPlot |
+
+> **Tip**: First figure out "what shape is my data", then pick the matching format and Plugin. See [Data Formats Overview](/docs/data-formats/overview) for the full reference.
+
+## Plugin and Layer
+
+- A **Plugin** is a **chart engine**; a single Plugin can draw multiple chart types. For example `PartitionPlot` can draw pie, rose, and bubble charts.
+- A **Layer** is a **single visual element**, such as a slice, a line, or an axis. A Plugin is composed of multiple Layers.
+
+The Layer names you list in the Plugin parameters determine which Layers are shown:
+
+```ts
+new PartitionPlot({ Pie: {} })   // shows only the Pie layer → pie chart
+```
+
+> **Tip**: The Layer display mechanism, dynamic toggling (`show`, `hide`, `showOnly`), and shared parameter types are detailed in [Plugin API](/docs/api/plugin-api).
+
+## Theme
+
+`Theme` controls the **colors and light/dark mode** of the entire chart. It is decoupled from data and Plugins—switching the Theme requires no changes to data or Plugins. The `ColorType` values commonly seen in Layer parameters (such as `'data'`, `'primary'`) point to colors defined in the Theme.
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  theme: { colorScheme: 'dark' },
+  plugins: [/* ... */],
+})
+```
+
+> **Tip**: For the full reference on color palettes, light/dark mode, and `ColorType`, see [Theme](/docs/api/theme).
+
+## Sizing and container mechanism
+
+OrbCharts renders charts into the container DOM you specify. The `size` option defaults to:
+
+```ts
+{ width: 'auto', height: 'auto', resizeDebounce: 50 }
+```
+
+`'auto'` means the chart **fills its container automatically** and re-renders when the container size changes (`resizeDebounce` is the debounce delay for re-rendering, in milliseconds).
+
+> **Note**: Because the default is `'auto'`, the container DOM **must have an explicit width and height**, otherwise the chart has no space to fill and will not be visible. This is the most common beginner issue.
+
+```html
+<div id="chart" style="width: 600px; height: 400px;"></div>
+```
+
+After creation, you can adjust the size anytime with `chart.resize(sizeConfig)`:
+
+```ts
+chart.resize({ width: 800, height: 500 })
+```
+
+## Creating and updating a chart
+
+The OrbCharts constructor is:
+
+```ts
+new OrbCharts(element, options?)
+```
+
+`options` is a `PartialChartOptions`, where all fields are optional:
+
+```ts
+interface PartialChartOptions {
+  size?: SizeConfig        // size (defaults to 'auto')
+  theme?: PartialTheme     // theme
+  data?: RawData           // raw data
+  encoding?: Encoding      // field mapping
+  plugins?: Plugin[]       // list of Plugins
+}
+```
+
+After creation, you can update the chart dynamically without recreating it:
+
+| Method | Description |
+|---|---|
+| `chart.setData(data)` | Replace the data |
+| `chart.setPlugins([...])` | Replace the list of Plugins |
+| `chart.updateEncoding({...})` | Update the field mapping |
+| `chart.updateTheme({...})` | Update the theme (deep merge) |
+| `chart.resize(sizeConfig)` | Adjust the size |
+| `chart.destroy()` | Destroy the chart and release resources |
+
+## Related
+
+- [Your First Chart](/docs/getting-started/first-chart) — combine these concepts into an actual chart
+- [Data Formats Overview](/docs/data-formats/overview) — the 5 data formats explained
+- [Plugin API](/docs/api/plugin-api) — Layer display and parameter operations
+- [Theme](/docs/api/theme) — colors and theming

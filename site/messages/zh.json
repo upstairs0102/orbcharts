@@ -1,0 +1,148 @@
+{
+  "Nav": {
+    "home": "首頁",
+    "demo": "展示",
+    "playground": "遊樂場",
+    "docs": "文件"
+  },
+  "Home": {
+    "title": "OrbCharts",
+    "subtitle": "資料驅動的 JavaScript 圖表函式庫",
+    "description": "一種資料格式，畫所有的圖。資料與繪圖解耦，同一份資料隨時切換不同的視覺呈現。",
+    "Hero": {
+      "badge": "v4 Beta 現已發佈",
+      "subtitle": "資料驅動的 JavaScript 圖表函式庫",
+      "description": "一種資料格式，畫所有的圖。資料與繪圖解耦，同一份資料隨時切換不同的視覺呈現——為儀表板而生。",
+      "ctaStart": "開始使用",
+      "ctaDemo": "瀏覽展示"
+    },
+    "Features": {
+      "heading": "為什麼選擇 OrbCharts",
+      "f1Title": "一種資料格式，畫所有的圖",
+      "f1Body": "在 OrbCharts 裡，所有圖表都讀同一種資料格式——單純的物件陣列。你不需要為了長條圖把資料整理成一種形狀、為了圓餅圖再整理成另一種。資料的定義只有一次，欄位對應交給 Encoding 宣告即可。資料層保持乾淨單純，維護的是「資料」本身，而不是某張圖的專屬格式。",
+      "f2Title": "資料與繪圖解耦，換圖不動資料",
+      "f2Body": "圖表的視覺呈現在 OrbCharts 中是可抽換的一層。同一份資料，今天用長條圖呈現、明天改成折線圖或圓餅圖，改的只有圖表的宣告，資料和取數邏輯一行都不用動。視覺決策可以晚一點做、隨時改——資料準備好了，剩下的只是「要怎麼看它」。",
+      "f3Title": "為儀表板而生的彈性",
+      "f3Body": "儀表板的需求總是在變：這個指標想換個圖型看看、那一區想加一條趨勢線。OrbCharts 的組合式設計讓圖層可以隨插即用、執行期動態開關，搭配統一的資料格式，新增或調整一張圖的成本被壓到最低。資料管線穩定不動，呈現層自由演進——這正是儀表板類產品最需要的開發體驗。"
+    },
+    "QuickDemo": {
+      "heading": "同一份資料，不同的呈現",
+      "description": "下方圖表由 OrbCharts 即時渲染：資料完全不變，切換的只有一行宣告。",
+      "dataTitle": "資料（不變）",
+      "codeTitle": "程式碼（只改一行）",
+      "viewPie": "圓餅圖",
+      "viewRose": "玫瑰圖",
+      "viewBubble": "泡泡圖",
+      "chartAriaLabel": "OrbCharts 互動展示圖表，目前顯示{view}",
+      "tablistAriaLabel": "切換圖表呈現方式"
+    },
+    "Cta": {
+      "heading": "準備好開始了嗎？",
+      "description": "安裝套件，幾分鐘內畫出第一張圖。",
+      "copy": "複製安裝指令",
+      "copied": "已複製",
+      "ctaDocs": "查看文件"
+    }
+  },
+  "Demo": {
+    "title": "展示",
+    "description": "所有圖表範例的即時預覽——點擊任一卡片，即可在遊樂場中開啟並編輯。",
+    "openInPlayground": "在遊樂場開啟{title}",
+    "Plugins": {
+      "GridPlot": "以「類別 × 數值」呈現的座標軸圖表：長條、折線、區域、堆疊⋯⋯同一份資料自由切換。",
+      "PartitionPlot": "以比例呈現分類資料：圓餅、玫瑰、泡泡。",
+      "ScatterPlot": "多維度數值的散佈呈現，支援 X / Y / Z 三軸。",
+      "NetworkPlot": "節點與關係的力導向佈局，可拖曳互動。",
+      "HierarchyPlot": "階層資料的矩形樹狀圖。",
+      "RacingPlot": "隨時間動態變化的排名競賽動畫。",
+      "RankedPlot": "依數值排名的泡泡矩陣。",
+      "CategoricalPlot": "類別 × 系列的泡泡分布。"
+    },
+    "Examples": {
+      "gridBar": "長條圖（Bar Chart）",
+      "gridLine": "折線圖（Line Chart）",
+      "gridArea": "區域圖（Area Chart）",
+      "gridStackedBar": "堆疊長條圖（Stacked Bar）",
+      "gridTriangleBar": "三角長條圖（Triangle Bar）",
+      "gridBarLine": "長條及折線圖（Bar + Line）",
+      "partitionPie": "圓餅圖（Pie Chart）",
+      "partitionRose": "玫瑰圖（Rose Chart）",
+      "partitionBubble": "泡泡圖（Bubble Chart）",
+      "scatterPoint": "散佈圖（Scatter Plot）",
+      "scatterBubble": "XY 氣泡圖（Bubble Chart）",
+      "networkForce": "力導向關係圖（Force Graph）",
+      "networkBubble": "力導向泡泡圖（Network Bubble）",
+      "hierarchyTreeMap": "矩形樹狀圖（TreeMap）",
+      "racingBar": "競賽長條圖（Racing Chart）",
+      "rankedBubble": "排名泡泡圖（Ranked Bubble）",
+      "categoricalBubble": "類別泡泡圖（Categorical Bubble）"
+    }
+  },
+  "Playground": {
+    "title": "遊樂場",
+    "description": "互動式體驗 OrbCharts：編輯資料與程式碼，即時看到圖表變化。",
+    "selectExample": "切換範例",
+    "selectExampleTitle": "選擇範例",
+    "reset": "還原範例",
+    "rerun": "重新繪圖",
+    "openPanel": "開啟功能面板",
+    "panelTitle": "功能面板",
+    "chartAreaLabel": "圖表即時呈現區",
+    "splitterLabel": "調整面板寬度",
+    "Tabs": {
+      "data": "Data",
+      "encoding": "Encoding",
+      "theme": "Theme",
+      "params": "Plugin Params",
+      "code": "Source Code",
+      "console": "Console",
+      "info": "說明"
+    },
+    "Data": {
+      "dataset": "Dataset {index}",
+      "addRow": "新增列",
+      "deleteRow": "刪除第 {index} 列",
+      "rowCount": "{count} 筆"
+    },
+    "Code": {
+      "run": "執行",
+      "hint": "編輯程式碼後按「執行」或上方的「重新繪圖」重新建立圖表。"
+    },
+    "Console": {
+      "empty": "尚無輸出。程式碼中的 console.log 會顯示在這裡。",
+      "latestOnly": "預設顯示最新一筆輸出（完整內容），可展開歷史紀錄",
+      "history": "歷史紀錄（{count}）",
+      "clear": "清除"
+    },
+    "Editor": {
+      "hint": "編輯後即時套用到圖表，並同步到程式碼。",
+      "paramsHint": "編輯後即時套用到圖表，並同步到程式碼（函式型參數請於 Source Code 中編輯）。"
+    },
+    "Info": {
+      "example": "範例",
+      "plugin": "Plugin",
+      "dataFormat": "資料格式",
+      "docs": "相關文件",
+      "pluginDocs": "{plugin} 文件",
+      "dataFormatDocs": "{format} 資料格式說明",
+      "minimalCode": "最小可執行程式碼",
+      "minimalCodeHint": "可直接複製到你的專案中執行（需先安裝套件）。"
+    },
+    "runError": "執行錯誤"
+  },
+  "Docs": {
+    "title": "文件",
+    "description": "學習如何使用 OrbCharts。"
+  },
+  "Footer": {
+    "copyright": "© 2025-present 藍星球資訊有限公司。版權所有。",
+    "licensePrefix": "OrbCharts 以 ",
+    "licenseSuffix": " 授權釋出。",
+    "tagline": "資料驅動的 JavaScript 圖表函式庫"
+  },
+  "LocaleSwitcher": {
+    "label": "語言",
+    "en": "English",
+    "zh": "繁體中文"
+  }
+}

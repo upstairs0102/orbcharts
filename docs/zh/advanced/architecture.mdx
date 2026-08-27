@@ -1,0 +1,106 @@
+---
+title: 架構總覽
+description: 從高層次理解 OrbCharts v4——資料驅動的單向資料流、以 RxJS 管理狀態的 ChartContext、Plugin / Layer 系統，以及 D3.js 渲染。
+nav:
+  group: 進階
+  order: 3
+related:
+  - /docs/advanced/custom-plugin
+  - /docs/advanced/custom-layer
+  - /docs/data-formats/overview
+---
+
+# 架構總覽
+
+本頁從高層次說明 OrbCharts v4 的運作方式，幫助你理解資料如何一路變成畫面上的圖。日常使用不需要這些細節，但在自訂 Plugin/Layer、除錯，或評估擴充可能性時會很有幫助。
+
+## 核心設計：資料驅動
+
+OrbCharts v4 是**資料驅動**的圖表函式庫。你提供資料與設定，函式庫負責把它們轉換並渲染成圖；整個過程是一條**單向資料流**：
+
+```
+RawData ──(Encoding)──▶ ModelData ──(Plugin/Layer 計算)──▶ ComputedData ──(D3.js)──▶ SVG
+```
+
+| 階段 | 內容 | 由誰處理 |
+|---|---|---|
+| **RawData** | 你輸入的原始資料（物件陣列） | 使用者 |
+| **ModelData** | 依 Encoding 正規化後的模型資料 | OrbCharts 核心 |
+| **ComputedData** | 加上視覺座標的資料 | Plugin / Layer |
+| **SVG** | 實際畫到畫面上的元素 | Layer（用 D3.js） |
+
+- **RawData → ModelData**：核心依 [Encoding](/docs/api/encoding) 把原始欄位映射到 `series`、`category`、`value` 等維度，並依資料格式（[ModelType](/docs/data-formats/overview)）正規化。
+- **ModelData → ComputedData**：Plugin/Layer 接手，計算每筆資料在畫面上的座標。
+- **ComputedData → SVG**：Layer 用 D3.js 把資料繪製成 SVG 元素。
+
+> **提示**：因為是單向資料流，你只要更新「來源」（資料、Encoding、Theme、參數），下游的計算與畫面就會自動跟著更新——這正是下面 RxJS 機制的作用。
+
+## 以 RxJS 管理狀態：ChartContext
+
+所有狀態都以 **RxJS Observable** 串流傳遞，集中在一個共享的 **ChartContext** 上。當你呼叫 `chart.setData(...)`、`chart.setTheme(...)` 或調整 Plugin 參數時，對應的 Observable 推出新值，所有訂閱它的 Plugin 與 Layer 都會自動重新計算與重繪。
+
+ChartContext 提供的主要串流包含：
+
+| 串流 | 內容 |
+|---|---|
+| `gridData$`、`seriesData$`、`multivariateData$`、`graphData$`、`treeData$` | 各資料格式正規化後的 ModelData |
+| `encoding$` | 目前的 Encoding 設定 |
+| `theme$` | 目前主題（色彩、明暗、字級） |
+| `size$` | 圖表尺寸 |
+| `event$` / `eventTrigger$` | 互動事件的監聽與觸發 |
+
+> **注意**：`ChartContext` 是 Plugin/Layer 之間的共享中樞，並非一般使用 API 會直接操作的物件。你平常透過 `OrbCharts` 類別的方法間接更新它即可。
+
+## Plugin 與 Layer
+
+OrbCharts 的圖表能力來自 **Plugin / Layer 系統**：
+
+```
+OrbCharts（主容器）
+└── Plugin（例：GridPlot）        ← 一種圖表的完整邏輯
+    ├── Layer：Bar                ← 繪製長條
+    ├── Layer：Line               ← 繪製折線
+    ├── Layer：CategoryAxis       ← 繪製類別軸
+    └── ...
+```
+
+- **Plugin** 是一個完整的圖表邏輯單元：持有 Plugin 層級參數、組合一組 Layer，並可在初始化時計算共用資料。
+- **Layer** 是實際繪圖的單位，對應一個 SVG `<g>` 元素，負責一種視覺呈現。
+
+**列出哪些 Layer，就顯示哪些 Layer**——這正是同一個 `GridPlot` 能畫出長條圖、折線圖、區域圖的原因（詳見 [Plugin 通用 API](/docs/api/plugin-api)）。
+
+Plugin 還能透過 **ExtendContext** 機制，把自己算好的衍生 Observable（例如座標轉換、highlight 狀態）注入 `context`，讓旗下各 Layer 共用同一份運算結果，避免重複計算。想自己打造圖表，請見 [自訂 Plugin](/docs/advanced/custom-plugin) 與 [自訂 Layer](/docs/advanced/custom-layer)。
+
+## 渲染：D3.js 與 SVG
+
+Layer 用 **D3.js** 在自己的 `<g>` 元素內繪製：以 D3 scale 計算座標映射、以 D3 shape 產生 path、以 data join 與 transition 處理進出場與動畫。最終的 DOM 結構大致如下：
+
+```html
+<div id="chart">           <!-- 你提供的容器 -->
+  <svg>                    <!-- OrbCharts 建立的主 SVG -->
+    <g class="GridPlot…">  <!-- Plugin 對應的 g -->
+      <g class="…Bar">…</g>          <!-- Layer 對應的 g -->
+      <g class="…CategoryAxis">…</g>
+    </g>
+    <g class="Legend…">…</g>
+  </svg>
+</div>
+```
+
+## 套件分層：core 不依賴 D3
+
+OrbCharts v4 在依賴關係上刻意分層：
+
+- **`@orbcharts/core`** — 框架核心、型別系統、Plugin/Layer 基礎設施與資料流。**只依賴 RxJS，不依賴 D3.js。**
+- **`@orbcharts/plugin-basic`** — 所有內建 Plugin 與 Layer。**D3.js 只在這裡使用**（在各 Layer 的繪製中）。
+- **`orbcharts`** — 統一 re-export 的整合包。
+
+這種分層讓「狀態與資料流」與「繪圖技術」解耦：core 不綁定任何渲染函式庫，繪圖細節留在 plugin 層，因此理論上也能以其他技術（如 Canvas）實作 Layer。
+
+> **提示**：core 與 plugin 都依賴 RxJS `^7`、D3 `^7`（D3 僅 plugin 需要）。
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview) — RawData、ModelType 與 Encoding
+- [自訂 Plugin](/docs/advanced/custom-plugin)
+- [自訂 Layer](/docs/advanced/custom-layer)

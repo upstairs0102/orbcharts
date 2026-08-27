@@ -1,0 +1,115 @@
+---
+title: Migrating from v3
+description: OrbCharts v4 is a major rewrite with substantial API differences from v3. This page explains the core model shift and maps old APIs to new ones.
+nav:
+  group: Advanced
+  order: 4
+related:
+  - /docs/getting-started/installation
+  - /docs/data-formats/overview
+  - /docs/api/orbcharts-class
+---
+
+# Migrating from v3
+
+OrbCharts v4 is a **major rewrite** with substantial differences from v3 in both design and API. **v4 is not backward compatible with v3**, so you can't upgrade by tweaking a few lines—most cases require rewriting how charts are created, following the new model.
+
+> **Note**: This page helps you understand the *shape* of the differences. If you're starting a new project, begin with [Installation](/docs/getting-started/installation)—you don't need to learn v3 first.
+
+## The core model shift
+
+The most important difference is the mental model for creating a chart:
+
+- **v3**: centered on "chart class + preset". You picked a chart class (e.g. `SeriesChart`), applied a preset (e.g. `PRESET_PIE_BASIC`), then pushed data and config via RxJS Subjects (`data$`, `plugins$`).
+- **v4**: a "**data format + Plugin/Layer**" model. You prepare data in a [data format](/docs/data-formats/overview), create an `OrbCharts` instance, choose a matching Plugin (e.g. `GridPlot`, `PartitionPlot`), and list the **Layers** to show inside that Plugin (e.g. `Bar`, `Line`, `Pie`) to decide the chart's appearance.
+
+In other words, v4 drops the preset mechanism and describes a chart through "the format of the data" combined with "the composition of Plugins/Layers".
+
+## API comparison
+
+| Feature | v3 | v4 |
+|---|---|---|
+| Create a chart | `new SeriesChart(el, { preset })` | `new OrbCharts(el, options?)` |
+| Set data | `chart.data$.next(data)` | `chart.setData(data)` or constructor `options.data` |
+| Set Plugins | `chart.plugins$.next([...])` | `chart.setPlugins([...])` or `options.plugins` |
+| Plugin | `new Pie()`, `new Bar()` | `new PartitionPlot({ Pie: {} })`, `new GridPlot({ Bar: {} })` |
+| Preset | `PRESET_PIE_BASIC` | No preset mechanism |
+| Data format | 2D number array `[[1, 2, 3]]` | Array of objects `[{ series, category, value }]` |
+
+## Data format: from number arrays to object arrays
+
+v3 described data as a 2D number array, where the meaning of rows and columns was implicit in position:
+
+```ts
+// v3
+chart.data$.next([
+  [1, 2, 3],
+  [4, 5, 6],
+])
+```
+
+v4 uses an **array of objects**, where each datum explicitly carries fields like `series`, `category`, and `value`—clearer in meaning and easier to maintain:
+
+```ts
+// v4
+chart.setData([
+  { series: 'A', category: 'Q1', value: 1 },
+  { series: 'A', category: 'Q2', value: 2 },
+  { series: 'A', category: 'Q3', value: 3 },
+  { series: 'B', category: 'Q1', value: 4 },
+  { series: 'B', category: 'Q2', value: 5 },
+  { series: 'B', category: 'Q3', value: 6 },
+])
+```
+
+If your raw field names differ, remap them via [Encoding](/docs/api/encoding) rather than reshaping the data. See [Data Formats Overview](/docs/data-formats/overview) for details on each format.
+
+## Plugins: from chart classes to Plugin + Layer
+
+In v3, each chart kind was a standalone Plugin class (`new Pie()`, `new Bar()`). In v4, one Plugin corresponds to a **data format**, and Layers switch the actual graphic:
+
+```ts
+// v3
+chart.plugins$.next([new Pie(), new Bar()])
+
+// v4: grid format uses GridPlot, list the Bar Layer
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+// v4: series format uses PartitionPlot, list the Pie Layer
+new PartitionPlot({ Pie: {} })
+```
+
+Swap the listed Layer (e.g. replace `Bar` with `Line`) and the same Plugin switches chart type. See [Plugin API](/docs/api/plugin-api) for how layer visibility and shared operations work.
+
+## Full side-by-side example
+
+Rewriting a v3 bar chart in v4:
+
+```ts
+// === v3 ===
+import { SeriesChart, PRESET_BAR_BASIC } from 'orbcharts'
+
+const chart = new SeriesChart(element, { preset: PRESET_BAR_BASIC })
+chart.data$.next([[30, 20, 45]])
+
+// === v4 ===
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(element, {
+  data: [
+    { series: 'A', category: 'Q1', value: 30 },
+    { series: 'A', category: 'Q2', value: 20 },
+    { series: 'A', category: 'Q3', value: 45 },
+  ],
+  plugins: [new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })],
+})
+```
+
+> **Tip**: v4 methods (`setData`, `setPlugins`, etc.) can be called at any time after creation to update the chart; or you can pass everything at once in the constructor `options`. See [OrbCharts class](/docs/api/orbcharts-class) for the full method list.
+
+## Related
+
+- [Installation](/docs/getting-started/installation) — build a v4 chart from scratch
+- [Data Formats Overview](/docs/data-formats/overview) — the v4 data model
+- [OrbCharts class](/docs/api/orbcharts-class) — the v4 entry point and all methods

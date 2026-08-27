@@ -1,0 +1,154 @@
+---
+title: Graph Format
+description: Graph consists of "node" and "edge" records, ideal for relationship and force-directed charts that show connections between nodes.
+nav:
+  group: Data Formats
+  order: 5
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/network-plot
+---
+
+# Graph Format
+
+`graph` describes **the relationships between nodes**. It consists of two kinds of records: **nodes** and **edges**. Nodes represent entities, while edges use `source` and `target` (both node `id`s) to describe the relationship between two nodes.
+
+It suits charts that show networks, relationships, or flows, such as a force-directed graph.
+
+## When to use
+
+- Showing "a network of relationships between entities" (social or dependency relationships)
+- Expressing "the flow or connection strength between nodes"
+- Data that has a node / edge graph-theory structure
+
+## Data structure
+
+Graph data mixes node and edge records. Nodes use `id`, `name`, `value`, and `series`; edges additionally require `source` and `target` (pointing to node `id`s):
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  // nodes
+  { id: 'id0', name: 'label0', value: 19800000, series: 'series1' },
+  { id: 'id2', name: 'label2', value: 9800000, series: 'series1' },
+  // edge
+  { id: 'id14', name: 'label8', series: 'series2', source: 'id0', target: 'id2', value: 100 },
+]
+```
+
+### Available fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `id` | `string` | Yes | Unique identifier; nodes are referenced by edges through it |
+| `value` | `number \| null` | No | The value of a node or edge |
+| `series` | `string` | No | Series name; used for grouping and coloring by default |
+| `name` | `string` | No | Display name (e.g. the text shown in a Tooltip) |
+| `source` | `string` | Required for edges | The source node `id` of an edge |
+| `target` | `string` | Required for edges | The target node `id` of an edge |
+| `data` | `any` | No | Custom attached data, preserved as-is |
+
+> **Tip**: Whether a record is treated as an "edge" depends on whether it has both `source` and `target`; all other records are treated as "nodes". A node's `id` is required, and an edge's `source` / `target` must match the `id` of an existing node.
+
+## Model data (ModelDataGraph)
+
+After OrbCharts processes RawData, graph data is split into node and edge arrays, forming an overall `ModelDataGraph` structure:
+
+```ts
+interface ModelDataGraph {
+  nodes: ModelDatumGraphNode[]
+  edges: ModelDatumGraphEdge[]
+}
+```
+
+The node `ModelDatumGraphNode` extends `ModelDatumBase`:
+
+```ts
+interface ModelDatumGraphNode {
+  // From ModelDatumBase
+  id: string
+  index: number
+  modelType: 'graph'
+  name: string
+  data: any
+  value: number | null
+  color: string
+  // Graph node-specific fields
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+The edge `ModelDatumGraphEdge` carries, beyond the node fields, `source` / `target` and their indices:
+
+```ts
+interface ModelDatumGraphEdge {
+  // From ModelDatumBase
+  id: string
+  index: number
+  modelType: 'graph'
+  name: string
+  data: any
+  value: number | null
+  color: string
+  // Graph edge-specific fields
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+  source: ModelDatumGraphNode
+  sourceIndex: number
+  target: ModelDatumGraphNode
+  targetIndex: number
+}
+```
+
+## Corresponding Plugins
+
+The `graph` format works with the following Plugins:
+
+| Plugin | Charts |
+|---|---|
+| [NetworkPlot](/docs/plugins/network-plot) | Force-directed graph |
+
+## Full example
+
+Below is a relationship chart using `NetworkPlot` (which shows a force-directed graph by default):
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { NetworkPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  // nodes
+  { id: 'id0', name: 'label0', value: 19800000, series: 'series1' },
+  { id: 'id2', name: 'label2', value: 9800000, series: 'series1' },
+  // edge
+  { id: 'id14', name: 'label8', series: 'series2', source: 'id0', target: 'id2', value: 100 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new NetworkPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// Remember to destroy the chart on unmount to release resources and listeners
+// chart.destroy()
+```
+
+> **Note**: OrbCharts fills its container by default (`size` defaults to `'auto'`). Make sure the `#chart` container has an explicit width and height, otherwise the chart may not be visible. See [Core Concepts](/docs/getting-started/core-concepts).
+
+## Related links
+
+- Back to [Data Formats Overview](/docs/data-formats/overview)
+- See the full parameters and more chart examples in [NetworkPlot](/docs/plugins/network-plot)
+- For size and color settings, see [Core Concepts](/docs/getting-started/core-concepts)
+- For color and ColorType settings, see [Theme API](/docs/api/theme)

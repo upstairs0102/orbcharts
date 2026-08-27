@@ -1,0 +1,165 @@
+---
+title: Grid Format
+description: Grid is a two-dimensional data format with a "category axis" and a "value axis", ideal for bar, line, and racing charts that need coordinate axes.
+nav:
+  group: Data Formats
+  order: 3
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/grid-plot
+---
+
+# Grid Format
+
+`grid` is the most common two-dimensional data format in OrbCharts. Each record has `series`, `category`, and `value`: `category` maps to the **category axis**, `value` maps to the **value axis**, and `series` is used for **grouping and coloring**.
+
+It suits charts that need coordinate axes, such as bar, line, and racing charts.
+
+## When to use
+
+- Comparing "the magnitude of values across categories" (bar chart)
+- Showing "how values change across categories" (line chart, area chart)
+- Comparing rankings across multiple time points dynamically (racing chart)
+
+## Data structure
+
+Each grid record should include `series`, `category`, and `value`:
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+```
+
+The example above forms a grid of 2 `series` (A, B) × 2 `category` (category1, category2).
+
+### Available fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `value` | `number \| null` | Yes | The value of this record, mapped to the value axis |
+| `category` | `string` | No | Category name, mapped to the category axis |
+| `series` | `string` | No | Series name; used for grouping and coloring by default |
+| `name` | `string` | No | Display name (e.g. the text shown in a Tooltip) |
+| `data` | `any` | No | Custom attached data, preserved as-is |
+
+> **Tip**: The default color source is `series` (`color: { from: 'series' }`). Records with the same `series` share the same color, so in a multi-series bar chart each series is automatically distinguished by color.
+
+## Aggregation behavior
+
+`aggregate` defaults to `'none'`, so **each record is its own data point**, even when they share the same `series` and `category`.
+
+```ts
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category1', value: 50 },  // not automatically summed with the previous record
+  { series: 'B', category: 'category1', value: 70 },
+]
+```
+
+If you want to sum the values of the same `series` and `category` combination into a single record, configure Encoding:
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { aggregate: 'sum' },  // sum within the same group
+  },
+})
+```
+
+Available `aggregate` values: `'sum'`, `'mean'`, `'median'`, `'min'`, `'max'`, `'count'`, `'none'`.
+
+## Model data (ModelDatumGrid)
+
+After OrbCharts processes RawData, each record is converted into a `ModelDatumGrid`. It extends the shared `ModelDatumBase` and adds `series` and `category` fields:
+
+```ts
+interface ModelDatumGrid {
+  // From ModelDatumBase
+  id: string            // unique identifier
+  index: number         // index within the same category
+  modelType: 'grid'
+  name: string          // from the original data's name
+  data: any             // from the original data's data
+  value: number | null  // the value after aggregation
+  color: string         // the mapped color (hex)
+  // Grid-specific fields
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+## Corresponding Plugins
+
+The `grid` format works with the following Plugins:
+
+| Plugin | Charts |
+|---|---|
+| [GridPlot](/docs/plugins/grid-plot) | Bar, Line, Area, etc. |
+| [RacingPlot](/docs/plugins/racing-plot) | Racing chart (requires multiple datasets) |
+| [RankedPlot](/docs/plugins/ranked-plot) | Ranked chart |
+
+## Full example
+
+Below is a multi-series bar chart using `GridPlot` with a category axis and a value axis:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// Remember to destroy the chart on unmount to release resources and listeners
+// chart.destroy()
+```
+
+> **Note**: OrbCharts fills its container by default (`size` defaults to `'auto'`). Make sure the `#chart` container has an explicit width and height, otherwise the chart may not be visible. See [Core Concepts](/docs/getting-started/core-concepts).
+
+### Multiple datasets (racing chart)
+
+To draw a racing chart (RacingPlot), provide a two-dimensional `RawData` where each outer array represents one dataset (e.g. one time point):
+
+```ts
+const data: RawData = [
+  // first time point
+  [
+    { series: 'A', category: 'category1', value: 30 },
+    { series: 'B', category: 'category1', value: 70 },
+  ],
+  // second time point
+  [
+    { series: 'A', category: 'category1', value: 45 },
+    { series: 'B', category: 'category1', value: 60 },
+  ],
+]
+```
+
+## Related links
+
+- Back to [Data Formats Overview](/docs/data-formats/overview)
+- See the full parameters and more chart examples in [GridPlot](/docs/plugins/grid-plot)
+- For size and color settings, see [Core Concepts](/docs/getting-started/core-concepts)
+- For color and ColorType settings, see [Theme API](/docs/api/theme)

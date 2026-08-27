@@ -1,0 +1,75 @@
+---
+title: 文件總覽
+description: OrbCharts v4 文件首頁——圖表索引與快速導覽。
+nav:
+  group: 開始
+  order: 1
+related:
+  - /docs/getting-started/installation
+  - /docs/getting-started/core-concepts
+---
+
+# OrbCharts 文件
+
+OrbCharts 是一個**資料驅動**的 JavaScript 圖表函式庫，以 D3.js 與 RxJS 為基礎。它的核心概念是：先準備**資料格式**，再選擇 **Plugin** 來呈現；每個 Plugin 由可組合的 **Layer** 構成，同一份資料能對應多種視覺呈現。
+
+> **第一次使用？** 建議從 [安裝](/docs/getting-started/installation) 與 [第一個圖表](/docs/getting-started/first-chart) 開始，再閱讀 [核心概念](/docs/getting-started/core-concepts)。
+
+## 圖表索引
+
+依「我想畫什麼圖」找到對應的 Plugin。每個 Plugin 頁面都有完整的範例與參數說明。
+
+### Grid（類別軸 × 數值軸）
+
+| 圖表 | Layer | Plugin |
+|---|---|---|
+| 長條圖 | `Bar` | [GridPlot](/docs/plugins/grid-plot) |
+| 折線圖 | `Line` | [GridPlot](/docs/plugins/grid-plot) |
+| 區域圖 | `LineArea` | [GridPlot](/docs/plugins/grid-plot) |
+| 堆疊長條圖 | `StackedBar` | [GridPlot](/docs/plugins/grid-plot) |
+| 三角長條圖 | `TriangleBar` | [GridPlot](/docs/plugins/grid-plot) |
+| 競速圖 | `RacingBar` | [RacingPlot](/docs/plugins/racing-plot) |
+| 排名泡泡圖 | `RankedBubble` | [RankedPlot](/docs/plugins/ranked-plot) |
+
+### Series（分類數值）
+
+| 圖表 | Layer | Plugin |
+|---|---|---|
+| 圓餅圖 | `Pie` | [PartitionPlot](/docs/plugins/partition-plot) |
+| 玫瑰圖 | `Rose` | [PartitionPlot](/docs/plugins/partition-plot) |
+| 泡泡圖 | `Bubble` | [PartitionPlot](/docs/plugins/partition-plot) |
+| 分類泡泡圖 | `RaisedBubble` | [CategoricalPlot](/docs/plugins/categorical-plot) |
+
+### Multivariate（多維數值）
+
+| 圖表 | Layer | Plugin |
+|---|---|---|
+| 散佈圖 | `Point` | [ScatterPlot](/docs/plugins/scatter-plot) |
+| 泡泡圖（XY） | `Bubble` | [ScatterPlot](/docs/plugins/scatter-plot) |
+
+### Graph（節點與連線）
+
+| 圖表 | Layer | Plugin |
+|---|---|---|
+| 力導向圖 | `ForceDirected` | [NetworkPlot](/docs/plugins/network-plot) |
+| 力導向泡泡圖 | `ForceDirectedBubble` | [NetworkPlot](/docs/plugins/network-plot) |
+
+### Tree（層級結構）
+
+| 圖表 | Layer | Plugin |
+|---|---|---|
+| 矩形樹狀圖 | `TreeMap` | [HierarchyPlot](/docs/plugins/hierarchy-plot) |
+
+## 工具型 Plugin
+
+| Plugin | 用途 |
+|---|---|
+| [Legend](/docs/plugins/legend) | 可互動的圖例 |
+| [Tooltip](/docs/plugins/tooltip) | 滑鼠懸停提示框 |
+
+## 其他主題
+
+- [資料格式](/docs/data-formats/overview) — 5 種資料格式詳解
+- [Plugin 通用 API](/docs/api/plugin-api) — Layer 顯示、參數操作
+- [Theme](/docs/api/theme) — 色彩與主題
+- [OrbCharts 類別](/docs/api/orbcharts-class) — 圖表實例 API

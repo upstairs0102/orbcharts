@@ -1,0 +1,204 @@
+---
+title: CategoricalPlot
+description: CategoricalPlot is the core Plugin for the series data format, drawing categorical bubble charts.
+nav:
+  group: Plugins
+  order: 8
+charts:
+  - categorical-bubble
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# CategoricalPlot
+
+`CategoricalPlot` is the core Plugin for the `series` data format. It presents a categorical bubble chart with one "category axis" and one "value axis": at each category position it stacks bubbles whose size corresponds to the value.
+
+**Data format:** `series`
+
+## Supported charts
+
+- Categorical Bubble — `RaisedBubble` Layer
+
+## Quick start
+
+A minimal configuration draws a categorical bubble chart. CategoricalPlot shows three Layers by default: `RaisedBubble`, `CategoryAxis`, and `ValueAxis`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { CategoricalPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: '0', value: 5 },
+  { series: 'A', category: '1', value: 8 },
+  { series: 'B', category: '0', value: 3 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new CategoricalPlot({ RaisedBubble: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+Each record in this `series` data has `series`, `category`, and `value`: `category` maps to the category axis, `value` determines the bubble size and maps to the value axis, and `series` is used for grouping and coloring.
+
+## Chart examples
+
+### Categorical Bubble
+
+```ts
+new CategoricalPlot({ RaisedBubble: {}, CategoryAxis: {}, ValueAxis: {} })
+```
+
+`RaisedBubble` draws a bubble sized by value at each category position, alongside the category and value axes. Add `CategoryGuide` to show guide lines and `CategoryZoom` to enable zooming along the category axis.
+
+> **Tip**: Pair with [Legend](/docs/plugins/legend) and [Tooltip](/docs/plugins/tooltip) for interactivity, added the same way as in [GridPlot](/docs/plugins/grid-plot).
+
+## How layer visibility works
+
+CategoricalPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new CategoricalPlot()`), it shows `RaisedBubble`, `CategoryAxis`, `ValueAxis` by default (a categorical bubble chart). You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Plugin parameters
+
+These parameters affect the whole CategoricalPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `position` | `'left' \| 'right'` | `'left'` | Which side the value axis is on |
+| `categoryAxis` | `CategoryAxis` | see below | Category axis settings |
+| `valueAxis` | `ValueAxis` | see below | Value axis settings |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 20, 60, 80, 60 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `container` | `Container` | single chart | Multi-chart layout (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `VisibleFilter<'series'>` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles`, `container`, and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only CategoricalPlot's default differences are noted here (`styles.padding` defaults to `{ top: 20, right: 60, bottom: 80, left: 60 }`, and `transitionDuration` defaults to `200`).
+
+### `categoryAxis` (CategoryAxis)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `scaleDomain` | `[number, number \| 'max']` | `[0, 'max']` | Category index range |
+| `scalePadding` | `number` | `0.5` | Spacing between categories |
+| `label` | `string` | `''` | Axis label |
+
+### `valueAxis` (ValueAxis)
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `scaleDomain` | `[number \| 'min' \| 'auto', number \| 'max' \| 'auto']` | `['auto', 'auto']` | Value range |
+| `scaleRange` | `[number, number]` | `[0, 0.9]` | Proportional range mapped to the plotting area |
+| `label` | `string` | `''` | Axis label |
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### RaisedBubble
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `sizeAdjust` | `number` | `0.8` | Bubble size adjustment factor |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | How values map (radius or area) |
+| `valueLinearOpacity` | `[number, number]` | `[0.5, 1]` | Opacity range based on the value |
+| `showZeroValue` | `boolean` | `false` | Whether to show bubbles with a value of 0 |
+
+### CategoryAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `true` | Whether to show the axis line |
+| `axisLineColorType` | `ColorType` | `'primary'` | Axis line color |
+| `ticks` | `number \| null \| 'all'` | `'all'` | Number of ticks |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `false` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextRotate` | `number` | `0` | Tick text rotation angle |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+
+### ValueAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `false` | Whether to show the axis line |
+| `ticks` | `number \| null` | `null` | Number of ticks (`null` for auto) |
+| `tickFormat` | `string \| ((num) => string)` | thousands-separator formatter | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `true` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+
+### CategoryGuide
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | Whether to show the guide line |
+| `showLabel` | `boolean` | `true` | Whether to show the label |
+| `lineDashArray` | `string` | `'3, 3'` | Dash pattern |
+| `lineColorType` | `ColorType` | `'primary'` | Guide line color |
+| `labelColorType` | `ColorType` | `'primary'` | Label background color |
+| `labelTextColorType` | `ColorType` | `'background'` | Label text color |
+| `labelTextFormat` | `string \| ((text) => string)` | `text => text` | Label text formatter |
+| `labelPadding` | `number` | `20` | Label padding |
+| `labelRotate` | `number` | `0` | Label rotation angle |
+
+### CategoryZoom
+
+When enabled, allows zooming and panning along the category axis. This Layer has no extra parameters:
+
+```ts
+new CategoricalPlot({ RaisedBubble: {}, CategoryAxis: {}, ValueAxis: {}, CategoryZoom: {} })
+```
+
+## Full TypeScript interface
+
+```ts
+interface CategoricalPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: VisibleFilter<'series'>
+  container: Container
+  position: 'left' | 'right'
+  categoryAxis: CategoryAxis
+  valueAxis: ValueAxis
+  datasetIndex: number
+}
+
+interface CategoricalPlotAllLayerParams {
+  RaisedBubble: CategoricalPlotRaisedBubbleParams
+  CategoryAxis: CategoricalPlotCategoryAxisParams
+  CategoryZoom: CategoricalPlotCategoryZoomParams
+  ValueAxis: CategoricalPlotValueAxisParams
+  CategoryGuide: CategoricalPlotCategoryGuideParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new CategoricalPlot(params?: DeepPartial<CategoricalPlotPluginParams & CategoricalPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

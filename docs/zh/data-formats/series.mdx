@@ -1,0 +1,139 @@
+---
+title: Series 格式
+description: Series 是 OrbCharts 最簡單的資料格式，適合圓餅圖、玫瑰圖、泡泡圖等以「分類數值」為主的圖表。
+nav:
+  group: 資料格式
+  order: 2
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/partition-plot
+---
+
+# Series 格式
+
+`series` 是 OrbCharts 中**最簡單**的資料格式。它描述一組「分類數值」——每一筆資料有一個數值，並以 `series` 欄位分組與上色。
+
+它適合不需要 X / Y 軸的圖表，例如圓餅圖、玫瑰圖、泡泡圖。
+
+## 適用場景
+
+- 想呈現「各部分佔整體的比例」（圓餅圖）
+- 想比較「各分組的數值大小」（泡泡圖）
+- 資料沒有時間軸或座標軸的概念
+
+## 資料結構
+
+最小的 series 資料只需要 `series` 與 `value`：
+
+```ts
+import type { RawData } from '@orbcharts/core'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+```
+
+### 可用欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `value` | `number \| null` | 是 | 此筆資料的數值 |
+| `series` | `string` | 否 | 系列名稱，預設用於分組與上色 |
+| `category` | `string` | 否 | 類別名稱（可作為次要分類） |
+| `name` | `string` | 否 | 顯示名稱（例如 Tooltip 中顯示的文字） |
+| `data` | `any` | 否 | 自訂附加資料，會原樣保留 |
+
+> **提示**：預設的色彩來源是 `series`（`color: { from: 'series' }`）。也就是說，相同 `series` 的資料會用同一個顏色。你可以改成依 `category` 或 `index` 上色。
+
+## 聚合行為
+
+預設 `aggregate` 為 `'none'`，因此**每一筆資料都是獨立的一個資料點**，即使它們的 `series` 相同。
+
+```ts
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'A', value: 50 },  // 不會與上一筆自動加總
+  { series: 'B', value: 70 },
+]
+```
+
+上例會產生 **3 個** 資料點。若你希望把相同 `series` 的數值加總成一筆，請設定 Encoding：
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  encoding: {
+    value: { aggregate: 'sum' },  // 相同分組加總
+  },
+})
+```
+
+可用的 `aggregate` 值：`'sum'`、`'mean'`、`'median'`、`'min'`、`'max'`、`'count'`、`'none'`。
+
+## 模型資料（ModelDatumSeries）
+
+當 OrbCharts 處理完 RawData 後，每筆資料會轉換為 `ModelDatumSeries`。你在事件（如點擊、Tooltip）中拿到的就是這個結構：
+
+```ts
+interface ModelDatumSeries {
+  id: string            // 唯一識別
+  index: number         // 在同類別中的索引
+  modelType: 'series'
+  name: string          // 來自原始資料的 name
+  data: any             // 來自原始資料的 data
+  value: number | null  // 經過 aggregate 後的數值
+  color: string         // 對應後的顏色（hex）
+  series: string
+  seriesIndex: number
+  category: string
+  categoryIndex: number
+}
+```
+
+## 對應的 Plugin
+
+`series` 格式可搭配以下 Plugin：
+
+| Plugin | 可繪製的圖表 |
+|---|---|
+| [PartitionPlot](/docs/plugins/partition-plot) | 圓餅圖（Pie）、玫瑰圖（Rose）、泡泡圖（Bubble） |
+| [CategoricalPlot](/docs/plugins/categorical-plot) | 分類泡泡圖 |
+
+## 完整範例
+
+以下是一個最小的圓餅圖，使用 `PartitionPlot` 的 `Pie` Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { PartitionPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new PartitionPlot({ Pie: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// 元件卸載時記得銷毀，釋放資源與事件監聽
+// chart.destroy()
+```
+
+> **注意**：OrbCharts 預設會自動填滿容器尺寸（`size` 預設為 `'auto'`），請確保 `#chart` 容器有明確的寬度與高度，否則圖表可能無法顯示。
+
+## 接下來
+
+- 回到 [資料格式概述](/docs/data-formats/overview)
+- 查看 [PartitionPlot](/docs/plugins/partition-plot) 的完整參數與更多圖表範例

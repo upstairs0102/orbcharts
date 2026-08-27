@@ -1,0 +1,120 @@
+---
+title: Tooltip
+description: Tooltip 是工具型 Plugin，為任何圖表加入滑鼠提示框，並可透過 renderFn 自訂提示內容。
+nav:
+  group: Plugins
+  order: 10
+related:
+  - /docs/plugins/grid-plot
+  - /docs/plugins/legend
+  - /docs/api/plugin-api
+---
+
+# Tooltip
+
+`Tooltip` 是一個工具型 Plugin，適用於**所有圖表**。它會自動監聽圖形的 `mouseover`、`mousemove`、`mouseout` 事件，在游標附近顯示提示框，並依資料類型自動渲染內容。
+
+Tooltip 只有單一 Layer（同名的 `Tooltip`），預設即會顯示，因此通常 `new Tooltip()` 就能使用。
+
+## 用法
+
+Tooltip 與圖表 Plugin 一起放入 `plugins` 陣列即可。以下是 GridPlot 搭配 Tooltip 的完整範例：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { GridPlot, Tooltip } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: 'category1', value: 30 },
+  { series: 'A', category: 'category2', value: 20 },
+  { series: 'B', category: 'category1', value: 70 },
+  { series: 'B', category: 'category2', value: 80 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} }),
+    new Tooltip(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+不帶任何參數的 `new Tooltip()` 即可運作，會在滑過資料時自動顯示提示框。
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 自訂提示內容（renderFn）
+
+`renderFn` 讓你完全自訂提示框的內容。它接收當前的 `eventData` 與一組工具（`styles`、`utils` 等），回傳要顯示的內容；若不指定，Tooltip 會依資料類型自動渲染。
+
+```ts
+new Tooltip({
+  Tooltip: {
+    renderFn: (eventData, { styles, utils }) => {
+      // 回傳自訂的提示內容（例如 SVG 字串或 HTML）
+      return `${eventData.datum.series}: ${eventData.datum.value}`
+    },
+  },
+})
+```
+
+## Plugin 參數
+
+這些參數影響整個 Tooltip 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `sort` | `((a, b) => number) \| null` | `null` | 多筆資料時的排序函式；`null` 為不排序 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | 見 [Plugin 通用 API](/docs/api/plugin-api) | 共用視覺樣式 |
+| `visibleFilter` | `VisibleFilter<'series'>` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`visibleFilter` 為所有 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## Layer 參數
+
+Tooltip 只有一個 Layer，名稱同樣為 `Tooltip`：
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### Tooltip（提示框）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `backgroundColorType` | `ColorType` | `'background'` | 提示框背景顏色 |
+| `strokeColorType` | `ColorType` | `'primary'` | 提示框邊框顏色 |
+| `backgroundOpacity` | `number` | `0.8` | 背景透明度 |
+| `textColorType` | `ColorType` | `'primary'` | 文字顏色 |
+| `offset` | `[number, number]` | `[20, 5]` | 距游標的 x、y 偏移（像素） |
+| `padding` | `number` | `10` | 提示框內距 |
+| `renderFn` | `(eventData, { styles, utils, ... }) => content` | 依資料類型自動渲染 | 自訂提示內容的函式 |
+
+## 完整 TypeScript 介面
+
+```ts
+interface TooltipPluginParams {
+  styles: GraphicStyles
+  visibleFilter: VisibleFilter<'series'>
+  sort: ((a, b) => number) | null
+  datasetIndex: number
+}
+
+interface TooltipAllLayerParams {
+  Tooltip: TooltipLayerParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new Tooltip(params?: DeepPartial<TooltipPluginParams & TooltipAllLayerParams>)
+```
+
+## 相關連結
+
+- [GridPlot](/docs/plugins/grid-plot) — 搭配 Tooltip 的圖表 Plugin
+- [Legend](/docs/plugins/legend) — 另一個工具型 Plugin
+- [Plugin 通用 API](/docs/api/plugin-api) — 共用參數與操作方式

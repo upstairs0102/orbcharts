@@ -1,0 +1,184 @@
+---
+title: RacingPlot
+description: RacingPlot is the core Plugin for the grid data format, playing frame by frame to render an animated bar chart race.
+nav:
+  group: Plugins
+  order: 6
+charts:
+  - racing-chart
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# RacingPlot
+
+`RacingPlot` is the core Plugin for the `grid` data format. It treats the `category` in the data as "animation frames" and `series` as the items in the race, playing frame by frame in `category` order to render an animated bar chart race where item rankings change over time.
+
+**Data format:** `grid`
+
+## Supported charts
+
+- [Racing Chart](#racing-chart) — `RacingBar`, `ValueLabel`, `SeriesLabel`, `CounterText`, `ValueAxis` Layers
+
+## Quick start
+
+A minimal configuration plays a bar chart race. RacingPlot shows all Layers by default: `RacingBar`, `ValueLabel`, `SeriesLabel`, `CounterText`, and `ValueAxis`:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { RacingPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: '2000', value: 30 },
+  { series: 'A', category: '2001', value: 55 },
+  { series: 'B', category: '2000', value: 20 },
+  { series: 'B', category: '2001', value: 60 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new RacingPlot({ autorun: true, loop: true, frameInterval: 300 }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+Each record in this `grid` data has `series`, `category`, and `value`: unlike a regular bar chart, RacingPlot treats `category` as a "frame", and the chart plays through them in `category` order (e.g. `2000`, `2001`). Each frame re-ranks and redraws the bars by each `series`'s `value`, and `CounterText` is typically used to show the current frame (`category`).
+
+## How layer visibility works
+
+RacingPlot is composed of multiple Layers, and **the Layer names you list in the params are the Layers that get shown**. If you specify no Layers (`new RacingPlot()`), it shows all 5 Layers by default: `RacingBar`, `ValueLabel`, `SeriesLabel`, `CounterText`, `ValueAxis`. You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Chart examples
+
+### Racing Chart
+
+```ts
+new RacingPlot({ autorun: true, loop: true, frameInterval: 300 })
+```
+
+The three Plugin parameters `autorun`, `loop`, and `frameInterval` control playback: `autorun` decides whether playback starts automatically after loading, `loop` decides whether to loop after reaching the last frame, and `frameInterval` is the number of milliseconds each frame stays. The example above starts playing automatically on load and loops at 300 ms per frame.
+
+> **Tip**: Pair it with [Legend](/docs/plugins/legend) and [Tooltip](/docs/plugins/tooltip) for interactivity—added the same way as in [GridPlot](/docs/plugins/grid-plot).
+
+## Plugin parameters
+
+These parameters affect the whole RacingPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | Ranking axis settings: `label` is the axis label, `limit` is the max number of ranks shown (`'auto'` for automatic) |
+| `autorun` | `boolean` | `true` | Whether playback starts automatically after loading |
+| `loop` | `boolean` | `false` | Whether to loop after reaching the last frame |
+| `frameInterval` | `number` | `1000` | Number of milliseconds each frame stays |
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 60, 60, 60, 60 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles` and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only RacingPlot's default differences are noted here (`styles.padding` defaults to `{ top: 60, right: 60, bottom: 60, left: 60 }`, `transitionDuration` defaults to `500`, and `transitionEase` defaults to `'easeLinear'` for smooth frame-by-frame animation).
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### RacingBar
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `barWidth` | `number \| null` | `null` | Bar width (px); `null` means auto-calculated |
+| `barPadding` | `number` | `4` | Spacing between bars |
+| `barRadius` | `number \| boolean` | `4` | Corner radius; `false` for none, or a number for the radius |
+
+### ValueLabel
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `padding` | `number` | `8` | Spacing between the label and the bar end |
+| `colorType` | `ColorType` | `'primary'` | Label text color |
+| `format` | `string \| ((text) => string)` | `text => text` | Value text formatter |
+
+### SeriesLabel
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `axisLabel.offset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `axisLabel.colorType` | `ColorType` | `'primary'` | Axis label color |
+| `seriesLabel.position` | `'inside-left' \| 'inside-right' \| 'outside'` | `'inside-right'` | Series label position |
+| `seriesLabel.padding` | `number` | `20` | Series label padding |
+| `seriesLabel.colorType` | `ColorType` | `'dataContrast'` | Series label text color |
+
+### CounterText
+
+Typically used to show the current frame (`category`, e.g. a year).
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `renderFn` | `(categoryLabel, frameIndex, data) => string \| string[]` | `(categoryLabel, frameIndex, data) => categoryLabel` | Function computing the text to show for each frame |
+| `textAttrs` | `Array<{ [key]: string \| number }>` | `[{}]` | SVG attributes of the text element |
+| `textStyles` | `Array<{ [key]: string \| number }>` | `[{ 'font-size': '3em', 'font-weight': 'bold' }]` | CSS styles of the text element |
+| `paddingRight` | `number` | `0` | Spacing from the right edge |
+| `paddingBottom` | `number` | `0` | Spacing from the bottom edge |
+
+### ValueAxis
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | Axis label offset |
+| `labelColorType` | `ColorType` | `'primary'` | Axis label color |
+| `axisLineVisible` | `boolean` | `true` | Whether to show the axis line |
+| `axisLineColorType` | `ColorType` | `'primary'` | Axis line color |
+| `ticks` | `number \| null` | `null` | Number of ticks (`null` for auto) |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | Tick text formatter |
+| `tickLineVisible` | `boolean` | `true` | Whether to show tick lines |
+| `tickPadding` | `number` | `20` | Spacing between tick and text |
+| `tickFullLine` | `boolean` | `true` | Whether to draw full gridlines |
+| `tickColorType` | `ColorType` | `'secondary'` | Tick line color |
+| `tickTextColorType` | `ColorType` | `'primary'` | Tick text color |
+| `placement` | `'top' \| 'bottom'` | `'top'` | Value axis placement |
+
+## Full TypeScript interface
+
+```ts
+interface RacingPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGrid) => boolean | null
+  datasetIndex: number
+  rankedAxis: {
+    label: string
+    limit: number | 'auto'
+  }
+  autorun: boolean
+  loop: boolean
+  frameInterval: number
+}
+
+interface RacingPlotAllLayerParams {
+  RacingBar: RacingPlotRacingBarParams
+  ValueLabel: RacingPlotValueLabelParams
+  SeriesLabel: RacingPlotSeriesLabelParams
+  CounterText: RacingPlotCounterTextParams
+  ValueAxis: RacingPlotValueAxisParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new RacingPlot(params?: DeepPartial<RacingPlotPluginParams & RacingPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

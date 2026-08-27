@@ -1,0 +1,110 @@
+---
+title: 第一個圖表
+description: 一步步建立你的第一張圓餅圖，理解每段程式碼的作用，並加上 Tooltip 與 Legend。
+nav:
+  group: 快速開始
+  order: 2
+related:
+  - /docs/getting-started/installation
+  - /docs/getting-started/core-concepts
+  - /docs/plugins/partition-plot
+---
+
+# 第一個圖表
+
+本頁帶你一步步建立一張**圓餅圖**，並逐段解釋程式碼的作用。完成後你會理解 OrbCharts 的基本使用流程：準備容器 → 準備資料 → 選擇 Plugin → 建立圖表。
+
+> **提示**：還沒安裝？請先看 [安裝](/docs/getting-started/installation)。
+
+## 步驟 1：準備容器
+
+OrbCharts 預設會自動填滿容器，因此容器必須有明確的寬高，否則圖表不會顯示。
+
+```html
+<div id="chart" style="width: 600px; height: 400px;"></div>
+```
+
+> **注意**：尺寸與容器機制是初學者最常踩到的坑，詳見 [核心概念 — 尺寸與容器機制](/docs/getting-started/core-concepts)。
+
+## 步驟 2：準備資料
+
+OrbCharts 接受的原始資料稱為 `RawData`。最簡單的格式是 `series`——每筆資料有一個 `value`，並以 `series` 欄位分組與上色。
+
+```ts
+import type { RawData } from 'orbcharts'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+```
+
+每一筆 `{ series, value }` 都會成為圓餅圖中的一個扇形。`series` 相同的資料預設會用同一個顏色。資料格式的完整說明請見 [Series 格式](/docs/data-formats/series)。
+
+## 步驟 3：選擇 Plugin
+
+圖表由 **Plugin** 繪製。畫圓餅圖要用 `PartitionPlot`，並開啟它的 `Pie` Layer：
+
+```ts
+import { PartitionPlot } from 'orbcharts'
+
+new PartitionPlot({ Pie: {} })
+```
+
+這裡的 `Pie` 是一個 **Layer**（單一視覺元素）。你在參數中列出哪些 Layer 名稱，就會顯示哪些 Layer——這就是 OrbCharts 的 Layer 顯示機制，詳見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 步驟 4：建立圖表
+
+把容器、資料與 Plugin 組合起來，傳給 `OrbCharts` 建構式：
+
+```ts
+import { OrbCharts } from 'orbcharts'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new PartitionPlot({ Pie: {} })],
+})
+```
+
+`new OrbCharts(element, options)` 的第一個參數是容器 DOM，第二個是選項物件（這裡用到 `data` 與 `plugins`）。執行後圓餅圖就會渲染到 `#chart` 容器中。
+
+## 步驟 5：加入 Tooltip 與 Legend
+
+`Tooltip`（懸停提示框）與 `Legend`（圖例）也是 Plugin，只要加進 `plugins` 陣列即可：
+
+```ts
+import { OrbCharts, PartitionPlot, Tooltip, Legend } from 'orbcharts'
+import type { RawData } from 'orbcharts'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new PartitionPlot({ Pie: {} }), new Tooltip(), new Legend()],
+})
+```
+
+現在滑鼠懸停在扇形上會顯示提示框，圖表周圍也會出現可互動的圖例。
+
+## 步驟 6：清理
+
+當圖表不再需要時（例如元件卸載），呼叫 `destroy()` 釋放資源與移除事件監聽：
+
+```ts
+chart.destroy()
+```
+
+> **提示**：在 React 的 `useEffect` cleanup 或 Vue 的 `onUnmounted` 中呼叫 `chart.destroy()`，可避免記憶體洩漏。
+
+## 相關連結
+
+- [核心概念](/docs/getting-started/core-concepts) — 資料流、Plugin、Layer 與尺寸機制
+- [Series 格式](/docs/data-formats/series) — 本範例使用的資料格式
+- [PartitionPlot](/docs/plugins/partition-plot) — 圓餅圖、玫瑰圖、泡泡圖的完整參數

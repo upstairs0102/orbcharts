@@ -1,0 +1,191 @@
+---
+title: NetworkPlot
+description: NetworkPlot 是 graph 資料格式的核心 Plugin，以力導向佈局繪製關係圖與力導向泡泡圖。
+nav:
+  group: Plugins
+  order: 4
+charts:
+  - force-graph
+  - network-bubble
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# NetworkPlot
+
+`NetworkPlot` 是處理 `graph` 資料格式的核心 Plugin。它以力導向（force-directed）佈局排列節點與連線，可透過切換內部的 Layer 繪製關係圖與力導向泡泡圖。
+
+**資料格式：** `graph`
+
+## 支援的圖表
+
+NetworkPlot 透過不同的 Layer 組合呈現不同圖表：
+
+- [力導向關係圖（Force Graph）](#力導向關係圖) — `ForceDirected` Layer
+- [力導向泡泡圖（Network Bubble）](#力導向泡泡圖) — `ForceDirectedBubble` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張力導向關係圖。NetworkPlot 預設會顯示 `ForceDirected` Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { NetworkPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { id: 'id0', name: 'label0', value: 19800000, series: 'series1' },
+  { id: 'id2', name: 'label2', value: 9800000, series: 'series1' },
+  { id: 'id14', name: 'label8', series: 'series2', source: 'id0', target: 'id2', value: 100 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new NetworkPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+`graph` 資料同時包含「節點」與「連線」：具有 `id`、`name`、`value`、`series` 的資料代表節點；另外帶有 `source`、`target` 的資料代表一條由 `source` 指向 `target` 的連線，`series` 用於分組與上色。
+
+## Layer 顯示機制
+
+NetworkPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new NetworkPlot()`），預設顯示 `ForceDirected`（即一張力導向關係圖）。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+```ts
+new NetworkPlot()                          // 力導向關係圖（預設）
+new NetworkPlot({ ForceDirectedBubble: {} })  // 力導向泡泡圖
+```
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 圖表範例
+
+以下範例皆使用相同的 `graph` 資料，只需更換 Layer 即可切換圖表類型。
+
+### 力導向關係圖
+
+```ts
+new NetworkPlot({ ForceDirected: {} })
+```
+
+`ForceDirected` 以固定半徑的圓點繪製節點，並以帶箭頭的連線表示節點之間的關係，節點位置由力學模擬自動排列。
+
+### 力導向泡泡圖
+
+```ts
+new NetworkPlot({ ForceDirectedBubble: {} })
+```
+
+`ForceDirectedBubble` 將節點繪製成泡泡，泡泡大小依 `value` 值變化，並以泡泡內的標籤呈現節點名稱。
+
+> **提示**：可搭配 [Legend](/docs/plugins/legend) 與 [Tooltip](/docs/plugins/tooltip) 增加互動，加入方式與 [GridPlot](/docs/plugins/grid-plot) 相同。
+
+## Plugin 參數
+
+這些參數影響整個 NetworkPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 20, 20, 20, 20 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 NetworkPlot 的預設值差異（`styles.padding` 預設為 `{ top: 20, right: 20, bottom: 20, left: 20 }`，`transitionDuration` 預設為 `800`）。
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### ForceDirected（力導向）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `point.radius` | `number` | `10` | 節點圓點半徑 |
+| `point.fillColorType` | `ColorType` | `'data'` | 節點填色 |
+| `point.strokeColorType` | `ColorType` | `'data'` | 節點邊框色 |
+| `point.strokeWidth` | `number` | `1` | 節點邊框寬度 |
+| `pointLabel.colorType` | `ColorType` | `'primary'` | 節點標籤顏色 |
+| `pointLabel.sizeFixed` | `boolean` | `false` | 標籤大小是否固定（不隨縮放變化） |
+| `arrow.colorType` | `ColorType` | `'primary'` | 連線箭頭顏色 |
+| `arrow.strokeWidth` | `number` | `1.5` | 連線線寬 |
+| `arrow.pointerWidth` | `number` | `5` | 箭頭寬度 |
+| `arrow.pointerHeight` | `number` | `5` | 箭頭高度 |
+| `arrowLabel.colorType` | `ColorType` | `'primary'` | 連線標籤顏色 |
+| `arrowLabel.sizeFixed` | `boolean` | `false` | 連線標籤大小是否固定 |
+| `force.nodeStrength` | `number` | `-500` | 節點間引力（負值為斥力） |
+| `force.linkDistance` | `number` | `100` | 連線長度 |
+| `force.velocityDecay` | `number` | `0.1` | 速度衰減係數 |
+| `force.alphaDecay` | `number` | `0.05` | 模擬收斂衰減係數 |
+| `zoomable` | `boolean` | `true` | 是否可縮放與平移 |
+| `transform` | `{ x, y, k }` | `{ x: 0, y: 0, k: 1 }` | 初始位移與縮放倍率 |
+| `scaleExtent` | `{ min, max }` | `{ min: 0, max: Infinity }` | 縮放倍率範圍 |
+
+> **提示**：`point`、`pointLabel`、`arrow`、`arrowLabel` 各自另有 `styleFn` 函式參數，可回傳 CSS 字串自訂個別元素樣式。
+
+### ForceDirectedBubble（力導向泡泡）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `bubble.radiusMin` | `number` | `15` | 對應最小 `value` 的泡泡半徑 |
+| `bubble.radiusMax` | `number` | `45` | 對應最大 `value` 的泡泡半徑 |
+| `bubble.arcScaleType` | `'area' \| 'radius'` | `'area'` | 數值映射方式（面積或半徑） |
+| `bubble.fillColorType` | `ColorType` | `'data'` | 泡泡填色 |
+| `bubble.strokeColorType` | `ColorType` | `'data'` | 泡泡邊框色 |
+| `bubble.strokeWidth` | `number` | `1` | 泡泡邊框寬度 |
+| `bubbleLabel.fillRate` | `number` | `0.9` | 標籤填滿泡泡的比例 |
+| `bubbleLabel.lineHeight` | `number` | `1` | 標籤行高 |
+| `bubbleLabel.maxLineLength` | `number` | `6` | 每行最大字數 |
+| `bubbleLabel.wordBreakAll` | `boolean` | `true` | 是否允許任意位置斷行 |
+| `bubbleLabel.colorType` | `ColorType` | `'dataContrast'` | 標籤文字顏色 |
+| `arrow.colorType` | `ColorType` | `'primary'` | 連線箭頭顏色 |
+| `arrow.strokeWidthMin` | `number` | `1.5` | 對應最小 `value` 的連線線寬 |
+| `arrow.strokeWidthMax` | `number` | `4.5` | 對應最大 `value` 的連線線寬 |
+| `arrow.pointerWidth` | `number` | `5` | 箭頭寬度 |
+| `arrow.pointerHeight` | `number` | `5` | 箭頭高度 |
+| `arrowLabel.colorType` | `ColorType` | `'primary'` | 連線標籤顏色 |
+| `arrowLabel.sizeFixed` | `boolean` | `false` | 連線標籤大小是否固定 |
+| `force.nodeStrength` | `number` | `-500` | 節點間引力（負值為斥力） |
+| `force.linkDistance` | `number` | `130` | 連線長度 |
+| `force.velocityDecay` | `number` | `0.1` | 速度衰減係數 |
+| `force.alphaDecay` | `number` | `0.05` | 模擬收斂衰減係數 |
+| `zoomable` | `boolean` | `true` | 是否可縮放與平移 |
+| `transform` | `{ x, y, k }` | `{ x: 0, y: 0, k: 1 }` | 初始位移與縮放倍率 |
+| `scaleExtent` | `{ min, max }` | `{ min: 0, max: Infinity }` | 縮放倍率範圍 |
+
+> **提示**：`bubble`、`bubbleLabel`、`arrow`、`arrowLabel` 各自另有 `styleFn` 函式參數，可回傳 CSS 字串自訂個別元素樣式。
+
+## 完整 TypeScript 介面
+
+```ts
+interface NetworkPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGraph) => boolean | null
+  datasetIndex: number
+}
+
+interface NetworkPlotAllLayerParams {
+  ForceDirected: ForceDirectedParams
+  ForceDirectedBubble: ForceDirectedBubbleParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new NetworkPlot(params?: DeepPartial<NetworkPlotPluginParams & NetworkPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

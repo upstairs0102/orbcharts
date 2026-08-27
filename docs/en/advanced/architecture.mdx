@@ -1,0 +1,106 @@
+---
+title: Architecture Overview
+description: A high-level look at OrbCharts v4—data-driven one-way data flow, a ChartContext that manages state with RxJS, the Plugin / Layer system, and D3.js rendering.
+nav:
+  group: Advanced
+  order: 3
+related:
+  - /docs/advanced/custom-plugin
+  - /docs/advanced/custom-layer
+  - /docs/data-formats/overview
+---
+
+# Architecture Overview
+
+This page explains how OrbCharts v4 works at a high level, to help you understand how data becomes a chart on screen. You don't need these details for everyday use, but they're helpful when building custom Plugins/Layers, debugging, or assessing extensibility.
+
+## Core design: data-driven
+
+OrbCharts v4 is a **data-driven** charting library. You provide data and configuration, and the library transforms and renders them into a chart. The whole process is a **one-way data flow**:
+
+```
+RawData ──(Encoding)──▶ ModelData ──(Plugin/Layer compute)──▶ ComputedData ──(D3.js)──▶ SVG
+```
+
+| Stage | Content | Handled by |
+|---|---|---|
+| **RawData** | The raw data you provide (array of objects) | You |
+| **ModelData** | Model data normalized by Encoding | OrbCharts core |
+| **ComputedData** | Data with visual coordinates added | Plugin / Layer |
+| **SVG** | The elements actually drawn on screen | Layer (via D3.js) |
+
+- **RawData → ModelData**: the core maps raw fields to dimensions such as `series`, `category`, `value` per the [Encoding](/docs/api/encoding), and normalizes by data format ([ModelType](/docs/data-formats/overview)).
+- **ModelData → ComputedData**: Plugins/Layers take over and compute each datum's on-screen coordinates.
+- **ComputedData → SVG**: Layers render the data into SVG elements with D3.js.
+
+> **Tip**: Because the flow is one-way, you only update the "sources" (data, Encoding, Theme, params) and the downstream compute and rendering update automatically—exactly what the RxJS mechanism below provides.
+
+## State with RxJS: ChartContext
+
+All state flows through **RxJS Observables**, centered on a shared **ChartContext**. When you call `chart.setData(...)`, `chart.setTheme(...)`, or adjust a Plugin's params, the corresponding Observable emits a new value, and every Plugin and Layer subscribed to it recomputes and re-renders automatically.
+
+The main streams ChartContext provides include:
+
+| Stream | Content |
+|---|---|
+| `gridData$`, `seriesData$`, `multivariateData$`, `graphData$`, `treeData$` | Normalized ModelData per data format |
+| `encoding$` | The current Encoding configuration |
+| `theme$` | The current theme (colors, light/dark, font size) |
+| `size$` | Chart size |
+| `event$` / `eventTrigger$` | Listening to and triggering interaction events |
+
+> **Note**: `ChartContext` is the shared hub between Plugins/Layers, not an object you operate on through the normal usage API. You update it indirectly via the `OrbCharts` class methods.
+
+## Plugins and Layers
+
+OrbCharts' charting power comes from the **Plugin / Layer system**:
+
+```
+OrbCharts (root container)
+└── Plugin (e.g. GridPlot)        ← the full logic of one chart kind
+    ├── Layer: Bar                ← draws bars
+    ├── Layer: Line               ← draws the line
+    ├── Layer: CategoryAxis       ← draws the category axis
+    └── ...
+```
+
+- A **Plugin** is a complete chart logic unit: it holds Plugin-level params, composes a set of Layers, and can compute shared data during setup.
+- A **Layer** is the actual drawing unit, corresponding to one SVG `<g>` element and rendering one kind of visual.
+
+**The Layers you list are the Layers that get shown**—that is exactly why a single `GridPlot` can render a bar chart, a line chart, or an area chart (see [Plugin API](/docs/api/plugin-api)).
+
+A Plugin can also use the **ExtendContext** mechanism to inject its own derived Observables (such as coordinate transforms or highlight state) into `context`, so its Layers share the same computed result and avoid redundant computation. To build your own chart, see [Custom Plugin](/docs/advanced/custom-plugin) and [Custom Layer](/docs/advanced/custom-layer).
+
+## Rendering: D3.js and SVG
+
+Layers draw inside their own `<g>` element using **D3.js**: D3 scales compute coordinate mappings, D3 shapes generate paths, and data joins and transitions handle enter/exit and animation. The resulting DOM structure looks roughly like:
+
+```html
+<div id="chart">           <!-- the container you provide -->
+  <svg>                    <!-- the main SVG created by OrbCharts -->
+    <g class="GridPlot…">  <!-- the g for the Plugin -->
+      <g class="…Bar">…</g>          <!-- the g for a Layer -->
+      <g class="…CategoryAxis">…</g>
+    </g>
+    <g class="Legend…">…</g>
+  </svg>
+</div>
+```
+
+## Package layering: core does not depend on D3
+
+OrbCharts v4 is deliberately layered in its dependencies:
+
+- **`@orbcharts/core`** — the framework core, type system, Plugin/Layer infrastructure, and data flow. **It depends only on RxJS, not on D3.js.**
+- **`@orbcharts/plugin-basic`** — all built-in Plugins and Layers. **D3.js is used only here** (inside each Layer's rendering).
+- **`orbcharts`** — the all-in-one re-export bundle.
+
+This layering decouples "state and data flow" from "rendering technology": the core is not tied to any rendering library, and rendering details stay in the plugin layer—so Layers could in principle be implemented with other technologies (such as Canvas).
+
+> **Tip**: Both core and plugin depend on RxJS `^7` and D3 `^7` (D3 only needed by the plugin layer).
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview) — RawData, ModelType, and Encoding
+- [Custom Plugin](/docs/advanced/custom-plugin)
+- [Custom Layer](/docs/advanced/custom-layer)

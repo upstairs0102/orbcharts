@@ -1,0 +1,182 @@
+---
+title: RankedPlot
+description: RankedPlot 是 grid 資料格式的排名型 Plugin，可繪製依數值排序的排名泡泡圖。
+nav:
+  group: Plugins
+  order: 7
+charts:
+  - ranked-bubble
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/grid-plot
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# RankedPlot
+
+`RankedPlot` 是處理 `grid` 資料格式的排名型 Plugin。它會依資料的 `value` 大小排序，以泡泡（圓形）呈現排名，並搭配排名軸與類別軸。
+
+**資料格式：** `grid`
+
+## 支援的圖表
+
+- [排名泡泡圖（Ranked Bubble）](#快速開始) — `RankedBubble` Layer
+
+## 快速開始
+
+最少的設定就能畫出一張排名泡泡圖。RankedPlot 預設會顯示 `RankedBubble`、`RankAxis`、`CategoryAxis` 三個 Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { RankedPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: '0', value: 5 },
+  { series: 'B', category: '0', value: 8 },
+  { series: 'C', category: '0', value: 3 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new RankedPlot({ RankedBubble: {} }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+這份 `grid` 資料每筆包含 `series`、`category`、`value`：RankedPlot 依 `value` 對資料進行排名，泡泡大小對應數值，`series` 用於分組與上色。
+
+## Layer 顯示機制
+
+RankedPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new RankedPlot()`），預設顯示 `RankedBubble`、`RankAxis`、`CategoryAxis`（即一張排名泡泡圖）。`CategoryGuide` 與 `CategoryZoom` 預設不顯示，需自行列出。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+```ts
+new RankedPlot({ RankedBubble: {} })                          // 排名泡泡圖（依 value 排名）
+new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })        // 額外啟用縮放
+```
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## Plugin 參數
+
+這些參數影響整個 RankedPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定；`limit` 為顯示的排名數量上限 |
+| `categoryAxis` | `CategoryAxis` | 見 [CategoryAxis](#categoryaxis類別軸) | 類別軸設定 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 60, 60, 60, 200 }`，`transitionDuration` 為 `100` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 RankedPlot 的預設值差異（`styles.padding` 預設為 `{ top: 60, right: 60, bottom: 60, left: 200 }`，`transitionDuration` 預設為 `100`）。
+
+### `rankedAxis`
+
+| 屬性 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `label` | `string` | `''` | 排名軸標籤 |
+| `limit` | `number \| 'auto'` | `10` | 顯示的排名數量上限；`'auto'` 為自動 |
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### RankedBubble（排名泡泡）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `sizeAdjust` | `number` | `0.8` | 泡泡大小調整係數 |
+| `arcScaleType` | `'radius' \| 'area'` | `'area'` | 泡泡大小對應數值的縮放方式 |
+| `valueLinearOpacity` | `[number, number]` | `[0.5, 1]` | 依數值線性對應的透明度範圍 |
+| `showZeroValue` | `boolean` | `false` | 是否顯示數值為 0 的資料 |
+
+### RankAxis（排名軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `axisLabel.offset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `axisLabel.colorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `seriesLabel.padding` | `number` | `20` | 系列標籤內距 |
+| `seriesLabel.colorType` | `ColorType` | `'primary'` | 系列標籤顏色 |
+
+### CategoryAxis（類別軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `true` | 是否顯示軸線 |
+| `axisLineColorType` | `ColorType` | `'primary'` | 軸線顏色 |
+| `ticks` | `number \| null \| 'all'` | `'all'` | 刻度數量 |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `false` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextRotate` | `number` | `0` | 刻度文字旋轉角度 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+| `placement` | `'top' \| 'bottom'` | `'top'` | 類別軸位置 |
+
+### CategoryGuide（類別輔助線）
+
+預設不顯示，列出後啟用。
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `showLine` | `boolean` | `true` | 是否顯示輔助線 |
+| `showLabel` | `boolean` | `true` | 是否顯示標籤 |
+| `lineDashArray` | `string` | `'3, 3'` | 虛線樣式 |
+| `lineColorType` | `ColorType` | `'primary'` | 輔助線顏色 |
+| `labelColorType` | `ColorType` | `'primary'` | 標籤背景顏色 |
+| `labelTextColorType` | `ColorType` | `'background'` | 標籤文字顏色 |
+| `labelTextFormat` | `string \| ((text) => string)` | `text => text` | 標籤文字格式化 |
+| `labelPadding` | `number` | `20` | 標籤內距 |
+
+### CategoryZoom（類別縮放）
+
+預設不顯示。啟用後可在類別軸方向進行縮放與平移。此 Layer 無額外參數：
+
+```ts
+new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })
+```
+
+## 完整 TypeScript 介面
+
+```ts
+interface RankedPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGrid) => boolean | null
+  categoryAxis: CategoryAxis
+  rankedAxis: { label: string; limit: number | 'auto' }
+  datasetIndex: number
+}
+
+interface RankedPlotAllLayerParams {
+  RankedBubble: RankedPlotRankedBubbleParams
+  RankAxis: RankedPlotRankAxisParams
+  CategoryAxis: RankedPlotCategoryAxisParams
+  CategoryGuide: RankedPlotCategoryGuideParams
+  CategoryZoom: RankedPlotCategoryZoomParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new RankedPlot(params?: DeepPartial<RankedPlotPluginParams & RankedPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [GridPlot](/docs/plugins/grid-plot) — 同為 `grid` 資料格式的核心 Plugin
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

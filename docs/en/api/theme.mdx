@@ -1,0 +1,114 @@
+---
+title: Theme
+description: Configure OrbCharts' colors, light/dark mode, and font size, plus the ColorType commonly used in Layer parameters.
+nav:
+  group: API Reference
+  order: 4
+related:
+  - /docs/api/plugin-api
+  - /docs/api/orbcharts-class
+---
+
+# Theme
+
+`Theme` controls the colors, light/dark mode, and font size of the whole chart. It's passed through the `theme` option when creating a chart, and can also be adjusted later with `chart.updateTheme()`.
+
+## Theme structure
+
+```ts
+interface Theme {
+  colorScheme: 'light' | 'dark' | 'auto'
+  colors: {
+    light: Colors
+    dark: Colors
+  }
+  fontSize: string | number
+}
+
+interface Colors {
+  data: string[]          // data palette (applied to each record in order)
+  primary: string         // primary color (text, axis lines)
+  secondary: string       // secondary color (gridlines, etc.)
+  dataContrast: string[]  // high-contrast colors (for text on top of data)
+  background: string      // background color
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `colorScheme` | `'light' \| 'dark' \| 'auto'` | `'light'` | Light/dark mode |
+| `fontSize` | `string \| number` | `'0.875rem'` | Base font size |
+
+## Default palette
+
+OrbCharts uses an understated, Tableau-style palette by default, so the colors don't overpower the data.
+
+**Light**
+
+| Role | Value |
+|---|---|
+| `data` | `#4E79A7` `#F28E2B` `#E15759` `#76B7B2` `#59A14F` `#EDC948` `#B07AA1` `#FF9DA7` `#9C755F` `#BAB0AC` |
+| `primary` | `#000000` |
+| `secondary` | `#e0e0e0` |
+| `dataContrast` | `['#ffffff', '#000000']` |
+| `background` | `#FFFFFF` |
+
+**Dark**
+
+| Role | Value |
+|---|---|
+| `data` | `#7EA6E0` `#FFB86B` `#FF7A7A` `#6ED0CC` `#7ED97A` `#FFE06E` `#D4A5D8` `#FFB3BA` `#C89F7A` `#D3D3D3` |
+| `primary` | `#FFFFFF` |
+| `secondary` | `#e0e0e0` |
+| `dataContrast` | `['#ffffff', '#000000']` |
+| `background` | `#000000` |
+
+## ColorType
+
+Many Layer parameters (such as `fillColorType`, `strokeColorType`, `tickColorType`) use `ColorType` to specify a color. Instead of a raw color code, it **points to a color defined in the Theme**, so the chart automatically adapts when the theme changes.
+
+```ts
+type ColorType = 'none' | 'data' | 'primary' | 'secondary' | 'dataContrast' | 'background'
+```
+
+| Value | Maps to |
+|---|---|
+| `'data'` | The data palette (picked by the data's series/category index) |
+| `'primary'` | Primary color |
+| `'secondary'` | Secondary color |
+| `'dataContrast'` | High-contrast color |
+| `'background'` | Background color |
+| `'none'` | No fill (transparent) |
+
+## Customizing the theme
+
+Override only what you want to change; the rest keeps its defaults (deep merge):
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  theme: {
+    colorScheme: 'dark',
+    fontSize: '1rem',
+    colors: {
+      dark: {
+        data: ['#7EA6E0', '#FFB86B', '#FF7A7A'],
+      },
+    },
+  },
+  plugins: [/* ... */],
+})
+```
+
+### Adjusting after creation
+
+```ts
+chart.updateTheme({ colorScheme: 'dark' })   // partial update (deep merge)
+chart.getTheme()                              // get the current theme
+chart.forceReplaceTheme(fullTheme)            // fully replace
+```
+
+## Related
+
+- [Plugin API](/docs/api/plugin-api) — `ColorType` in Layer parameters
+- [OrbCharts Class](/docs/api/orbcharts-class) — `updateTheme` / `getTheme`

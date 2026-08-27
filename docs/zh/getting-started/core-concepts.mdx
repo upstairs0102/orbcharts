@@ -1,0 +1,130 @@
+---
+title: 核心概念
+description: 理解 OrbCharts 的資料流、5 種資料格式、Plugin 與 Layer、Theme，以及尺寸與容器機制。
+nav:
+  group: 快速開始
+  order: 3
+related:
+  - /docs/getting-started/first-chart
+  - /docs/data-formats/overview
+  - /docs/api/plugin-api
+  - /docs/api/theme
+---
+
+# 核心概念
+
+本頁說明 OrbCharts 的設計理念。理解這些概念後，你就能自由組合資料、Plugin 與 Theme，畫出各種圖表。
+
+## 資料流
+
+OrbCharts 是**資料驅動**的：你提供原始資料，函式庫負責一連串轉換，最終輸出 SVG。整個流程如下：
+
+```text
+RawData ──(Encoding 欄位對應)──▶ ModelData ──(Plugin 計算座標 + Theme 上色)──▶ SVG
+```
+
+1. **RawData**：你提供的原始資料陣列。
+2. **Encoding**：把原始欄位對應到 OrbCharts 內部使用的欄位（例如指定哪個欄位作為 `value`、是否聚合）。
+3. **ModelData**：經過對應與計算後的標準化資料，這也是你在事件（如點擊、Tooltip）中拿到的結構。
+4. **Plugin + Theme**：Plugin 計算每筆資料的座標與形狀，Theme 決定顏色，最終渲染成 SVG。
+
+## 5 種資料格式
+
+OrbCharts 用 `ModelType` 區分資料的「形狀」。不同的資料格式對應不同的 Plugin：
+
+| ModelType | 說明 | 對應 Plugin |
+|---|---|---|
+| `'series'` | 分類數值（每筆一個數值） | PartitionPlot、CategoricalPlot |
+| `'grid'` | 類別軸 × 數值軸 | GridPlot、RacingPlot、RankedPlot |
+| `'multivariate'` | 多維數值（如 XY 散佈） | ScatterPlot |
+| `'graph'` | 節點與連線 | NetworkPlot |
+| `'tree'` | 層級結構 | HierarchyPlot |
+
+> **提示**：先想清楚「我的資料是什麼形狀」，再選對應的格式與 Plugin。完整說明請見 [資料格式概述](/docs/data-formats/overview)。
+
+## Plugin 與 Layer
+
+- **Plugin** 是**圖表引擎**，一個 Plugin 可以繪製多種圖表。例如 `PartitionPlot` 能畫圓餅圖、玫瑰圖與泡泡圖。
+- **Layer** 是**單一視覺元素**，例如一個扇形、一條折線、一條座標軸。一個 Plugin 由多個 Layer 組成。
+
+你在 Plugin 參數中列出哪些 Layer 名稱，就會顯示哪些 Layer：
+
+```ts
+new PartitionPlot({ Pie: {} })   // 只顯示 Pie Layer → 圓餅圖
+```
+
+> **提示**：Layer 的顯示機制、動態切換（`show`、`hide`、`showOnly`）以及共用參數型別，詳見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## Theme
+
+`Theme` 控制整張圖表的**色彩與明暗模式**。它與資料、Plugin 解耦——切換 Theme 不需要改動資料或 Plugin。Layer 參數中常見的 `ColorType`（如 `'data'`、`'primary'`）就是指向 Theme 中定義的色彩。
+
+```ts
+const chart = new OrbCharts(element, {
+  data,
+  theme: { colorScheme: 'dark' },
+  plugins: [/* ... */],
+})
+```
+
+> **提示**：色盤、明暗模式與 `ColorType` 的完整說明請見 [Theme](/docs/api/theme)。
+
+## 尺寸與容器機制
+
+OrbCharts 的圖表會渲染進你指定的容器 DOM。`size` 選項預設為：
+
+```ts
+{ width: 'auto', height: 'auto', resizeDebounce: 50 }
+```
+
+`'auto'` 代表圖表會**自動填滿容器**，並在容器尺寸變化時自動重繪（`resizeDebounce` 是重繪的防抖延遲，單位毫秒）。
+
+> **注意**：因為預設是 `'auto'`，容器 DOM **必須有明確的寬度與高度**，否則圖表沒有可填滿的空間，將無法顯示。這是初學者最常見的問題。
+
+```html
+<div id="chart" style="width: 600px; height: 400px;"></div>
+```
+
+建立後可隨時用 `chart.resize(sizeConfig)` 調整尺寸：
+
+```ts
+chart.resize({ width: 800, height: 500 })
+```
+
+## 建立與更新圖表
+
+OrbCharts 的建構式為：
+
+```ts
+new OrbCharts(element, options?)
+```
+
+`options` 為 `PartialChartOptions`，所有欄位皆可選填：
+
+```ts
+interface PartialChartOptions {
+  size?: SizeConfig        // 尺寸（預設 'auto'）
+  theme?: PartialTheme     // 主題
+  data?: RawData           // 原始資料
+  encoding?: Encoding      // 欄位對應
+  plugins?: Plugin[]       // Plugin 列表
+}
+```
+
+建立後可用以下方法動態更新，無需重建圖表：
+
+| 方法 | 說明 |
+|---|---|
+| `chart.setData(data)` | 替換資料 |
+| `chart.setPlugins([...])` | 替換 Plugin 列表 |
+| `chart.updateEncoding({...})` | 更新欄位對應 |
+| `chart.updateTheme({...})` | 更新主題（深層合併） |
+| `chart.resize(sizeConfig)` | 調整尺寸 |
+| `chart.destroy()` | 銷毀圖表，釋放資源 |
+
+## 相關連結
+
+- [第一個圖表](/docs/getting-started/first-chart) — 把這些概念實際組合成一張圖
+- [資料格式概述](/docs/data-formats/overview) — 5 種資料格式詳解
+- [Plugin 通用 API](/docs/api/plugin-api) — Layer 顯示與參數操作
+- [Theme](/docs/api/theme) — 色彩與主題

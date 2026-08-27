@@ -1,0 +1,184 @@
+---
+title: RacingPlot
+description: RacingPlot 是 grid 資料格式的核心 Plugin，依時間幀逐幀播放，呈現動態排名競賽長條圖。
+nav:
+  group: Plugins
+  order: 6
+charts:
+  - racing-chart
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# RacingPlot
+
+`RacingPlot` 是處理 `grid` 資料格式的核心 Plugin。它將資料中的 `category` 視為「動畫時間幀」，`series` 視為競賽中的項目，依 `category` 順序逐幀播放，呈現項目排名隨時間變化的動態競賽長條圖（bar chart race）。
+
+**資料格式：** `grid`
+
+## 支援的圖表
+
+- [競賽長條圖（Racing Chart）](#競賽長條圖) — `RacingBar`、`ValueLabel`、`SeriesLabel`、`CounterText`、`ValueAxis` Layer
+
+## 快速開始
+
+最少的設定就能播放一張競賽長條圖。RacingPlot 預設會顯示 `RacingBar`、`ValueLabel`、`SeriesLabel`、`CounterText`、`ValueAxis` 全部 Layer：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { RacingPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { series: 'A', category: '2000', value: 30 },
+  { series: 'A', category: '2001', value: 55 },
+  { series: 'B', category: '2000', value: 20 },
+  { series: 'B', category: '2001', value: 60 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new RacingPlot({ autorun: true, loop: true, frameInterval: 300 }),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **提示**：圖表預設會填滿容器，請設定 `#chart` 容器的寬高。詳見 [核心概念](/docs/getting-started/core-concepts)。
+
+這份 `grid` 資料每筆包含 `series`、`category`、`value`：與一般長條圖不同，RacingPlot 將 `category` 當作「時間幀」，圖表會依 `category` 順序（如 `2000`、`2001`）逐幀播放；每一幀依各 `series` 的 `value` 重新排名並重繪長條，`CounterText` 通常用來顯示目前的幀（`category`）。
+
+## Layer 顯示機制
+
+RacingPlot 由多個 Layer 組成，**你在參數中列出哪些 Layer 名稱，就會顯示那些 Layer**。若不指定任何 Layer（`new RacingPlot()`），預設顯示全部 5 個 Layer：`RacingBar`、`ValueLabel`、`SeriesLabel`、`CounterText`、`ValueAxis`。建立後也可用 `show`/`hide`/`showOnly` 動態切換。
+
+> **提示**：Layer 顯示機制與 `show`/`hide`/`showOnly`/`toggle` 等方法為所有 Plugin 共通，完整說明見 [Plugin 通用 API](/docs/api/plugin-api)。
+
+## 圖表範例
+
+### 競賽長條圖
+
+```ts
+new RacingPlot({ autorun: true, loop: true, frameInterval: 300 })
+```
+
+`autorun`、`loop`、`frameInterval` 三個 Plugin 參數控制播放行為：`autorun` 決定載入後是否自動開始播放、`loop` 決定播放至最後一幀後是否循環、`frameInterval` 則是每一幀停留的毫秒數。上例會在載入後自動以每幀 300 毫秒的速度循環播放。
+
+> **提示**：可搭配 [Legend](/docs/plugins/legend) 與 [Tooltip](/docs/plugins/tooltip) 增加互動，加入方式與 [GridPlot](/docs/plugins/grid-plot) 相同。
+
+## Plugin 參數
+
+這些參數影響整個 RacingPlot 的行為，與 Layer 名稱並列在同一個參數物件中：
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定：`label` 為軸標籤，`limit` 為顯示的名次上限（`'auto'` 為自動） |
+| `autorun` | `boolean` | `true` | 載入後是否自動開始播放 |
+| `loop` | `boolean` | `false` | 播放至最後一幀後是否循環 |
+| `frameInterval` | `number` | `1000` | 每一幀停留的毫秒數 |
+| `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
+| `styles` | `GraphicStyles` | `padding` 為 `{ 60, 60, 60, 60 }` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
+
+> **提示**：`styles`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 RacingPlot 的預設值差異（`styles.padding` 預設為 `{ top: 60, right: 60, bottom: 60, left: 60 }`，`transitionDuration` 預設為 `500`、`transitionEase` 預設為 `'easeLinear'`，以呈現平順的逐幀動畫）。
+
+## Layer 參數
+
+每個 Layer 都有獨立的參數。以下列出各 Layer 的主要參數與預設值。
+
+> **關於 `ColorType`**：顏色相關參數使用 `ColorType`（`'data'`、`'primary'` 等），對應 Theme 中定義的色彩。完整說明見 [Theme](/docs/api/theme)。
+
+### RacingBar（競賽長條）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `barWidth` | `number \| null` | `null` | 長條寬度（像素）；`null` 為自動計算 |
+| `barPadding` | `number` | `4` | 長條之間的間距 |
+| `barRadius` | `number \| boolean` | `4` | 圓角；`false` 為無圓角，或給數字指定半徑 |
+
+### ValueLabel（數值標籤）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `padding` | `number` | `8` | 標籤與長條末端的間距 |
+| `colorType` | `ColorType` | `'primary'` | 標籤文字顏色 |
+| `format` | `string \| ((text) => string)` | `text => text` | 數值文字格式化 |
+
+### SeriesLabel（項目標籤）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `axisLabel.offset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `axisLabel.colorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `seriesLabel.position` | `'inside-left' \| 'inside-right' \| 'outside'` | `'inside-right'` | 項目標籤位置 |
+| `seriesLabel.padding` | `number` | `20` | 項目標籤內距 |
+| `seriesLabel.colorType` | `ColorType` | `'dataContrast'` | 項目標籤文字顏色 |
+
+### CounterText（計數文字）
+
+通常用來顯示目前播放到的幀（`category`，例如年份）。
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `renderFn` | `(categoryLabel, frameIndex, data) => string \| string[]` | `(categoryLabel, frameIndex, data) => categoryLabel` | 計算每一幀要顯示文字的函式 |
+| `textAttrs` | `Array<{ [key]: string \| number }>` | `[{}]` | 文字元素的 SVG 屬性 |
+| `textStyles` | `Array<{ [key]: string \| number }>` | `[{ 'font-size': '3em', 'font-weight': 'bold' }]` | 文字元素的 CSS 樣式 |
+| `paddingRight` | `number` | `0` | 距右側的間距 |
+| `paddingBottom` | `number` | `0` | 距下方的間距 |
+
+### ValueAxis（數值軸）
+
+| 參數 | 型別 | 預設值 | 說明 |
+|---|---|---|---|
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `axisLineVisible` | `boolean` | `true` | 是否顯示軸線 |
+| `axisLineColorType` | `ColorType` | `'primary'` | 軸線顏色 |
+| `ticks` | `number \| null` | `null` | 刻度數量（`null` 為自動） |
+| `tickFormat` | `string \| ((text) => string)` | `text => text` | 刻度文字格式化 |
+| `tickLineVisible` | `boolean` | `true` | 是否顯示刻度線 |
+| `tickPadding` | `number` | `20` | 刻度與文字間距 |
+| `tickFullLine` | `boolean` | `true` | 是否畫滿格線 |
+| `tickColorType` | `ColorType` | `'secondary'` | 刻度線顏色 |
+| `tickTextColorType` | `ColorType` | `'primary'` | 刻度文字顏色 |
+| `placement` | `'top' \| 'bottom'` | `'top'` | 數值軸位置 |
+
+## 完整 TypeScript 介面
+
+```ts
+interface RacingPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumGrid) => boolean | null
+  datasetIndex: number
+  rankedAxis: {
+    label: string
+    limit: number | 'auto'
+  }
+  autorun: boolean
+  loop: boolean
+  frameInterval: number
+}
+
+interface RacingPlotAllLayerParams {
+  RacingBar: RacingPlotRacingBarParams
+  ValueLabel: RacingPlotValueLabelParams
+  SeriesLabel: RacingPlotSeriesLabelParams
+  CounterText: RacingPlotCounterTextParams
+  ValueAxis: RacingPlotValueAxisParams
+}
+
+// 建構子接受兩者的 DeepPartial（Layer 名稱與 Plugin 參數並列）
+new RacingPlot(params?: DeepPartial<RacingPlotPluginParams & RacingPlotAllLayerParams>)
+```
+
+## 相關連結
+
+- [資料格式概述](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — 加入可互動的圖例
+- [Tooltip](/docs/plugins/tooltip) — 加入滑鼠提示框

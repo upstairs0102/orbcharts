@@ -1,0 +1,188 @@
+---
+title: 自訂 Plugin
+description: 使用 defineSVGPlugin / defineCanvasPlugin 建立自己的 Plugin，組合 Layer、注入共用 Observable（ExtendContext），並控制初始化與清理。
+nav:
+  group: 進階
+  order: 1
+related:
+  - /docs/advanced/custom-layer
+  - /docs/advanced/architecture
+  - /docs/api/plugin-api
+---
+
+# 自訂 Plugin
+
+OrbCharts 內建的 `GridPlot`、`PartitionPlot` 等 Plugin 都是用 `defineSVGPlugin` 建立的。當內建 Plugin 無法滿足需求時，你可以用同一套 API 打造自己的 Plugin。
+
+> **注意**：這是**進階 API**，假設你已熟悉 [核心概念](/docs/getting-started/core-concepts) 與 [Plugin 通用 API](/docs/api/plugin-api)，並對 RxJS Observable 與 D3.js 有基本了解。一般使用情境通常不需要自訂 Plugin。
+
+## Plugin 與 Layer 的關係
+
+一個 **Plugin** 是一個完整的圖表邏輯單元，本身不直接繪圖；它負責：
+
+- 持有 **Plugin 層級參數**（影響整體行為）。
+- 組合一組 **Layer**，由 Layer 實際在 SVG 上繪製視覺元素。
+- 在 `setup()` 中計算共用資料，並透過 **ExtendContext** 注入 `context`，讓旗下各 Layer 共用。
+
+繪製的工作交給 Layer，請見 [自訂 Layer](/docs/advanced/custom-layer)。
+
+## `defineSVGPlugin`
+
+```ts
+import { defineSVGPlugin } from '@orbcharts/core'
+
+const MyPlugin = defineSVGPlugin<ExtendContext, PluginParams, AllLayerParams>(config)
+```
+
+`defineSVGPlugin` 接受一個 `config` 物件，回傳一個 **Plugin 類別**（可用 `new MyPlugin(params?)` 建立實例）。它有三個泛型參數：
+
+| 泛型 | 說明 |
+|---|---|
+| `ExtendContext` | 此 Plugin 要注入 `context` 的額外 Observable 型別 |
+| `PluginParams` | Plugin 層級參數的型別 |
+| `AllLayerParams` | 各 Layer 名稱對應其參數的型別字典 |
+
+### config 欄位
+
+| 欄位 | 型別 | 必填 | 說明 |
+|---|---|---|---|
+| `name` | `string` | 是 | Plugin 名稱，作為預設 id |
+| `defaultParams` | `PluginParams` | 否 | Plugin 層級參數的預設值 |
+| `layers` | `LayerEntity[]` | 否 | 此 Plugin 包含的 Layer 實例陣列 |
+| `validator` | `(params) => ValidatorResult` | 否 | 驗證使用者傳入的參數 |
+| `setup` | `(props) => () => void` | 否 | 初始化函式，**回傳一個 cleanup 函式** |
+
+> **提示**：`config.layers` 放的是 **Layer 實例**（`new MyLayer()`），不是類別本身。哪些 Layer 預設顯示，由各 Layer 的 `initShow` 決定；使用者也可在建構參數中列出 Layer 名稱來覆寫。
+
+### `setup` 與 ExtendContext
+
+`setup` 在 Plugin 取得 `context` 後執行一次，收到的 `props` 包含：
+
+| 屬性 | 型別 | 說明 |
+|---|---|---|
+| `props.context` | `ChartContext<ExtendContext>` | 共享的圖表 context（內含 `gridData$`、`theme$`、`size$`、`event$` 等 Observable） |
+| `props.pluginParams$` | `Observable<PluginParams>` | 合併預設值後的 Plugin 參數串流 |
+
+**ExtendContext** 是 Plugin 最重要的擴充機制：你在 `setup` 中以 `context` 的基礎 Observable 計算出衍生資料（例如座標轉換、highlight 狀態），再把這些 Observable 合併回 `props.context`。如此一來，旗下所有 Layer 都能從 `context` 取得**同一份運算結果**，避免每個 Layer 重複計算。
+
+`setup` 必須回傳一個 **cleanup 函式**，會在 Plugin 重新初始化或 `destroy()` 時被呼叫，用來取消訂閱、釋放資源。
+
+```ts
+setup: (props) => {
+  // 1. 以 context 基礎 Observable 計算衍生資料
+  const layout$ = props.context.size$.pipe(
+    map((size) => computeLayout(size)),
+    shareReplay(1),
+  )
+
+  // 2. 透過 ExtendContext 注入，供旗下 Layer 共用
+  props.context = {
+    ...props.context,
+    layout$,
+  }
+
+  // 3. 回傳 cleanup
+  return () => {
+    // 取消訂閱、清理資源
+  }
+}
+```
+
+## 最小範例
+
+以下是一個極簡化的 Plugin，組合單一個 Layer，並注入一個共用的 `layout$`：
+
+```ts
+import { defineSVGPlugin, defineSVGLayer } from '@orbcharts/core'
+import { map, shareReplay } from 'rxjs'
+import * as d3 from 'd3'
+
+// 此 Plugin 注入 context 的額外 Observable
+interface MyExtendContext {
+  layout$: import('rxjs').Observable<{ width: number; height: number }>
+}
+
+interface MyPluginParams {
+  padding: number
+}
+
+interface MyLayerParams {
+  fillColor: string
+}
+
+interface MyAllLayerParams {
+  MyRect: MyLayerParams
+}
+
+// Layer：實際在所屬的 SVG <g> 上繪製（詳見「自訂 Layer」）
+const MyRect = defineSVGLayer<MyExtendContext, MyPluginParams, MyAllLayerParams>({
+  name: 'MyRect',
+  layerIndex: 0,
+  initShow: true,
+  defaultParams: { fillColor: '#3b82f6' },
+  setup: ({ svgG, context, layerParams$ }) => {
+    const sub = context.layout$.subscribe((layout) => {
+      d3.select(svgG)
+        .selectAll('rect')
+        .data([layout])
+        .join('rect')
+        .attr('width', (d) => d.width)
+        .attr('height', (d) => d.height)
+    })
+    return () => sub.unsubscribe()
+  },
+})
+
+const myRect = new MyRect()
+
+export const MyPlugin = defineSVGPlugin<
+  MyExtendContext,
+  MyPluginParams,
+  MyAllLayerParams
+>({
+  name: 'MyPlugin',
+  defaultParams: { padding: 20 },
+  layers: [myRect],
+  setup: (props) => {
+    const layout$ = props.context.size$.pipe(
+      map((size) => ({ width: size.width, height: size.height })),
+      shareReplay(1),
+    )
+
+    props.context = { ...props.context, layout$ }
+
+    return () => {}
+  },
+})
+```
+
+使用方式與內建 Plugin 完全相同：
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new MyPlugin({ padding: 30 })],
+})
+```
+
+> **提示**：建立後的實例支援 [Plugin 通用 API](/docs/api/plugin-api) 的所有方法（`show`、`hide`、`updateParams`、`destroy` 等），這些都由 `defineSVGPlugin` 自動提供，無需自行實作。
+
+## Canvas 版本
+
+若要以 Canvas 繪製，改用 `defineCanvasPlugin`，config 欄位與 `defineSVGPlugin` 完全相同；差別在於其 Layer 需以 `defineCanvasLayer` 建立（Layer 收到的是 `canvas` 元素而非 `svgG`）。
+
+```ts
+import { defineCanvasPlugin } from '@orbcharts/core'
+
+const MyCanvasPlugin = defineCanvasPlugin<ExtendContext, PluginParams, AllLayerParams>(config)
+```
+
+> **注意**：Canvas 渲染 API 已在 core 中定義，但內建的 `@orbcharts/plugin-basic` 目前皆為 SVG 實作。
+
+## 相關連結
+
+- [自訂 Layer](/docs/advanced/custom-layer) — 在 Layer 中實際繪圖
+- [架構總覽](/docs/advanced/architecture) — 資料流與 ChartContext
+- [Plugin 通用 API](/docs/api/plugin-api) — 實例的共用操作方法

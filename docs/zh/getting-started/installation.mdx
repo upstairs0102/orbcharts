@@ -1,0 +1,79 @@
+---
+title: 安裝
+description: 安裝 OrbCharts、準備容器，並用最小範例畫出第一張圖。
+nav:
+  group: 快速開始
+  order: 1
+related:
+  - /docs/getting-started/first-chart
+  - /docs/getting-started/core-concepts
+---
+
+# 安裝
+
+OrbCharts 是一個**資料驅動**的 JavaScript 圖表函式庫，以 D3.js 與 RxJS 為基礎。它支援 JavaScript 與 TypeScript，且**不限定前端框架**——你可以在純 JavaScript、React、Vue 或任何環境中使用。
+
+## 安裝套件
+
+安裝 `orbcharts` 套件即可使用全部功能：
+
+```bash
+npm i orbcharts@beta
+```
+
+> **注意**：v4 目前為 beta 版本，安裝時需指定 `@beta` 標籤。
+
+`orbcharts` 完整收錄了 `@orbcharts/core`（核心引擎）與 `@orbcharts/plugin-basic`（內建 Plugin 集合）的所有 API。若想依模組各自安裝、更精準地控制依賴，也可以個別安裝：
+
+```bash
+npm i @orbcharts/core@beta @orbcharts/plugin-basic@beta
+```
+
+（個別安裝時，import 改由各套件引入，如 `import { OrbCharts } from '@orbcharts/core'`。）
+
+| 套件 | 用途 |
+|---|---|
+| `orbcharts` | 統合套件，re-export 以下兩個套件的全部 API |
+| `@orbcharts/core` | 核心引擎，提供 `OrbCharts` 類別與資料處理 |
+| `@orbcharts/plugin-basic` | 內建 Plugin 集合（圖表、Tooltip、Legend 等） |
+
+## 準備容器
+
+OrbCharts 會把圖表渲染成 SVG，填入你指定的 DOM 容器中。預設情況下，圖表會**自動填滿容器**，因此容器必須有**明確的寬度與高度**。
+
+```html
+<div id="chart" style="width: 600px; height: 400px;"></div>
+```
+
+> **注意**：若容器沒有明確的寬高（例如高度為 `0`），圖表將無法顯示。詳細的尺寸與容器機制請見 [核心概念](/docs/getting-started/core-concepts)。
+
+## 最小可執行範例
+
+以下是一個完整的最小範例，使用 `PartitionPlot` 的 `Pie` Layer 畫出圓餅圖，並加上 Tooltip 與 Legend：
+
+```ts
+import { OrbCharts, PartitionPlot, Tooltip, Legend } from 'orbcharts'
+import type { RawData } from 'orbcharts'
+
+const data: RawData = [
+  { series: 'A', value: 30 },
+  { series: 'B', value: 70 },
+  { series: 'C', value: 45 },
+  { series: 'D', value: 85 },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [new PartitionPlot({ Pie: {} }), new Tooltip(), new Legend()],
+})
+
+// 不再需要時記得銷毀，釋放資源與事件監聽
+// chart.destroy()
+```
+
+> **提示**：想了解這段程式碼每一行的作用，以及如何一步步建立它，請接著閱讀 [第一個圖表](/docs/getting-started/first-chart)。
+
+## 相關連結
+
+- [第一個圖表](/docs/getting-started/first-chart) — 逐步建立並解釋上面的範例
+- [核心概念](/docs/getting-started/core-concepts) — 資料流、Plugin、Layer 與尺寸機制

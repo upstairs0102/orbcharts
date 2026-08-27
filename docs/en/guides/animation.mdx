@@ -1,0 +1,64 @@
+---
+title: Animation
+description: Control chart transitions with styles.transitionDuration and styles.transitionEase; defaults vary by Plugin.
+nav:
+  group: Guides
+  order: 3
+related:
+  - /docs/api/plugin-api
+  - /docs/plugins/grid-plot
+---
+
+# Animation
+
+OrbCharts smoothly transitions when data or parameters change. The animation is controlled by two fields in each chart Plugin's `styles`:
+
+- `transitionDuration`: animation duration (milliseconds).
+- `transitionEase`: the easing function (a D3 ease name, e.g. `'easeCubic'`, `'easeLinear'`).
+
+`styles` is the shared visual style across all chart Plugins; for its full structure see [Plugin API](/docs/api/plugin-api).
+
+## Defaults vary by Plugin
+
+Different charts need different pacing, so the defaults vary by Plugin. For example:
+
+| Plugin | `transitionDuration` | `transitionEase` |
+|---|---|---|
+| GridPlot | `800` | `'easeCubic'` |
+| ScatterPlot | `100` | `'easeCubic'` |
+| RacingPlot | `500` | `'easeLinear'` |
+
+> **Note**: The table above is illustrative. Refer to each Plugin's page for its actual defaults. RacingPlot uses `'easeLinear'` so that consecutive ranking animations move at a constant speed rather than speeding up and slowing down.
+
+## Adjusting the animation
+
+`styles` sits alongside the Layer names in the same params object. Set it at creation, or update it partially later with `updateParams`:
+
+```ts
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+// Set at creation
+const plugin = new GridPlot({
+  Bar: {},
+  CategoryAxis: {},
+  ValueAxis: {},
+  styles: {
+    transitionDuration: 1200,
+    transitionEase: 'easeCubicInOut',
+  },
+})
+
+// Adjust after creation (deep-merged, only changes styles)
+plugin.updateParams({
+  styles: { transitionDuration: 400 },
+})
+```
+
+`updateParams` deep-merges with the existing params, so you only supply the fields you want to change—everything else (including each Layer's settings) stays put.
+
+> **Tip**: Set `transitionDuration` to `0` to disable animation, which suits scenarios that need instant response without a transition effect.
+
+## Related
+
+- [Plugin API](/docs/api/plugin-api) — the `styles` (GraphicStyles) structure and `updateParams`
+- [GridPlot](/docs/plugins/grid-plot) — Plugin parameters and `styles` defaults

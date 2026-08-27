@@ -1,0 +1,60 @@
+---
+title: Multi-Chart Layout
+description: Use a Plugin's container parameter to arrange several subcharts of the same type in a grid within one chart.
+nav:
+  group: Guides
+  order: 6
+related:
+  - /docs/api/plugin-api
+  - /docs/plugins/grid-plot
+---
+
+# Multi-Chart Layout
+
+When your data has multiple datasets, you can arrange several subcharts of the same type in a grid **within one chart** (small multiples). This is controlled by a Plugin's `container` parameter.
+
+## The container parameter
+
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `columnAmount` | `number` | `1` | number of columns |
+| `rowAmount` | `number` | `1` | number of rows |
+| `columnGap` | `number \| 'auto'` | `'auto'` | column gap |
+| `rowGap` | `number \| 'auto'` | `'auto'` | row gap |
+
+The default is `{ columnAmount: 1, rowAmount: 1, columnGap: 'auto', rowGap: 'auto' }`, i.e. a single chart. For the full explanation of `container`, see [Plugin API](/docs/api/plugin-api).
+
+## Laying out two columns
+
+`container` sits alongside the Layer names in the same params object. Set `columnAmount` to `2` and the subcharts arrange into two columns:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new GridPlot({
+      Bar: {},
+      CategoryAxis: {},
+      ValueAxis: {},
+      container: {
+        columnAmount: 2,
+        columnGap: 40,
+      },
+    }),
+  ],
+})
+```
+
+Each subchart shares the same Layer composition and styles—they just draw different datasets.
+
+> **Tip**: Leaving `columnGap` and `rowGap` at the default `'auto'` distributes the gaps automatically; for precise control, set a number (pixels) instead.
+
+> **Note**: Subcharts split the space within the container evenly, so **the container still needs an explicit width and height** (see [Responsive Sizing](/docs/guides/responsive)). The denser the grid, the smaller each subchart, so keep enough overall size.
+
+## Related
+
+- [Plugin API](/docs/api/plugin-api) — the full fields of `container` (Container)
+- [GridPlot](/docs/plugins/grid-plot) — a chart Plugin that supports `container`

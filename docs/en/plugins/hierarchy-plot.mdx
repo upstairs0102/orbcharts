@@ -1,0 +1,123 @@
+---
+title: HierarchyPlot
+description: HierarchyPlot is the core Plugin for the tree data format, presenting hierarchical values as a TreeMap.
+nav:
+  group: Plugins
+  order: 5
+charts:
+  - treemap
+related:
+  - /docs/data-formats/overview
+  - /docs/plugins/legend
+  - /docs/plugins/tooltip
+---
+
+# HierarchyPlot
+
+`HierarchyPlot` is the core Plugin for the `tree` data format. It presents hierarchical data as nested rectangles in a TreeMap, where rectangle area corresponds to value.
+
+**Data format:** `tree`
+
+## Supported charts
+
+- [TreeMap](#treemap) — `TreeMap` Layer
+
+## Quick start
+
+A minimal configuration draws a TreeMap. HierarchyPlot shows the `TreeMap` Layer by default:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import type { RawData } from '@orbcharts/core'
+import { HierarchyPlot, Tooltip, Legend } from '@orbcharts/plugin-basic'
+
+const data: RawData = [
+  { id: 'Movies', name: 'Movies', value: null, series: '' },
+  { id: 'Movies.Action', name: 'Action', value: null, parent: 'Movies', series: '' },
+  { id: 'Movies.Action.Avatar', name: 'Avatar', value: 760505847, parent: 'Movies.Action', series: 'Action' },
+]
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [
+    new HierarchyPlot(),
+    new Tooltip(),
+    new Legend(),
+  ],
+})
+
+// chart.destroy()
+```
+
+> **Tip**: The chart fills its container by default, so set a width and height on the `#chart` container. See [Core Concepts](/docs/getting-started/core-concepts).
+
+`tree` data builds its hierarchy with the `parent` field: each record's `parent` points to the `id` of its parent node, and a record with no `parent` is a root node. The `value` of leaf nodes determines rectangle area, while the `value` of intermediate nodes can be `null` (summed from their children).
+
+## Chart examples
+
+### TreeMap
+
+```ts
+new HierarchyPlot({ TreeMap: {} })
+```
+
+`TreeMap` recursively subdivides the space into nested rectangles by hierarchy, with rectangle area corresponding to `value`—good for comparing many hierarchical values within a limited space.
+
+> **Tip**: Pair it with [Legend](/docs/plugins/legend) and [Tooltip](/docs/plugins/tooltip) for interactivity—added the same way as in [GridPlot](/docs/plugins/grid-plot).
+
+## How layer visibility works
+
+HierarchyPlot is composed of Layers, and **the Layer names you list in the params are the Layers that get shown**. `TreeMap` is its only Layer and is shown by default, so `new HierarchyPlot()` renders a TreeMap. You can also switch Layers dynamically with `show`/`hide`/`showOnly` after creation.
+
+> **Tip**: Layer visibility and the `show`/`hide`/`showOnly`/`toggle` methods are common to all Plugins. See [Plugin API](/docs/api/plugin-api) for the full explanation.
+
+## Plugin parameters
+
+These parameters affect the whole HierarchyPlot's behavior, listed alongside Layer names in the same params object:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
+| `styles` | `GraphicStyles` | `padding` is `{ 20, 20, 60, 20 }` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
+| `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
+
+> **Note**: `styles` and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only HierarchyPlot's default differences are noted here (`styles.padding` defaults to `{ top: 20, right: 20, bottom: 60, left: 20 }`, and `transitionDuration` defaults to `800`).
+
+## Layer parameters
+
+Each Layer has its own parameters. The main parameters and defaults of each Layer are listed below.
+
+> **About `ColorType`**: color-related parameters use `ColorType` (`'data'`, `'primary'`, etc.), mapping to the colors defined in the Theme. See [Theme](/docs/api/theme) for the full explanation.
+
+### TreeMap
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `paddingInner` | `number` | `2` | Padding between sibling rectangles at the same level |
+| `paddingOuter` | `number` | `2` | Padding between a parent rectangle and its children |
+| `labelColorType` | `ColorType` | `'dataContrast'` | Text color of the in-rectangle label |
+| `squarifyRatio` | `number` | `1.618034` | Preferred aspect ratio of rectangles (golden ratio by default) |
+| `sort` | `(a, b) => number` | `(a, b) => b.value - a.value` | Sort function for nodes at the same level (descending by value by default) |
+
+## Full TypeScript interface
+
+```ts
+interface HierarchyPlotPluginParams {
+  styles: GraphicStyles
+  visibleFilter: (datum: ModelDatumTree) => boolean | null
+  datasetIndex: number
+}
+
+interface HierarchyPlotAllLayerParams {
+  TreeMap: HierarchyPlotTreeMapParams
+}
+
+// The constructor accepts a DeepPartial of both (Layer names alongside Plugin params)
+new HierarchyPlot(params?: DeepPartial<HierarchyPlotPluginParams & HierarchyPlotAllLayerParams>)
+```
+
+## Related
+
+- [Data Formats Overview](/docs/data-formats/overview)
+- [Legend](/docs/plugins/legend) — add an interactive legend
+- [Tooltip](/docs/plugins/tooltip) — add a hover tooltip

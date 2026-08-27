@@ -1,0 +1,72 @@
+---
+title: Layer Visibility Control
+description: Centered on "the Layers listed in params are the Layers shown," combined with show/hide/showOnly/toggle to switch between chart types.
+nav:
+  group: Guides
+  order: 5
+related:
+  - /docs/api/plugin-api
+  - /docs/plugins/grid-plot
+---
+
+# Layer Visibility Control
+
+Each Plugin is composed of multiple **Layers**, where each Layer renders one visual element (bars, lines, axes, and so on). There's just one core rule: **the Layer names you list in the params are the Layers that get shown.**
+
+```ts
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })   // bar chart
+new GridPlot({ Line: {}, CategoryAxis: {}, ValueAxis: {} })  // line chart
+```
+
+Swap the listed Layer names and you swap the chart type. This behavior is common to all Plugins; for the full API see [Plugin API](/docs/api/plugin-api).
+
+## Switching at runtime
+
+After creating a Plugin, you can control visibility at runtime with these methods:
+
+```ts
+const plugin = new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+plugin.show('Line')                     // additionally show one or more Layers
+plugin.hide('Bar')                      // hide specified Layers
+plugin.showOnly(['Line', 'CategoryAxis', 'ValueAxis'])  // show only these
+plugin.showAll()                        // show all
+plugin.hideAll()                        // hide all
+plugin.toggle('Point')                  // toggle on/off
+plugin.getShownLayerNames()             // get the array of currently shown Layer names
+```
+
+## Example: toggling between bar and line
+
+Wire those methods to buttons and users can switch chart types. The trick is to use `showOnly` to swap the data Layer while keeping the shared axes:
+
+```ts
+import { OrbCharts } from '@orbcharts/core'
+import { GridPlot } from '@orbcharts/plugin-basic'
+
+const grid = new GridPlot({ Bar: {}, CategoryAxis: {}, ValueAxis: {} })
+
+const chart = new OrbCharts(document.querySelector('#chart')!, {
+  data,
+  plugins: [grid],
+})
+
+document.querySelector('#to-bar')!.addEventListener('click', () => {
+  grid.showOnly(['Bar', 'CategoryAxis', 'ValueAxis'])
+})
+
+document.querySelector('#to-line')!.addEventListener('click', () => {
+  grid.showOnly(['Line', 'CategoryAxis', 'ValueAxis'])
+})
+```
+
+> **Tip**: `showOnly` suits "swap the main visual, keep the axes" scenarios; if you just want to add or remove a single Layer (e.g. `Point` markers on a line), `show` / `hide` / `toggle` are more intuitive.
+
+> **Note**: Layer names are always capitalized (`Bar`, `ValueAxis`); Plugin-level params (such as `styles`, `container`) are lowercase, are **not** Layer names, and don't affect which Layers are shown.
+
+## Related
+
+- [Plugin API](/docs/api/plugin-api) — full definitions of `show` / `hide` / `showOnly` / `toggle`
+- [GridPlot](/docs/plugins/grid-plot) — the chart types each Layer maps to
