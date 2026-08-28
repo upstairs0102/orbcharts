@@ -32,6 +32,9 @@ export const ValueAxis = defineSVGLayer<GridPlotExtendContext, GridPlotPluginPar
   initShow: true,
   validator: (params) => {
     const result = validateObject(params, {
+      label: {
+        toBeTypes: ['string']
+      },
       labelOffset: {
         toBe: '[number, number]',
         test: (value: any) => {

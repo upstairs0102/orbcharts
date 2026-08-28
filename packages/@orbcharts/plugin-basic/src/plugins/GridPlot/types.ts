@@ -156,7 +156,7 @@ export interface GridPlotTriangleBarParams {
 }
 
 export interface GridPlotCategoryAxisParams {
-  // xLabel: string
+  label: string
   // labelAnchor: 'start' | 'end'
   labelOffset: [number, number]
   labelColorType: ColorType
@@ -176,7 +176,7 @@ export interface GridPlotCategoryAxisParams {
 }
 
 export interface GridPlotValueAxisParams {
-  // xLabel: string
+  label: string
   // labelAnchor: 'start' | 'end'
   labelOffset: [number, number]
   labelColorType: ColorType

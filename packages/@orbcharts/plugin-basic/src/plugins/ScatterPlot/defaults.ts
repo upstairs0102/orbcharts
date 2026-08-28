@@ -144,6 +144,7 @@ DEFAULT_SCATTER_PLOT_X_Y_GUIDE_PARAMS.yAxis.labelTextFormat.toString = () => `nu
 
 export const DEFAULT_SCATTER_PLOT_X_Y_AXES_PARAMS: ScatterPlotXYAxesParams = {
   xAxis: {
+    label: '',
     labelOffset: [0, 0],
     labelColorType: 'primary',
     axisLineVisible: false,
@@ -167,6 +168,7 @@ export const DEFAULT_SCATTER_PLOT_X_Y_AXES_PARAMS: ScatterPlotXYAxesParams = {
     tickTextColorType: 'primary'
   },
   yAxis: {
+    label: '',
     labelOffset: [0, 0],
     labelColorType: 'primary',
     axisLineVisible: false,

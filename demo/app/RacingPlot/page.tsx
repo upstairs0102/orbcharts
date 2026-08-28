@@ -67,10 +67,9 @@ export default function RacingPlotPage() {
         valueFormat: (n: number) => Math.round(n).toLocaleString()
       },
       SeriesLabel: {
-        // seriesLabel: {
-        //   position: 'inside-right',
-        //   padding: 16,
-        // },
+        // label: 'Brand Value (百萬美元)',
+        // seriesLabelPosition: 'inside-right',
+        // seriesLabelPadding: 16,
       },
       CounterText: {
         // renderFn 預設顯示 categoryLabel（即幀標籤 "2000/01" 等）
@@ -92,7 +91,6 @@ export default function RacingPlotPage() {
       loop: true,
       frameInterval: 300,
     //   rankedScale: {
-    //     label: 'Brand Value (百萬美元)',
     //     limit: 15,
     //   },
     //   styles: {

@@ -29,6 +29,7 @@ export interface BaseDotsParams {
     onlyShowHighlighted: boolean;
 }
 export interface BaseCategoryAxisParams {
+    label: string;
     labelOffset: [number, number];
     labelColorType: ColorType;
     axisLineVisible: boolean;
@@ -130,6 +131,7 @@ export type BaseTooltipParams = {
     }) => string[] | string);
 };
 export interface BaseValueAxisParams {
+    label: string;
     labelOffset: [number, number];
     labelColorType: ColorType;
     axisLineVisible: boolean;
@@ -145,6 +147,7 @@ export interface BaseValueAxisParams {
     tickTextColorType: ColorType;
 }
 export interface BaseXAxisParams {
+    label: string;
     labelOffset: [number, number];
     labelColorType: ColorType;
     axisLineVisible: boolean;
@@ -159,6 +162,7 @@ export interface BaseXAxisParams {
     tickTextColorType: ColorType;
 }
 export interface BaseYAxisParams {
+    label: string;
     labelOffset: [number, number];
     labelColorType: ColorType;
     axisLineVisible: boolean;

@@ -83,6 +83,7 @@ export const DEFAULT_BARS_TRIANGLE_PARAMS: GridPlotTriangleBarParams = {
 }
 
 export const DEFAULT_CATEGORY_AXIS_PARAMS: GridPlotCategoryAxisParams = {
+  label: '',
   // labelAnchor: 'start',
   labelOffset: [0, 0],
   labelColorType: 'primary',
@@ -101,6 +102,7 @@ export const DEFAULT_CATEGORY_AXIS_PARAMS: GridPlotCategoryAxisParams = {
 DEFAULT_CATEGORY_AXIS_PARAMS.tickFormat.toString = () => `text => text`
 
 export const DEFAULT_VALUE_AXIS_PARAMS: GridPlotValueAxisParams = {
+  label: '',
   // labelAnchor: 'end',
   labelOffset: [0, 0],
   labelColorType: 'primary',

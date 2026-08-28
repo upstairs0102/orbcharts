@@ -72,8 +72,7 @@ export const CategoricalPlot = defineSVGPlugin<
         map(scaleDomain => ({
           position: 'bottom' as const,   // category axis is always at the bottom
           scaleDomain: scaleDomain ? scaleDomain : params.categoryScale.scaleDomain,
-          scalePadding: params.categoryScale.scalePadding,
-          label: params.categoryScale.label
+          scalePadding: params.categoryScale.scalePadding
         }))
       )),
       shareReplay(1)

@@ -137,6 +137,7 @@ export interface ScatterPlotXYGuideParams {
 
 export interface ScatterPlotXYAxesParams {
   xAxis: {
+    label: string
     labelOffset: [number, number]
     labelColorType: ColorType
     axisLineVisible: boolean
@@ -154,6 +155,7 @@ export interface ScatterPlotXYAxesParams {
     tickTextColorType: ColorType
   }
   yAxis: {
+    label: string
     labelOffset: [number, number]
     labelColorType: ColorType
     axisLineVisible: boolean

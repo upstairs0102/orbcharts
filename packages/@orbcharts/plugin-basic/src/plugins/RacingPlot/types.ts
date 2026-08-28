@@ -44,7 +44,6 @@ export interface RacingPlotPluginParams {
   //   position: 'top' | 'bottom'
   // }
   rankedScale: {
-    label: string
     limit: number | 'auto'
   }
   autorun: boolean
@@ -77,15 +76,12 @@ export interface RacingPlotValueLabelParams {
 }
 
 export interface RacingPlotSeriesLabelParams {
-  axisLabel: {
-    offset: [number, number]
-    colorType: ColorType
-  }
-  seriesLabel: {
-    position: 'inside-left' | 'inside-right' | 'outside'
-    padding: number
-    colorType: ColorType
-  }
+  label: string
+  labelOffset: [number, number]
+  labelColorType: ColorType
+  seriesLabelPosition: 'inside-left' | 'inside-right' | 'outside'
+  seriesLabelPadding: number
+  seriesLabelColorType: ColorType
 }
 
 export interface RacingPlotCounterTextParams {

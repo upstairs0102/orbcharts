@@ -476,9 +476,6 @@ export const GridPlot = defineSVGPlugin<
         scaleRange: {
           toBe: '[number, number]',
           test: (value: any) => Array.isArray(value) && value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number'
-        },
-        label: {
-          toBeTypes: ['string']
         }
       })
       if (valueAxisResult.status === 'error') {
@@ -496,9 +493,6 @@ export const GridPlot = defineSVGPlugin<
         },
         scalePadding: {
           toBeTypes: ['number']
-        },
-        label: {
-          toBeTypes: ['string']
         }
       })
       if (categoryAxisResult.status === 'error') {

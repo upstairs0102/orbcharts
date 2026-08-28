@@ -533,9 +533,6 @@ export const ScatterPlot = defineSVGPlugin<
         toBe: '[number, number]',
         test: (value) => Array.isArray(value) && value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number'
       },
-      label: {
-        toBeTypes: ['string']
-      },
     })
     if (valueAxisResult.status === 'error') {
       return valueAxisResult
@@ -550,9 +547,6 @@ export const ScatterPlot = defineSVGPlugin<
         scaleRange: {
           toBe: '[number, number]',
           test: (value) => Array.isArray(value) && value.length === 2 && typeof value[0] === 'number' && typeof value[1] === 'number'
-        },
-        label: {
-          toBeTypes: ['string']
         },
       })
       if (groupAxisResult.status === 'error') {

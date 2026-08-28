@@ -23,6 +23,7 @@ export const CategoryAxis = defineSVGLayer<CategoricalPlotExtendContext, Categor
   initShow: true,
   validator: (params) => {
     const result = validateObject(params, {
+      label: { toBeTypes: ['string'] },
       labelOffset: {
         toBe: '[number, number]',
         test: (value: any) => Array.isArray(value) && value.length === 2

@@ -78,7 +78,7 @@ new RacingPlot({ autorun: true, loop: true, frameInterval: 300 })
 
 | 參數 | 型別 | 預設值 | 說明 |
 |---|---|---|---|
-| `rankedScale` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定：`label` 為軸標籤，`limit` 為顯示的名次上限（`'auto'` 為自動） |
+| `rankedScale` | `{ limit: number \| 'auto' }` | `{ limit: 10 }` | 排名軸設定：`limit` 為顯示的名次上限（`'auto'` 為自動） |
 | `autorun` | `boolean` | `true` | 載入後是否自動開始播放 |
 | `loop` | `boolean` | `false` | 播放至最後一幀後是否循環 |
 | `frameInterval` | `number` | `1000` | 每一幀停留的毫秒數 |
@@ -114,11 +114,12 @@ new RacingPlot({ autorun: true, loop: true, frameInterval: 300 })
 
 | 參數 | 型別 | 預設值 | 說明 |
 |---|---|---|---|
-| `axisLabel.offset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
-| `axisLabel.colorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
-| `seriesLabel.position` | `'inside-left' \| 'inside-right' \| 'outside'` | `'inside-right'` | 項目標籤位置 |
-| `seriesLabel.padding` | `number` | `20` | 項目標籤內距 |
-| `seriesLabel.colorType` | `ColorType` | `'dataContrast'` | 項目標籤文字顏色 |
+| `label` | `string` | `''` | 軸標籤 |
+| `labelOffset` | `[number, number]` | `[0, 0]` | 軸標籤位移 |
+| `labelColorType` | `ColorType` | `'primary'` | 軸標籤顏色 |
+| `seriesLabelPosition` | `'inside-left' \| 'inside-right' \| 'outside'` | `'inside-right'` | 項目標籤位置 |
+| `seriesLabelPadding` | `number` | `20` | 項目標籤內距 |
+| `seriesLabelColorType` | `ColorType` | `'dataContrast'` | 項目標籤文字顏色 |
 
 ### CounterText（計數文字）
 
@@ -157,7 +158,6 @@ interface RacingPlotPluginParams {
   visibleFilter: (datum: ModelDatumGrid) => boolean | null
   datasetIndex: number
   rankedScale: {
-    label: string
     limit: number | 'auto'
   }
   autorun: boolean

@@ -28,6 +28,9 @@ export const StackedValueAxis = defineSVGLayer<GridPlotExtendContext, GridPlotPl
   initShow: false,
   validator: (params) => {
     const result = validateObject(params, {
+      label: {
+        toBeTypes: ['string']
+      },
       labelOffset: {
         toBe: '[number, number]',
         test: (value: any) => {
