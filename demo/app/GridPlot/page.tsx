@@ -44,7 +44,7 @@ export default function GridPlotPage() {
       },
       CategoryGuide: {},
       CategoryZoom: {},
-      direction: 'top-down',
+      // direction: 'top-down',
       categoryScale: {
         reverse: false,
       },
@@ -87,7 +87,9 @@ export default function GridPlotPage() {
     const chart = new OrbCharts(domRef.current!, {
       data: data,
       encoding: {
-
+        color: {
+          // by: 'category'
+        }
       },
       // plugins: [],
       theme: {
