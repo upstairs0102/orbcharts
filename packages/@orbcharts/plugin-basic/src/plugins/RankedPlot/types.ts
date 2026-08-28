@@ -51,8 +51,8 @@ export interface RankedAxis {
 export interface RankedPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: VisibleFilter<'grid'>
-  categoryAxis: CategoryAxis
-  rankedAxis: RankedAxis
+  categoryScale: CategoryAxis
+  rankedScale: RankedAxis
   datasetIndex: number
 }
 

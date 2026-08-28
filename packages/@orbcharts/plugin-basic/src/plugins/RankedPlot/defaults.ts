@@ -23,11 +23,11 @@ export const DEFAULT_RANKED_PLOT_PLUGIN_PARAMS: RankedPlotPluginParams = {
     transitionEase: 'easeCubic'
   },
   visibleFilter: (datum) => true,
-  categoryAxis: {
+  categoryScale: {
     ...DEFAULT_CATEGORY_AXIS,
     // position: 'top',
   },
-  rankedAxis: {
+  rankedScale: {
     label: '',
     limit: 10
   },

@@ -64,7 +64,7 @@ export default function RacingPlotPage() {
         barRadius: 4,
       },
       ValueLabel: {
-        format: (n: number) => Math.round(n).toLocaleString()
+        valueFormat: (n: number) => Math.round(n).toLocaleString()
       },
       SeriesLabel: {
         // seriesLabel: {
@@ -91,7 +91,7 @@ export default function RacingPlotPage() {
       autorun: true,
       loop: true,
       frameInterval: 300,
-    //   rankedAxis: {
+    //   rankedScale: {
     //     label: 'Brand Value (百萬美元)',
     //     limit: 15,
     //   },

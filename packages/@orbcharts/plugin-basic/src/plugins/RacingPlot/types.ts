@@ -43,7 +43,7 @@ export interface RacingPlotPluginParams {
   // valueAxis: {
   //   position: 'top' | 'bottom'
   // }
-  rankedAxis: {
+  rankedScale: {
     label: string
     limit: number | 'auto'
   }
@@ -73,7 +73,7 @@ export interface RacingPlotRacingBarParams {
 export interface RacingPlotValueLabelParams {
   padding: number
   colorType: ColorType
-  format: string | ((n: number | d3.NumberValue) => string | d3.NumberValue)
+  valueFormat: string | ((n: number | d3.NumberValue) => string | d3.NumberValue)
 }
 
 export interface RacingPlotSeriesLabelParams {

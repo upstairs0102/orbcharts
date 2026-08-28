@@ -1022,13 +1022,13 @@ export default function CategoricalPlotPage() {
       //   transitionEase: 'easeCubic'
       // },
       // visibleFilter: (datum: any) => true,
-      // categoryAxis: {
+      // categoryScale: {
       //   scaleDomain: [0, 'max'],
       //   scalePadding: 0.5,
       //   label: ''
       // },
-      // valueAxis: {
-      //   position: 'left',
+      // valueScale: {
+      //   valueAxisPosition: 'left',
       //   scaleDomain: ['auto', 'auto'],
       //   scaleRange: [0, 0.9],
       //   label: ''

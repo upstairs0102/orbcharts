@@ -77,7 +77,7 @@ export const CategoryAxis = defineSVGLayer<GridPlotExtendContext, GridPlotPlugin
       isSeriesSeprate$: context.isSeriesSeprate$,
       fontSizePx$: context.fontSizePx$,
       categoryAxis$: context.zoomedCategoryAxis$,
-      valueAxis$: pluginParams$.pipe(map(params => params.valueAxis)),
+      valueAxis$: pluginParams$.pipe(map(params => params.valueScale)),
       styles$: pluginParams$.pipe(
         map(params => params.styles),
       ),

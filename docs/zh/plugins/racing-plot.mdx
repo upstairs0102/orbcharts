@@ -78,7 +78,7 @@ new RacingPlot({ autorun: true, loop: true, frameInterval: 300 })
 
 | 參數 | 型別 | 預設值 | 說明 |
 |---|---|---|---|
-| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定：`label` 為軸標籤，`limit` 為顯示的名次上限（`'auto'` 為自動） |
+| `rankedScale` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定：`label` 為軸標籤，`limit` 為顯示的名次上限（`'auto'` 為自動） |
 | `autorun` | `boolean` | `true` | 載入後是否自動開始播放 |
 | `loop` | `boolean` | `false` | 播放至最後一幀後是否循環 |
 | `frameInterval` | `number` | `1000` | 每一幀停留的毫秒數 |
@@ -108,7 +108,7 @@ new RacingPlot({ autorun: true, loop: true, frameInterval: 300 })
 |---|---|---|---|
 | `padding` | `number` | `8` | 標籤與長條末端的間距 |
 | `colorType` | `ColorType` | `'primary'` | 標籤文字顏色 |
-| `format` | `string \| ((text) => string)` | `text => text` | 數值文字格式化 |
+| `valueFormat` | `string \| ((text) => string)` | `text => text` | 數值文字格式化 |
 
 ### SeriesLabel（項目標籤）
 
@@ -156,7 +156,7 @@ interface RacingPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: (datum: ModelDatumGrid) => boolean | null
   datasetIndex: number
-  rankedAxis: {
+  rankedScale: {
     label: string
     limit: number | 'auto'
   }

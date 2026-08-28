@@ -42,10 +42,10 @@ export const Legend = defineSVGLayer<LegendExtendContext, LegendPluginParams, Le
       padding: {
         toBeTypes: ['number']
       },
-      backgroundFill: {
+      backgroundColorType: {
         toBeOption: 'ColorType',
       },
-      backgroundStroke: {
+      strokeColorType: {
         toBeOption: 'ColorType',
       },
       gap: {

@@ -500,10 +500,10 @@ export const createBaseStackedBar: BaseLayerFn<BaseStackedBarContext> = ({
       // const groupScaleDomainMin = data.dataFormatter.categoryAxis.scaleDomain[0] === 'auto'
       //   ? groupMin // - data.dataFormatter.categoryAxis.scalePadding
       //   : data.dataFormatter.categoryAxis.scaleDomain[0] as number // - data.dataFormatter.categoryAxis.scalePadding
-      const groupScaleDomainMin = data.pluginParams.categoryAxis.scaleDomain[0]
-      const groupScaleDomainMax = data.pluginParams.categoryAxis.scaleDomain[1] === 'max'
-        ? groupMax // + data.pluginParams.categoryAxis.scalePadding
-        : data.pluginParams.categoryAxis.scaleDomain[1] as number // + data.pluginParams.categoryAxis.scalePadding
+      const groupScaleDomainMin = data.pluginParams.categoryScale.scaleDomain[0]
+      const groupScaleDomainMax = data.pluginParams.categoryScale.scaleDomain[1] === 'max'
+        ? groupMax // + data.pluginParams.categoryScale.scalePadding
+        : data.pluginParams.categoryScale.scaleDomain[1] as number // + data.pluginParams.categoryScale.scalePadding
 
       return [groupScaleDomainMin, groupScaleDomainMax]
     })

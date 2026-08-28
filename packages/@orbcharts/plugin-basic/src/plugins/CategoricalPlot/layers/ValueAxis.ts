@@ -57,8 +57,8 @@ export const ValueAxis = defineSVGLayer<CategoricalPlotExtendContext, Categorica
       filteredMinMaxValue$: context.filteredMinMaxValue$,
       baseValueAxisParams$: layerParams$,
       categoryAxis$: context.zoomedCategoryAxis$,
-      // 'position' in pluginParams controls which side the value axis appears on (left or right)
-      valueAxis$: pluginParams$.pipe(map(params => ({ ...params.valueAxis, position: params.position }))),
+      // 'valueAxisPosition' in pluginParams controls which side the value axis appears on (left or right)
+      valueAxis$: pluginParams$.pipe(map(params => ({ ...params.valueScale, position: params.valueAxisPosition }))),
       theme$: context.theme$,
       gridAxesTransform$: context.gridAxesTransform$,
       gridAxesReverseTransform$: context.gridAxesReverseTransform$,

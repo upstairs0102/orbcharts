@@ -78,7 +78,7 @@ These parameters affect the whole RacingPlot's behavior, listed alongside Layer 
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | Ranking axis settings: `label` is the axis label, `limit` is the max number of ranks shown (`'auto'` for automatic) |
+| `rankedScale` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | Ranking axis settings: `label` is the axis label, `limit` is the max number of ranks shown (`'auto'` for automatic) |
 | `autorun` | `boolean` | `true` | Whether playback starts automatically after loading |
 | `loop` | `boolean` | `false` | Whether to loop after reaching the last frame |
 | `frameInterval` | `number` | `1000` | Number of milliseconds each frame stays |
@@ -108,7 +108,7 @@ Each Layer has its own parameters. The main parameters and defaults of each Laye
 |---|---|---|---|
 | `padding` | `number` | `8` | Spacing between the label and the bar end |
 | `colorType` | `ColorType` | `'primary'` | Label text color |
-| `format` | `string \| ((text) => string)` | `text => text` | Value text formatter |
+| `valueFormat` | `string \| ((text) => string)` | `text => text` | Value text formatter |
 
 ### SeriesLabel
 
@@ -156,7 +156,7 @@ interface RacingPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: (datum: ModelDatumGrid) => boolean | null
   datasetIndex: number
-  rankedAxis: {
+  rankedScale: {
     label: string
     limit: number | 'auto'
   }

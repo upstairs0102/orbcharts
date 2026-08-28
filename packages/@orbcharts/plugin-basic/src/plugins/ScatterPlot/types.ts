@@ -57,8 +57,8 @@ export interface ScatterPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: VisibleFilter<'grid'>
   container: Container
-  xAxis: XYAxis
-  yAxis: XYAxis
+  xScale: XYAxis
+  yScale: XYAxis
   separateSeries: boolean
   datasetIndex: number
 }

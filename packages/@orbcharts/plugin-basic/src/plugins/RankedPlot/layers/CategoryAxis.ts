@@ -75,7 +75,7 @@ export const CategoryAxis = defineSVGLayer<RankedPlotExtendContext, RankedPlotPl
           reverse: false
         }
       })),
-      valueAxis$: pluginParams$.pipe(map(params => params.rankedAxis as any)),
+      valueAxis$: pluginParams$.pipe(map(params => params.rankedScale as any)),
       styles$: pluginParams$.pipe(map(params => params.styles)),
       theme$: context.theme$,
       categoryAxisPosition$: layerParams$.pipe(map(p => p.placement))

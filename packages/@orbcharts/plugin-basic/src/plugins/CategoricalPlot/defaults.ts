@@ -23,13 +23,13 @@ export const DEFAULT_CATEGORICAL_PLOT_PLUGIN_PARAMS: CategoricalPlotPluginParams
     transitionEase: 'easeCubic'
   },
   visibleFilter: (datum) => true,
-  position: 'left',
-  categoryAxis: {
+  valueAxisPosition: 'left',
+  categoryScale: {
     scaleDomain: [0, 'max'],
     scalePadding: 0.5,
     label: ''
   },
-  valueAxis: { ...DEFAULT_VALUE_AXIS },
+  valueScale: { ...DEFAULT_VALUE_AXIS },
   datasetIndex: 0
 }
 DEFAULT_CATEGORICAL_PLOT_PLUGIN_PARAMS.visibleFilter.toString = () => '(datum) => true'

@@ -55,9 +55,9 @@ export interface CategoricalPlotCategoryAxis {
 export interface CategoricalPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: VisibleFilter<'series'>
-  position: CategoricalPlotPosition
-  categoryAxis: CategoricalPlotCategoryAxis
-  valueAxis: ValueAxis
+  valueAxisPosition: CategoricalPlotPosition
+  categoryScale: CategoricalPlotCategoryAxis
+  valueScale: ValueAxis
   datasetIndex: number
 }
 

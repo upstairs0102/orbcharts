@@ -45,7 +45,7 @@ export default function GridPlotPage() {
       CategoryGuide: {},
       CategoryZoom: {},
       direction: 'top-down',
-      categoryAxis: {
+      categoryScale: {
         reverse: false,
       },
       // Bars: {},

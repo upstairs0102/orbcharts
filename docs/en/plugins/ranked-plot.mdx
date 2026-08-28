@@ -71,15 +71,15 @@ These parameters affect the whole RankedPlot's behavior, listed alongside Layer 
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | Rank axis settings; `limit` is the maximum number of ranks to show |
-| `categoryAxis` | `CategoryAxis` | see [CategoryAxis](#categoryaxis) | Category axis settings |
+| `rankedScale` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | Rank axis settings; `limit` is the maximum number of ranks to show |
+| `categoryScale` | `CategoryAxis` | see [CategoryAxis](#categoryaxis) | Category axis settings |
 | `datasetIndex` | `number` | `0` | Which dataset to use when data is multi-dataset |
 | `styles` | `GraphicStyles` | `padding` is `{ 60, 60, 60, 200 }`, `transitionDuration` is `100` | Shared visual styles (see [Plugin API](/docs/api/plugin-api)) |
 | `visibleFilter` | `(datum) => boolean \| null` | `() => true` | Filter which data to show (see [Plugin API](/docs/api/plugin-api)) |
 
 > **Note**: `styles` and `visibleFilter` are shared by all chart Plugins; their structure and usage are documented centrally in [Plugin API](/docs/api/plugin-api). Only RankedPlot's default differences are noted here (`styles.padding` defaults to `{ top: 60, right: 60, bottom: 60, left: 200 }`, and `transitionDuration` defaults to `100`).
 
-### `rankedAxis`
+### `rankedScale`
 
 | Property | Type | Default | Description |
 |---|---|---|---|
@@ -157,8 +157,8 @@ new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })
 interface RankedPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: (datum: ModelDatumGrid) => boolean | null
-  categoryAxis: CategoryAxis
-  rankedAxis: { label: string; limit: number | 'auto' }
+  categoryScale: CategoryAxis
+  rankedScale: { label: string; limit: number | 'auto' }
   datasetIndex: number
 }
 

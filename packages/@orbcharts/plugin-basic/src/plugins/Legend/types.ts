@@ -35,8 +35,8 @@ export interface LegendLegendParams {
   // justify: 'start' | 'center' | 'end'
   placement: Placement
   padding: number
-  backgroundFill: ColorType
-  backgroundStroke: ColorType
+  backgroundColorType: ColorType
+  strokeColorType: ColorType
   gap: number
   listRectWidth: number
   listRectHeight: number

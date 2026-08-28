@@ -72,8 +72,8 @@ export interface GridPlotPluginParams {
   container: Container
   // direction: 'vertical' | 'horizontal'
   direction: 'bottom-up' | 'top-down' | 'left-right' | 'right-left'
-  valueAxis: ValueAxis
-  categoryAxis: ReversibleCategoryAxis
+  valueScale: ValueAxis
+  categoryScale: ReversibleCategoryAxis
   separateSeries: boolean
   datasetIndex: number
 }

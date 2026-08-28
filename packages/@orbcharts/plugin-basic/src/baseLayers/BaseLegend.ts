@@ -19,8 +19,8 @@ import { Placement } from '../types'
 export interface BaseLegendParams {
     placement: Placement;
     padding: number;
-    backgroundFill: ColorType;
-    backgroundStroke: ColorType;
+    backgroundColorType: ColorType;
+    strokeColorType: ColorType;
     textColorType: ColorType;
     gap: number;
     labelList: Array<{
@@ -571,8 +571,8 @@ export const createBaseLegend: BaseLayerFn<BaseLegendContext> = ({
             .join('rect')
             .attr('width', d => d.width)
             .attr('height', d => d.height)
-            .attr('fill', getColor(data.baseLegendParams.backgroundFill, data.theme))
-            .attr('stroke', getColor(data.baseLegendParams.backgroundStroke, data.theme))
+            .attr('fill', getColor(data.baseLegendParams.backgroundColorType, data.theme))
+            .attr('stroke', getColor(data.baseLegendParams.strokeColorType, data.theme))
         })
     })
   )

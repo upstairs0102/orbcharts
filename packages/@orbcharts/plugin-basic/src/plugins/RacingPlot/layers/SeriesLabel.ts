@@ -88,7 +88,7 @@ export const SeriesLabel = defineSVGLayer<RacingPlotExtendContext, RacingPlotPlu
       xScale$: context.xScale$,
       fullParams$: layerParams$,
       styles$: pluginParams$.pipe(map(p => p.styles)),
-      rankingAxisLabel$: pluginParams$.pipe(map(p => p.rankedAxis.label)),
+      rankingAxisLabel$: pluginParams$.pipe(map(p => p.rankedScale.label)),
       rankedScaleList$: context.rankedScaleList$,
       containerPosition$: context.gridContainerPosition$,
       containerSize$: context.containerSize$,

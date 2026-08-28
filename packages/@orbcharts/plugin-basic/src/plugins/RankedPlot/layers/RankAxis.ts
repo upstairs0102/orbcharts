@@ -80,7 +80,7 @@ export const RankAxis = defineSVGLayer<RankedPlotExtendContext, RankedPlotPlugin
       rankedSeriesData$: context.rankedSeriesData$,
       fullParams$: layerParams$,
       styles$: pluginParams$.pipe(map(params => params.styles)),
-      rankingAxisLabel$: pluginParams$.pipe(map(params => params.rankedAxis.label)),
+      rankingAxisLabel$: pluginParams$.pipe(map(params => params.rankedScale.label)),
       rankingScaleList$: context.rankedScaleList$,
       containerPosition$: context.gridContainerPosition$,
       containerSize$: context.containerSize$,

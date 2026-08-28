@@ -71,15 +71,15 @@ new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })        // 額外啟用縮
 
 | 參數 | 型別 | 預設值 | 說明 |
 |---|---|---|---|
-| `rankedAxis` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定；`limit` 為顯示的排名數量上限 |
-| `categoryAxis` | `CategoryAxis` | 見 [CategoryAxis](#categoryaxis類別軸) | 類別軸設定 |
+| `rankedScale` | `{ label: string, limit: number \| 'auto' }` | `{ label: '', limit: 10 }` | 排名軸設定；`limit` 為顯示的排名數量上限 |
+| `categoryScale` | `CategoryAxis` | 見 [CategoryAxis](#categoryaxis類別軸) | 類別軸設定 |
 | `datasetIndex` | `number` | `0` | 當資料為多資料集時，使用第幾個 |
 | `styles` | `GraphicStyles` | `padding` 為 `{ 60, 60, 60, 200 }`，`transitionDuration` 為 `100` | 共用視覺樣式（見 [Plugin 通用 API](/docs/api/plugin-api)） |
 | `visibleFilter` | `(datum) => boolean \| null` | `() => true` | 過濾要顯示的資料（見 [Plugin 通用 API](/docs/api/plugin-api)） |
 
 > **提示**：`styles`、`visibleFilter` 為所有圖表 Plugin 共用，其結構與用法集中說明於 [Plugin 通用 API](/docs/api/plugin-api)。此處僅標示 RankedPlot 的預設值差異（`styles.padding` 預設為 `{ top: 60, right: 60, bottom: 60, left: 200 }`，`transitionDuration` 預設為 `100`）。
 
-### `rankedAxis`
+### `rankedScale`
 
 | 屬性 | 型別 | 預設值 | 說明 |
 |---|---|---|---|
@@ -157,8 +157,8 @@ new RankedPlot({ RankedBubble: {}, CategoryZoom: {} })
 interface RankedPlotPluginParams {
   styles: GraphicStyles
   visibleFilter: (datum: ModelDatumGrid) => boolean | null
-  categoryAxis: CategoryAxis
-  rankedAxis: { label: string; limit: number | 'auto' }
+  categoryScale: CategoryAxis
+  rankedScale: { label: string; limit: number | 'auto' }
   datasetIndex: number
 }
 

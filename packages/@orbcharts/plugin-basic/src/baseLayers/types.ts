@@ -46,8 +46,8 @@ export interface BaseCategoryAxisParams {
 export interface BaseLegendParams {
     placement: Placement;
     padding: number;
-    backgroundFill: ColorType;
-    backgroundStroke: ColorType;
+    backgroundColorType: ColorType;
+    strokeColorType: ColorType;
     textColorType: ColorType;
     gap: number;
     labelList: Array<{

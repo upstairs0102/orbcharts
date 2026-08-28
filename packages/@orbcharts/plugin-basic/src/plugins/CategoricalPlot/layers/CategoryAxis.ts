@@ -92,7 +92,7 @@ export const CategoryAxis = defineSVGLayer<CategoricalPlotExtendContext, Categor
           reverse: false
         }
       })),
-      valueAxis$: pluginParams$.pipe(map(params => params.valueAxis)),
+      valueAxis$: pluginParams$.pipe(map(params => params.valueScale)),
       styles$: pluginParams$.pipe(map(params => params.styles)),
       theme$: context.theme$,
     })

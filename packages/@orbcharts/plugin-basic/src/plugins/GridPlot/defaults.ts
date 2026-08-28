@@ -18,8 +18,8 @@ export const DEFAULT_SERIES_PLOT_PARAMS: GridPlotPluginParams = {
   visibleFilter: (datum) => true,
   container: { ...DEFAULT_CONTAINER },
   direction: 'bottom-up',
-  valueAxis: { ...DEFAULT_VALUE_AXIS },
-  categoryAxis: { ...DEFAULT_CATEGORY_AXIS},
+  valueScale: { ...DEFAULT_VALUE_AXIS },
+  categoryScale: { ...DEFAULT_CATEGORY_AXIS},
   separateSeries: false,
   datasetIndex: 0
 }

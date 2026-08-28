@@ -74,7 +74,7 @@ export const GridPlot = defineSVGPlugin<
     })
 
     const zoomedCategoryAxis$ = props.pluginParams$.pipe(
-      map(params => params.categoryAxis),
+      map(params => params.categoryScale),
       switchMap(categoryAxis => zoomedScaleDomain$.pipe(
         map(scaleDomain => {
           if (!scaleDomain) {
@@ -90,7 +90,7 @@ export const GridPlot = defineSVGPlugin<
     )
 
     const valueAxis$ = props.pluginParams$.pipe(
-      map(params => params.valueAxis),
+      map(params => params.valueScale),
       shareReplay(1)
     )
 
@@ -383,10 +383,10 @@ export const GridPlot = defineSVGPlugin<
       // columnLabels: {
       //   toBeTypes: ['string[]']
       // },
-      valueAxis: {
+      valueScale: {
         toBeTypes: ['object']
       },
-      categoryAxis: {
+      categoryScale: {
         toBeTypes: ['object']
       },
       separateSeries: {
@@ -464,8 +464,8 @@ export const GridPlot = defineSVGPlugin<
         return containerResult
       }
     }
-    if (params.valueAxis) {
-      const valueAxisResult = validateObject(params.valueAxis, {
+    if (params.valueScale) {
+      const valueAxisResult = validateObject(params.valueScale, {
         // opposite: {
         //   toBeTypes: ['boolean']
         // },
@@ -485,8 +485,8 @@ export const GridPlot = defineSVGPlugin<
         return valueAxisResult
       }
     }
-    if (params.categoryAxis) {
-      const categoryAxisResult = validateObject(params.categoryAxis, {
+    if (params.categoryScale) {
+      const categoryAxisResult = validateObject(params.categoryScale, {
         reverse: {
           toBeTypes: ['boolean']
         },
